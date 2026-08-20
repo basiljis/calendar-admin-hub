@@ -46,7 +46,10 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -62,7 +65,10 @@ function AuthPage() {
       },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (!data.session) {
       toast.success("Проверьте почту — мы отправили ссылку для подтверждения.");
       return;
@@ -74,7 +80,10 @@ function AuthPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("Не удалось войти через Google");
+    if (result.error) {
+      toast.error("Не удалось войти через Google");
+      return;
+    }
     if (result.redirected) return;
     navigate({ to: "/dashboard", replace: true });
   }
