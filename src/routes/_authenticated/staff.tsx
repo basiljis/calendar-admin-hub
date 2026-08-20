@@ -74,7 +74,7 @@ function StaffPage() {
   const profiles = data?.profiles ?? [];
 
   const updateProfile = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: { shift_group?: number } }) => {
       const { error } = await supabase.from("profiles").update(patch).eq("id", id);
       if (error) throw error;
     },
