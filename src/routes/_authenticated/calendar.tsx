@@ -286,7 +286,9 @@ function CalendarPage() {
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
             </DialogTitle>
             <DialogDescription>
-              Отметьте сотрудников, которые работают в этот день (11 рабочих часов).
+              {isAdmin
+                ? "Управление сменами и временем обеда сотрудников."
+                : "Просмотр смен и выбор времени обеда."}
             </DialogDescription>
           </DialogHeader>
           {openDay && data?.holidays.get(openDay) && (
