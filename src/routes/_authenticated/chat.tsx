@@ -146,7 +146,7 @@ function ChatPage() {
     const { error } = await supabase
       .from("chat_read_status")
       .upsert(
-        { user_id: user.id, room_id: roomId || undefined, last_read_at: new Date().toISOString() },
+        { user_id: user.id, room_id: roomId ? roomId : null, last_read_at: new Date().toISOString() } as any,
         { onConflict: "user_id, room_id" }
       );
     if (!error) {
@@ -156,7 +156,7 @@ function ChatPage() {
 
   useEffect(() => {
     markAsRead(selectedRoom);
-  }, [selectedRoom, chatData?.messages.length]);
+  }, [selectedRoom, chatData?.messages.length, user?.id]);
 
   const getUnreadCount = (roomId: string | null) => {
     if (!readStatuses || !user) return 0;
