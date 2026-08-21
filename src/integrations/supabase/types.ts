@@ -167,6 +167,44 @@ export type Database = {
         }
         Relationships: []
       }
+      vacation_audit_logs: {
+        Row: {
+          action_by: string
+          action_type: string
+          created_at: string | null
+          id: string
+          new_status: string | null
+          previous_status: string | null
+          vacation_id: string
+        }
+        Insert: {
+          action_by: string
+          action_type: string
+          created_at?: string | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          vacation_id: string
+        }
+        Update: {
+          action_by?: string
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          vacation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacation_audit_logs_vacation_id_fkey"
+            columns: ["vacation_id"]
+            isOneToOne: false
+            referencedRelation: "vacations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacations: {
         Row: {
           created_at: string
