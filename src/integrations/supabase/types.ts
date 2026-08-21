@@ -38,14 +38,17 @@ export type Database = {
       holidays: {
         Row: {
           holiday_date: string
+          is_working: boolean | null
           name: string
         }
         Insert: {
           holiday_date: string
+          is_working?: boolean | null
           name: string
         }
         Update: {
           holiday_date?: string
+          is_working?: boolean | null
           name?: string
         }
         Relationships: []
