@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Send, Trash2, Users, User, Plus } from "lucide-react";
+import { Send, Trash2, Users, User, Plus, Paperclip, X, FileIcon, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,9 @@ function ChatPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
   const { data: profiles } = useQuery({
@@ -114,15 +117,66 @@ function ChatPage() {
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const content = text.trim();
-    if (!content || !user) return;
-    setText("");
-    const { error } = await supabase.from("chat_messages").insert({ 
-      user_id: user.id, 
-      content,
-      room_id: selectedRoom 
-    });
-    if (error) toast.error(error.message);
+    if ((!content && attachments.length === 0) || !user) return;
+    
+    setIsUploading(true);
+    const uploadedAttachments = [];
+
+    try {
+      for (const { file } of attachments) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("chat-attachments")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("chat-attachments")
+          .getPublicUrl(filePath);
+
+        uploadedAttachments.push({
+          name: file.name,
+          url: publicUrl,
+          type: file.type,
+          size: file.size
+        });
+      }
+
+      const { error } = await supabase.from("chat_messages").insert({ 
+        user_id: user.id, 
+        content,
+        room_id: selectedRoom,
+        attachments: uploadedAttachments
+      });
+
+      if (error) throw error;
+      
+      setText("");
+      setAttachments([]);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsUploading(false);
+    }
   }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newAttachments = files.map(file => ({
+      file,
+      id: crypto.randomUUID()
+    }));
+    setAttachments(prev => [...prev, ...newAttachments]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  };
 
   async function remove(id: string) {
     const { error } = await supabase.from("chat_messages").delete().eq("id", id);
@@ -310,6 +364,35 @@ function ChatPage() {
                         </div>
                       )}
                       <div className="text-sm break-words whitespace-pre-wrap">{m.content}</div>
+                      
+                      {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {(m.attachments as any[]).map((file: any, idx: number) => (
+                            <div key={idx} className="rounded border bg-background/10 p-2">
+                              {file.type?.startsWith('image/') ? (
+                                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                                  <img 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    className="max-h-48 rounded object-contain"
+                                  />
+                                </a>
+                              ) : (
+                                <a 
+                                  href={file.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-xs hover:underline"
+                                >
+                                  <FileIcon className="size-4" />
+                                  <span className="truncate max-w-[150px]">{file.name}</span>
+                                  <span className="opacity-60">({(file.size / 1024).toFixed(1)} KB)</span>
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-70">
                         {new Date(m.created_at).toLocaleString("ru-RU", {
                           day: "2-digit",
@@ -329,16 +412,56 @@ function ChatPage() {
               })}
               <div ref={bottom} />
             </div>
-            <form onSubmit={send} className="flex gap-2 border-t p-3">
-              <Input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Сообщение…"
-              />
-              <Button type="submit" size="icon" aria-label="Отправить">
-                <Send className="size-4" />
-              </Button>
-            </form>
+            <div className="border-t p-3 space-y-3">
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {attachments.map((a) => (
+                    <div key={a.id} className="relative group bg-secondary rounded p-2 flex items-center gap-2 max-w-[200px]">
+                      {a.file.type.startsWith('image/') ? (
+                        <ImageIcon className="size-4 shrink-0" />
+                      ) : (
+                        <FileIcon className="size-4 shrink-0" />
+                      )}
+                      <span className="text-xs truncate">{a.file.name}</span>
+                      <button 
+                        type="button"
+                        onClick={() => removeAttachment(a.id)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <form onSubmit={send} className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  multiple
+                />
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  <Paperclip className="size-4" />
+                </Button>
+                <Input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Сообщение…"
+                  disabled={isUploading}
+                />
+                <Button type="submit" size="icon" aria-label="Отправить" disabled={isUploading}>
+                  <Send className={`size-4 ${isUploading ? 'animate-pulse' : ''}`} />
+                </Button>
+              </form>
+            </div>
           </CardContent>
         </Card>
       </div>
