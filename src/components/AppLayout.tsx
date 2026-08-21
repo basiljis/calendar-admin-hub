@@ -1,9 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings } from "lucide-react";
-import type { ReactNode } from "react";
+import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info } from "lucide-react";
+import { type ReactNode, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const nav = [
   { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
