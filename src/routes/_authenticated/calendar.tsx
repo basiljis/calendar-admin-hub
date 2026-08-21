@@ -67,13 +67,19 @@ function CalendarPage() {
       const [profiles, shifts, holidays, vacations] = await Promise.all([
         supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
         supabase.from("shifts").select("*").gte("work_date", first).lte("work_date", last),
-        supabase.from("holidays").select("*").gte("holiday_date", first).lte("holiday_date", last),
+        supabase
+          .from("holidays")
+          .select("holiday_date, name, is_working")
+          .gte("holiday_date", first)
+          .lte("holiday_date", last),
         supabase.from("vacations").select("*"),
       ]);
       return {
         profiles: (profiles.data ?? []) as Profile[],
         shifts: shifts.data ?? [],
-        holidays: new Map((holidays.data ?? []).map((h) => [h.holiday_date, h.name])),
+        holidays: new Map(
+          (holidays.data ?? []).map((h) => [h.holiday_date, { name: h.name, is_working: h.is_working }]),
+        ),
         vacations: vacations.data ?? [],
       };
     },
@@ -129,6 +135,18 @@ function CalendarPage() {
           .eq("work_date", date);
         if (error) throw error;
       }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateHoliday = useMutation({
+    mutationFn: async ({ date, isWorking }: { date: string; isWorking: boolean }) => {
+      const { error } = await supabase
+        .from("holidays")
+        .update({ is_working: isWorking })
+        .eq("holiday_date", date);
+      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
     onError: (e: Error) => toast.error(e.message),
@@ -211,7 +229,7 @@ function CalendarPage() {
                     <span className="text-sm font-medium">{Number(d.slice(-2))}</span>
                     {holiday && (
                       <span className="text-holiday-foreground max-w-16 truncate text-[10px]">
-                        {holiday}
+                        {holiday.name}
                       </span>
                     )}
                   </div>
@@ -249,9 +267,25 @@ function CalendarPage() {
             </DialogDescription>
           </DialogHeader>
           {openDay && data?.holidays.get(openDay) && (
-            <Badge className="bg-holiday text-holiday-foreground w-fit border-0">
-              Праздник: {data.holidays.get(openDay)} — предусмотрена доплата
-            </Badge>
+            <div className="space-y-3">
+              <Badge className="bg-holiday text-holiday-foreground w-fit border-0">
+                Праздник: {data.holidays.get(openDay)?.name}
+              </Badge>
+              <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                <div className="text-sm">
+                  <div className="font-medium">Рабочий день</div>
+                  <div className="text-muted-foreground text-xs">
+                    Если выключено, день считается выходным и уменьшает норму часов.
+                  </div>
+                </div>
+                <Switch
+                  checked={data.holidays.get(openDay)?.is_working}
+                  onCheckedChange={(v) =>
+                    updateHoliday.mutate({ date: openDay, isWorking: v })
+                  }
+                />
+              </div>
+            </div>
           )}
           <div className="space-y-2">
             {profiles.map((p) => {
