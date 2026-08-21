@@ -312,24 +312,50 @@ function CalendarPage() {
           )}
           <div className="space-y-2">
             {profiles.map((p) => {
-              const on = !!shifts.find(
+              const shift = shifts.find(
                 (s) => s.user_id === p.id && s.work_date === openDay && s.type === "work",
               );
+              const on = !!shift;
+              const isOwnShift = user?.id === p.id;
+
+              if (!isAdmin && !isOwnShift) return null;
+
               return (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-lg border px-3 py-2"
-                >
-                  <div>
-                    <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
-                    <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                <div key={p.id} className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
+                      <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                    </div>
+                    {isAdmin && (
+                      <Switch
+                        checked={on}
+                        onCheckedChange={(v) =>
+                          openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
+                        }
+                      />
+                    )}
                   </div>
-                  <Switch
-                    checked={on}
-                    onCheckedChange={(v) =>
-                      openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
-                    }
-                  />
+
+                  {on && (
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium shrink-0">Время обеда:</label>
+                      <input
+                        type="time"
+                        className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        defaultValue={shift.break_time || ""}
+                        onBlur={(e) => {
+                          if (openDay) {
+                            updateShift.mutate({
+                              userId: p.id,
+                              date: openDay,
+                              breakTime: e.target.value,
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
