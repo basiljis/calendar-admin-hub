@@ -59,12 +59,10 @@ function VacationsAdminPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-vacations", statusFilter, searchQuery, dateFrom, dateTo],
     queryFn: async () => {
+      // First fetch vacations
       let query = supabase
         .from("vacations")
-        .select(`
-          *,
-          profile:profiles(full_name, email)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (statusFilter !== "all") {
@@ -79,10 +77,23 @@ function VacationsAdminPage() {
         query = query.lte("end_date", dateTo);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: vacs, error: vacError } = await query;
+      if (vacError) throw vacError;
 
-      let filteredData = data || [];
+      // Fetch profiles separately since relationships might not be detected by TS
+      const { data: profiles, error: profError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email");
+      
+      if (profError) throw profError;
+
+      const profileMap = new Map(profiles.map(p => [p.id, p]));
+
+      let filteredData = (vacs || []).map(v => ({
+        ...v,
+        profile: profileMap.get(v.user_id)
+      }));
+
       if (searchQuery) {
         const lowerQuery = searchQuery.toLowerCase();
         filteredData = filteredData.filter(v => 
@@ -99,18 +110,29 @@ function VacationsAdminPage() {
   const { data: auditLogs = [] } = useQuery({
     queryKey: ["vacation-audit-logs-global"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: logs, error: logError } = await supabase
         .from("vacation_audit_logs")
-        .select(`
-          *,
-          action_by_profile:profiles!vacation_audit_logs_action_by_fkey(full_name)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      
+      if (logError) throw logError;
+
+      const { data: profiles, error: profError } = await supabase
+        .from("profiles")
+        .select("id, full_name");
+      
+      if (profError) throw profError;
+
+      const profileMap = new Map(profiles.map(p => [p.id, p]));
+
+      return (logs || []).map(log => ({
+        ...log,
+        action_by_profile: profileMap.get(log.action_by)
+      }));
     },
     enabled: isAdmin,
   });
+
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status, userId, startDate, endDate }: { id: string; status: "approved" | "rejected", userId: string, startDate: string, endDate: string }) => {
