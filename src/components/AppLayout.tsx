@@ -141,6 +141,70 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {isAdmin ? "Администратор" : isManager ? "Руководитель" : "Сотрудник"}
               </div>
             </div>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="size-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex size-3 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="flex items-center justify-between border-b px-4 py-2">
+                  <h3 className="text-sm font-semibold">Уведомления</h3>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-2 py-1 text-xs"
+                      onClick={() => markAllAsRead.mutate()}
+                    >
+                      Прочитать все
+                    </Button>
+                  )}
+                </div>
+                <ScrollArea className="h-80">
+                  {notifications.length === 0 ? (
+                    <div className="text-muted-foreground p-4 text-center text-sm">
+                      Нет уведомлений
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`flex gap-3 border-b p-3 transition-colors hover:bg-muted/50 ${
+                            !n.read ? "bg-muted/20" : ""
+                          }`}
+                        >
+                          <div className="mt-0.5">{getIcon(n.type)}</div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className={`text-sm leading-none ${!n.read ? "font-semibold" : ""}`}>
+                                {n.title}
+                              </p>
+                              <span className="text-muted-foreground text-[10px]">
+                                {new Date(n.created_at).toLocaleDateString("ru-RU", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground text-xs leading-normal">
+                              {n.message}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <Button variant="ghost" size="icon" onClick={signOut} aria-label="Выйти">
               <LogOut className="size-4" />
             </Button>
