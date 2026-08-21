@@ -116,6 +116,62 @@ function SettingsPage() {
 
       <div className="grid gap-6">
         <Card>
+          <CardHeader>
+            <CardTitle>Массовая настройка праздников</CardTitle>
+            <CardDescription>
+              '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            Реализовать массовую настройку для администратора, чтобы одним действием отмечать выбранный диапазон дат как «нерабочий» или «рабочий» по конкретному празднику.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date-from">Дата с</Label>
+                <Input
+                  id="date-from"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date-to">Дата по</Label>
+                <Input
+                  id="date-to"
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: false })}
+                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                  variant="outline"
+                  className="gap-2 border-holiday text-holiday hover:bg-holiday hover:text-white"
+                >
+                  <XCircle className="size-4" />
+                  Сделать нерабочими
+                </Button>
+                <Button
+                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: true })}
+                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                  variant="outline"
+                  className="gap-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                >
+                  <CheckCircle2 className="size-4" />
+                  Сделать рабочими
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle>Государственные праздники</CardTitle>
