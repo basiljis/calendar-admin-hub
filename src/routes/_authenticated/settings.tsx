@@ -35,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const { isAdmin } = useAuth();
   const qc = useQueryClient();
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: ["admin-holidays"],
