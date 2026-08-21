@@ -71,6 +71,30 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bulkUpdateHolidays = useMutation({
+    mutationFn: async ({ isWorking }: { isWorking: boolean }) => {
+      if (!dateFrom || !dateTo) {
+        throw new Error("Выберите диапазон дат");
+      }
+
+      const { error } = await supabase
+        .from("holidays")
+        .update({ is_working: isWorking })
+        .gte("holiday_date", dateFrom)
+        .lte("holiday_date", dateTo);
+
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success("Статус праздников в выбранном периоде обновлен");
+      qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+      qc.invalidateQueries({ queryKey: ["shifts"] });
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!isAdmin) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
