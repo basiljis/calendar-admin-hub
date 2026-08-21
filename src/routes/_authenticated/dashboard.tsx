@@ -151,9 +151,9 @@ function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base font-semibold">Ближайшие смены</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             {upcoming.length === 0 && (
-              <p className="text-muted-foreground text-sm">Смены ещё не назначены.</p>
+              <p className="text-muted-foreground text-sm py-4 text-center">Смены ещё не назначены.</p>
             )}
             {upcoming.map((s) => {
               const d = parseISO(s.work_date);
@@ -161,49 +161,57 @@ function Dashboard() {
               return (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-background/40 p-3 text-sm transition-colors hover:bg-background/60"
                 >
-                  <span>
-                    {d.getDate()} {MONTH_NAMES[d.getMonth()]?.toLowerCase()}
-                  </span>
-                  <span className="flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-foreground/90">
+                      {d.getDate()} {MONTH_NAMES[d.getMonth()]?.toLowerCase()}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {format(d, "eeee", { locale: ru })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
                     {holiday && (
-                      <Badge className="bg-holiday text-holiday-foreground border-0">
+                      <Badge className="bg-holiday/50 text-holiday-foreground hover:bg-holiday/60 border-none text-[10px] h-5">
                         {holiday.name}
                       </Badge>
                     )}
-                    <span className="text-muted-foreground">08:00–20:00 · 11 ч</span>
-                  </span>
+                    <span className="text-muted-foreground text-xs font-mono">08:00–20:00</span>
+                  </div>
                 </div>
               );
             })}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Праздничные смены (доплата)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {holidayShifts.length === 0 && (
-              <p className="text-muted-foreground text-sm">
-                Смен в праздничные дни в периоде нет.
-              </p>
-            )}
-            {holidayShifts.map((s) => (
-              <div
-                key={s.id}
-                className="bg-holiday/40 flex items-center justify-between rounded-lg px-3 py-2 text-sm"
-              >
-                <span>{s.work_date.split("-").reverse().join(".")}</span>
-                <span className="text-holiday-foreground font-medium">
-                  {data?.holidays.get(s.work_date)?.name}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
       </div>
+
+      <Card className="border-none shadow-sm bg-card/50 backdrop-blur">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Праздничные смены (доплата)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {holidayShifts.length === 0 && (
+            <p className="text-muted-foreground text-sm col-span-full py-4 text-center">
+              Смен в праздничные дни в периоде нет.
+            </p>
+          )}
+          {holidayShifts.map((s) => (
+            <div
+              key={s.id}
+              className="bg-holiday/30 flex items-center justify-between rounded-xl px-4 py-3 text-sm"
+            >
+              <div className="flex flex-col">
+                <span className="font-medium text-foreground/90">{s.work_date.split("-").reverse().join(".")}</span>
+                <span className="text-[10px] text-holiday-foreground/80 uppercase tracking-wider">Праздник</span>
+              </div>
+              <span className="text-holiday-foreground font-semibold">
+                {data?.holidays.get(s.work_date)?.name}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
