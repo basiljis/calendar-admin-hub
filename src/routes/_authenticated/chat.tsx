@@ -337,7 +337,7 @@ function ChatPage() {
             <p className="text-xs text-muted-foreground whitespace-pre-line">
               {selectedRoom 
                 ? "Личное или групповое обсуждение" 
-                : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Добавь возможность прикреплять файлы и изображения в сообщения чата."}
+                : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Реализуй поиск по истории сообщений в личных и групповых чатах с фильтрами по пользователю и дате."}
             </p>
           </CardHeader>
           <CardContent className="p-0 flex-1 flex flex-col min-h-0">
