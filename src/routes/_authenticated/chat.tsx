@@ -117,15 +117,66 @@ function ChatPage() {
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const content = text.trim();
-    if (!content || !user) return;
-    setText("");
-    const { error } = await supabase.from("chat_messages").insert({ 
-      user_id: user.id, 
-      content,
-      room_id: selectedRoom 
-    });
-    if (error) toast.error(error.message);
+    if ((!content && attachments.length === 0) || !user) return;
+    
+    setIsUploading(true);
+    const uploadedAttachments = [];
+
+    try {
+      for (const { file } of attachments) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("chat-attachments")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("chat-attachments")
+          .getPublicUrl(filePath);
+
+        uploadedAttachments.push({
+          name: file.name,
+          url: publicUrl,
+          type: file.type,
+          size: file.size
+        });
+      }
+
+      const { error } = await supabase.from("chat_messages").insert({ 
+        user_id: user.id, 
+        content,
+        room_id: selectedRoom,
+        attachments: uploadedAttachments
+      });
+
+      if (error) throw error;
+      
+      setText("");
+      setAttachments([]);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsUploading(false);
+    }
   }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newAttachments = files.map(file => ({
+      file,
+      id: crypto.randomUUID()
+    }));
+    setAttachments(prev => [...prev, ...newAttachments]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  };
 
   async function remove(id: string) {
     const { error } = await supabase.from("chat_messages").delete().eq("id", id);
