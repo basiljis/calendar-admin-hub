@@ -49,12 +49,12 @@ function Dashboard() {
           .lte("work_date", PERIOD.end)
           .order("work_date"),
         supabase.from("vacations").select("*").eq("user_id", user!.id),
-        supabase.from("holidays").select("*"),
+        supabase.from("holidays").select("holiday_date, name, is_working"),
       ]);
       return {
         shifts: shifts.data ?? [],
         vacations: vacations.data ?? [],
-        holidays: new Map((holidays.data ?? []).map((h) => [h.holiday_date, h.name])),
+        holidays: new Map((holidays.data ?? []).map((h) => [h.holiday_date, { name: h.name, is_working: h.is_working }])),
       };
     },
   });
@@ -63,7 +63,8 @@ function Dashboard() {
   const workShifts = shifts.filter((s) => s.type === "work");
   const plannedHours = workShifts.reduce((a, s) => a + Number(s.hours), 0);
   const vacationDays = vacationDatesInRange(data?.vacations ?? [], PERIOD.start, PERIOD.end).size;
-  const norm = personalNorm(vacationDays);
+  const nonWorkingHolidaysCount = Array.from(data?.holidays.values() ?? []).filter(h => !h.is_working).length;
+  const norm = personalNorm(vacationDays, PERIOD.normHours, nonWorkingHolidaysCount);
   const diff = plannedHours - norm;
   const holidayShifts = workShifts.filter((s) => data?.holidays.has(s.work_date));
 
@@ -164,7 +165,7 @@ function Dashboard() {
                   <span className="flex items-center gap-2">
                     {holiday && (
                       <Badge className="bg-holiday text-holiday-foreground border-0">
-                        {holiday}
+                        {holiday.name}
                       </Badge>
                     )}
                     <span className="text-muted-foreground">08:00–20:00 · 11 ч</span>
@@ -192,7 +193,7 @@ function Dashboard() {
               >
                 <span>{s.work_date.split("-").reverse().join(".")}</span>
                 <span className="text-holiday-foreground font-medium">
-                  {data?.holidays.get(s.work_date)}
+                  {data?.holidays.get(s.work_date)?.name}
                 </span>
               </div>
             ))}
