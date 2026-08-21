@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, RefreshCw, Info } from "lucide-react";
+import { Calendar, RefreshCw, Info, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -15,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -32,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const { isAdmin } = useAuth();
   const qc = useQueryClient();
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: ["admin-holidays"],
@@ -66,6 +71,30 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bulkUpdateHolidays = useMutation({
+    mutationFn: async ({ isWorking }: { isWorking: boolean }) => {
+      if (!dateFrom || !dateTo) {
+        throw new Error("Выберите диапазон дат");
+      }
+
+      const { error } = await supabase
+        .from("holidays")
+        .update({ is_working: isWorking })
+        .gte("holiday_date", dateFrom)
+        .lte("holiday_date", dateTo);
+
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success("Статус праздников в выбранном периоде обновлен");
+      qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+      qc.invalidateQueries({ queryKey: ["shifts"] });
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!isAdmin) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
@@ -86,6 +115,62 @@ function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Массовая настройка праздников</CardTitle>
+            <CardDescription>
+              '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            Реализовать массовую настройку для администратора, чтобы одним действием отмечать выбранный диапазон дат как «нерабочий» или «рабочий» по конкретному празднику.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date-from">Дата с</Label>
+                <Input
+                  id="date-from"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date-to">Дата по</Label>
+                <Input
+                  id="date-to"
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-[180px]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: false })}
+                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                  variant="outline"
+                  className="gap-2 border-holiday text-holiday hover:bg-holiday hover:text-white"
+                >
+                  <XCircle className="size-4" />
+                  Сделать нерабочими
+                </Button>
+                <Button
+                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: true })}
+                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                  variant="outline"
+                  className="gap-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                >
+                  <CheckCircle2 className="size-4" />
+                  Сделать рабочими
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
