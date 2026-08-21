@@ -52,7 +52,7 @@ type Profile = {
 };
 
 function CalendarPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState({ year: 2026, month: 9 });
   const [openDay, setOpenDay] = useState<string | null>(null);
@@ -153,6 +153,27 @@ function CalendarPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const updateShift = useMutation({
+    mutationFn: async ({
+      userId,
+      date,
+      breakTime,
+    }: {
+      userId: string;
+      date: string;
+      breakTime: string;
+    }) => {
+      const { error } = await supabase
+        .from("shifts")
+        .update({ break_time: breakTime })
+        .eq("user_id", userId)
+        .eq("work_date", date);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const leadingBlanks = (parseISO(first).getDay() + 6) % 7;
 
   function shiftsOn(date: string) {
@@ -221,7 +242,7 @@ function CalendarPage() {
               return (
                 <button
                   key={d}
-                  onClick={() => isAdmin && setOpenDay(d)}
+                  onClick={() => setOpenDay(d)}
                   className={`min-h-24 rounded-lg border p-1.5 text-left align-top transition-colors ${
                     holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
                   } ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
@@ -241,11 +262,12 @@ function CalendarPage() {
                       return (
                         <div
                           key={s.id}
-                          className={`truncate rounded px-1 py-0.5 text-[10px] text-white ${
+                          className={`truncate rounded px-1 py-0.5 text-[10px] text-white flex justify-between items-center ${
                             p.shift_group === 1 ? "bg-shift-a" : "bg-shift-b"
                           }`}
                         >
-                          {p.full_name.split(" ")[0]}
+                          <span>{p.full_name.split(" ")[0]}</span>
+                          {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
                         </div>
                       );
                     })}
@@ -264,7 +286,9 @@ function CalendarPage() {
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
             </DialogTitle>
             <DialogDescription>
-              Отметьте сотрудников, которые работают в этот день (11 рабочих часов).
+              {isAdmin
+                ? "Управление сменами и временем обеда сотрудников."
+                : "Просмотр смен и выбор времени обеда."}
             </DialogDescription>
           </DialogHeader>
           {openDay && data?.holidays.get(openDay) && (
@@ -290,24 +314,50 @@ function CalendarPage() {
           )}
           <div className="space-y-2">
             {profiles.map((p) => {
-              const on = !!shifts.find(
+              const shift = shifts.find(
                 (s) => s.user_id === p.id && s.work_date === openDay && s.type === "work",
               );
+              const on = !!shift;
+              const isOwnShift = user?.id === p.id;
+
+              if (!isAdmin && !isOwnShift) return null;
+
               return (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-lg border px-3 py-2"
-                >
-                  <div>
-                    <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
-                    <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                <div key={p.id} className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
+                      <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                    </div>
+                    {isAdmin && (
+                      <Switch
+                        checked={on}
+                        onCheckedChange={(v) =>
+                          openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
+                        }
+                      />
+                    )}
                   </div>
-                  <Switch
-                    checked={on}
-                    onCheckedChange={(v) =>
-                      openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
-                    }
-                  />
+
+                  {on && (
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium shrink-0">Время обеда:</label>
+                      <input
+                        type="time"
+                        className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        defaultValue={shift.break_time || ""}
+                        onBlur={(e) => {
+                          if (openDay) {
+                            updateShift.mutate({
+                              userId: p.id,
+                              date: openDay,
+                              breakTime: e.target.value,
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
