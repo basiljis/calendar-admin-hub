@@ -262,11 +262,12 @@ function CalendarPage() {
                       return (
                         <div
                           key={s.id}
-                          className={`truncate rounded px-1 py-0.5 text-[10px] text-white ${
+                          className={`truncate rounded px-1 py-0.5 text-[10px] text-white flex justify-between items-center ${
                             p.shift_group === 1 ? "bg-shift-a" : "bg-shift-b"
                           }`}
                         >
-                          {p.full_name.split(" ")[0]}
+                          <span>{p.full_name.split(" ")[0]}</span>
+                          {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
                         </div>
                       );
                     })}
