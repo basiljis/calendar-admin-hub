@@ -24,12 +24,85 @@ const nav = [
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { profile, isManager, isAdmin } = useAuth();
+  const { profile, user, isManager, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["notifications", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllAsRead = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+    },
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("notifications-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+          toast.info("У вас новое уведомление");
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "success":
+        return <CheckCircle2 className="size-4 text-emerald-500" />;
+      case "error":
+        return <XCircle className="size-4 text-destructive" />;
+      case "warning":
+        return <Info className="size-4 text-amber-500" />;
+      default:
+        return <Info className="size-4 text-blue-500" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
