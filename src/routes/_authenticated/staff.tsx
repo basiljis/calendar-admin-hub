@@ -156,13 +156,6 @@ function StaffPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-    onSuccess: () => {
-      toast.success("Статус отпуска обновлен");
-      qc.invalidateQueries({ queryKey: ["staff"] });
-      qc.invalidateQueries({ queryKey: ["calendar"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const removeVacation = useMutation({
     mutationFn: async (id: string) => {
