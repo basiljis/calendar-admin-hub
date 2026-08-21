@@ -88,6 +88,7 @@ export type Database = {
       }
       shifts: {
         Row: {
+          break_time: string | null
           created_at: string
           hours: number
           id: string
@@ -97,6 +98,7 @@ export type Database = {
           work_date: string
         }
         Insert: {
+          break_time?: string | null
           created_at?: string
           hours?: number
           id?: string
@@ -106,6 +108,7 @@ export type Database = {
           work_date: string
         }
         Update: {
+          break_time?: string | null
           created_at?: string
           hours?: number
           id?: string
