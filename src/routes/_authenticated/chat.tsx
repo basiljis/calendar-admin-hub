@@ -412,16 +412,56 @@ function ChatPage() {
               })}
               <div ref={bottom} />
             </div>
-            <form onSubmit={send} className="flex gap-2 border-t p-3">
-              <Input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Сообщение…"
-              />
-              <Button type="submit" size="icon" aria-label="Отправить">
-                <Send className="size-4" />
-              </Button>
-            </form>
+            <div className="border-t p-3 space-y-3">
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {attachments.map((a) => (
+                    <div key={a.id} className="relative group bg-secondary rounded p-2 flex items-center gap-2 max-w-[200px]">
+                      {a.file.type.startsWith('image/') ? (
+                        <ImageIcon className="size-4 shrink-0" />
+                      ) : (
+                        <FileIcon className="size-4 shrink-0" />
+                      )}
+                      <span className="text-xs truncate">{a.file.name}</span>
+                      <button 
+                        type="button"
+                        onClick={() => removeAttachment(a.id)}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <form onSubmit={send} className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  multiple
+                />
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="outline" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  <Paperclip className="size-4" />
+                </Button>
+                <Input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Сообщение…"
+                  disabled={isUploading}
+                />
+                <Button type="submit" size="icon" aria-label="Отправить" disabled={isUploading}>
+                  <Send className={`size-4 ${isUploading ? 'animate-pulse' : ''}`} />
+                </Button>
+              </form>
+            </div>
           </CardContent>
         </Card>
       </div>
