@@ -399,24 +399,31 @@ function ChatPage() {
         
         <Button 
           variant={selectedRoom === null ? "secondary" : "ghost"} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-between gap-2"
           onClick={() => setSelectedRoom(null)}
         >
-          <Users className="size-4" />
-          Общий чат
+          <div className="flex items-center gap-2">
+            <Users className="size-4" />
+            Общий чат
+          </div>
         </Button>
 
-        {rooms?.map((room) => (
-          <Button 
-            key={room.id}
-            variant={selectedRoom === room.id ? "secondary" : "ghost"} 
-            className="w-full justify-start gap-2 overflow-hidden text-ellipsis"
-            onClick={() => setSelectedRoom(room.id)}
-          >
-            {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
-            <span className="truncate">{getRoomName(room)}</span>
-          </Button>
-        ))}
+        {rooms?.map((room) => {
+          const isSelected = selectedRoom === room.id;
+          return (
+            <Button 
+              key={room.id}
+              variant={isSelected ? "secondary" : "ghost"} 
+              className="w-full justify-between gap-2 overflow-hidden text-ellipsis"
+              onClick={() => setSelectedRoom(room.id)}
+            >
+              <div className="flex items-center gap-2 truncate">
+                {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
+                <span className="truncate">{getRoomName(room)}</span>
+              </div>
+            </Button>
+          );
+        })}
       </div>
 
       <div className="md:col-span-3 flex flex-col space-y-4">
