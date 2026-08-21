@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -145,7 +146,7 @@ function ChatPage() {
     const { error } = await supabase
       .from("chat_read_status")
       .upsert(
-        { user_id: user.id, room_id: roomId, last_read_at: new Date().toISOString() },
+        { user_id: user.id, room_id: roomId || undefined, last_read_at: new Date().toISOString() },
         { onConflict: "user_id, room_id" }
       );
     if (!error) {
