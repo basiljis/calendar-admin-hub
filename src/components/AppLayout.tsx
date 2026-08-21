@@ -187,10 +187,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                                 {n.title}
                               </p>
                               <span className="text-muted-foreground text-[10px]">
-                                {new Date(n.created_at).toLocaleDateString("ru-RU", {
+                                {new Date(n.created_at).toLocaleTimeString("ru-RU", {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                } as Intl.DateTimeFormatOptions)}
+                                })}
                               </span>
                             </div>
                             <p className="text-muted-foreground text-xs leading-normal">
