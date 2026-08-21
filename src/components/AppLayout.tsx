@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info } from "lucide-react";
+import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info, Plane } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,10 +17,12 @@ import { toast } from "sonner";
 const nav = [
   { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
   { to: "/calendar", label: "Календарь", icon: CalendarDays },
+  { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
   { to: "/staff", label: "Команда", icon: Users, managerOnly: true },
   { to: "/chat", label: "Чат", icon: MessageSquare },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
