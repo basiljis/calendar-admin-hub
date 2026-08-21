@@ -153,6 +153,27 @@ function CalendarPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const updateShift = useMutation({
+    mutationFn: async ({
+      userId,
+      date,
+      breakTime,
+    }: {
+      userId: string;
+      date: string;
+      breakTime: string;
+    }) => {
+      const { error } = await supabase
+        .from("shifts")
+        .update({ break_time: breakTime })
+        .eq("user_id", userId)
+        .eq("work_date", date);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const leadingBlanks = (parseISO(first).getDay() + 6) % 7;
 
   function shiftsOn(date: string) {
