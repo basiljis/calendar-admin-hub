@@ -199,21 +199,57 @@ function StaffPage() {
                     {vacs.map((v) => (
                       <div
                         key={v.id}
-                        className="bg-secondary/60 flex items-center justify-between rounded-md px-2 py-1 text-xs"
+                        className={`flex items-center justify-between rounded-md px-2 py-1 text-xs ${
+                          v.status === "approved"
+                            ? "bg-secondary/60"
+                            : v.status === "rejected"
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-amber-100 text-amber-800"
+                        }`}
                       >
-                        <span className="flex items-center gap-1.5">
-                          <Plane className="size-3" />
-                          {v.start_date.split("-").reverse().join(".")} —{" "}
-                          {v.end_date.split("-").reverse().join(".")}
-                        </span>
-                        {isAdmin && (
-                          <button
-                            onClick={() => removeVacation.mutate(v.id)}
-                            aria-label="Удалить отпуск"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        )}
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-1.5">
+                            <Plane className="size-3" />
+                            {v.start_date.split("-").reverse().join(".")} —{" "}
+                            {v.end_date.split("-").reverse().join(".")}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold opacity-70">
+                            {v.status === "approved"
+                              ? "Подтвержден"
+                              : v.status === "rejected"
+                                ? "Отклонен"
+                                : "Ожидает"}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {isAdmin && v.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "approved" })}
+                                className="text-green-600 hover:text-green-700"
+                                title="Подтвердить"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "rejected" })}
+                                className="text-red-600 hover:text-red-700"
+                                title="Отклонить"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          )}
+                          {(isAdmin || (user?.id === p.id && v.status === "pending")) && (
+                            <button
+                              onClick={() => removeVacation.mutate(v.id)}
+                              aria-label="Удалить отпуск"
+                              className="opacity-50 hover:opacity-100"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
