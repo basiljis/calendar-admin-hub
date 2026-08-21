@@ -365,11 +365,11 @@ function ChatPage() {
                       )}
                       <div className="text-sm break-words whitespace-pre-wrap">{m.content}</div>
                       
-                      {m.attachments && m.attachments.length > 0 && (
+                      {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
-                          {m.attachments.map((file: any, idx: number) => (
+                          {(m.attachments as any[]).map((file: any, idx: number) => (
                             <div key={idx} className="rounded border bg-background/10 p-2">
-                              {file.type.startsWith('image/') ? (
+                              {file.type?.startsWith('image/') ? (
                                 <a href={file.url} target="_blank" rel="noopener noreferrer">
                                   <img 
                                     src={file.url} 
