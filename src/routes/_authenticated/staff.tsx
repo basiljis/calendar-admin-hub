@@ -43,7 +43,7 @@ const roleLabels: Record<AppRole, string> = {
 };
 
 function StaffPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
   const [vacUser, setVacUser] = useState("");
   const [vacFrom, setVacFrom] = useState("");
