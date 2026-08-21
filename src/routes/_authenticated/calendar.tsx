@@ -98,7 +98,7 @@ function CalendarPage() {
       }[] = [];
       for (const p of profiles) {
         const vac = vacationDatesInRange(data?.vacations ?? [], first, last);
-        console.log("Vacation set for", p.full_name, vac);
+        
         for (const d of days) {
           if (vac.has(d)) {
             rows.push({ user_id: p.id, work_date: d, hours: 0, type: "vacation" });
