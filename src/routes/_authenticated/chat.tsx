@@ -158,14 +158,17 @@ function ChatPage() {
   }, [selectedRoom, chatData?.messages.length]);
 
   const getUnreadCount = (roomId: string | null) => {
-    if (!chatData?.messages || !readStatuses || !user) return 0;
+    if (!readStatuses || !user) return 0;
     const status = readStatuses.find(s => s.room_id === roomId);
-    if (!status) return 0; // Or return total if never read
     
-    // This is a simplification; ideally we'd have a count from server
-    // For now, let's just count messages in current chatData that are newer than last_read_at
-    // In a real app, this should be a server-side count per room
-    return 0; // Placeholder until we have a better way to count
+    // We can't easily count on client without full history, 
+    // but we can check if there are messages newer than last_read_at in chatData
+    if (!status || !chatData?.messages) return 0;
+    
+    return chatData.messages.filter(m => 
+      m.user_id !== user.id && 
+      new Date(m.created_at) > new Date(status.last_read_at)
+    ).length;
   };
 
   const handleSearch = async () => {
@@ -406,6 +409,11 @@ function ChatPage() {
             <Users className="size-4" />
             Общий чат
           </div>
+          {getUnreadCount(null) > 0 && (
+            <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
+              {getUnreadCount(null)}
+            </Badge>
+          )}
         </Button>
 
         {rooms?.map((room) => {
@@ -421,6 +429,11 @@ function ChatPage() {
                 {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
                 <span className="truncate">{getRoomName(room)}</span>
               </div>
+              {getUnreadCount(room.id) > 0 && (
+                <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
+                  {getUnreadCount(room.id)}
+                </Badge>
+              )}
             </Button>
           );
         })}
