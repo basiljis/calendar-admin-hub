@@ -271,7 +271,7 @@ function StaffPage() {
             <div className="space-y-1.5">
               <Label className="text-xs">Сотрудник</Label>
               <Select
-                value={vacUser || (isAdmin ? "" : user?.id)}
+                value={vacUser || (isAdmin ? "" : user?.id || "")}
                 disabled={!isAdmin}
                 onValueChange={setVacUser}
               >
