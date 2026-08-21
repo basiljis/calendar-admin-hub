@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info } from "lucide-react";
+import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info, Plane } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
