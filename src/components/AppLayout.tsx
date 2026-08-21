@@ -1,5 +1,21 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info, Plane } from "lucide-react";
+import {
+  CalendarDays,
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  LogOut,
+  Settings,
+  Bell,
+  CheckCircle2,
+  XCircle,
+  Info,
+  Plane,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Heart
+} from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,25 +27,26 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 
 const nav = [
-  { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
-  { to: "/calendar", label: "Календарь", icon: CalendarDays },
+  { to: "/dashboard", label: "Главная", icon: LayoutDashboard },
+  { to: "/staff", label: "Специалисты", icon: Users, managerOnly: true },
+  { to: "/calendar", label: "График", icon: CalendarDays },
   { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
-  { to: "/vacations-stats", label: "Статистика отпусков", icon: LayoutDashboard, adminOnly: true },
-  { to: "/staff", label: "Команда", icon: Users, managerOnly: true },
+  { to: "/vacations-stats", label: "Отчеты", icon: LayoutDashboard, adminOnly: true },
   { to: "/chat", label: "Чат", icon: MessageSquare },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
-
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { profile, user, isManager, isAdmin } = useAuth();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
@@ -110,77 +127,118 @@ export function AppLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b bg-card/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-          <Link to="/dashboard" className="mr-2 flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <CalendarDays className="size-4" />
-            </span>
-            <span className="text-sm leading-tight font-semibold">
-              График ОКП
-              <span className="text-muted-foreground block text-xs font-normal">
-                смены психологов
-              </span>
-            </span>
+    <div className="flex min-h-screen bg-background text-foreground font-sans">
+      {/* Sidebar - Matching reference image style */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-sidebar transition-all duration-300 ${
+          isSidebarCollapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <div className="flex h-16 items-center px-6">
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <CalendarDays className="size-5" />
+            </div>
+            {!isSidebarCollapsed && (
+              <span className="text-xl font-bold tracking-tight text-primary">universum.</span>
+            )}
           </Link>
-          <nav className="flex flex-1 flex-wrap items-center gap-1">
+        </div>
+
+        <ScrollArea className="flex-1 px-3 py-4">
+          <nav className="space-y-1">
             {nav
               .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
               .map((n) => (
                 <Link
                   key={n.to}
                   to={n.to}
-                  className="text-muted-foreground hover:bg-secondary hover:text-foreground inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                  activeProps={{ className: "bg-secondary text-foreground" }}
+                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
                 >
-                  <n.icon className="size-4" />
-                  {n.label}
+                  <n.icon className="size-5" />
+                  {!isSidebarCollapsed && <span>{n.label}</span>}
                 </Link>
               ))}
           </nav>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <div className="text-sm font-medium">{profile?.full_name || "Профиль"}</div>
-              <div className="text-muted-foreground text-xs">
-                {isAdmin ? "Администратор" : isManager ? "Руководитель" : "Сотрудник"}
-              </div>
+        </ScrollArea>
+
+        {/* Bottom Help/Support Widget from reference image */}
+        {!isSidebarCollapsed && (
+          <div className="mx-4 mb-6 rounded-2xl bg-blue-50 p-4 text-center dark:bg-blue-900/10">
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-card">
+              <Heart className="size-6 text-blue-500" />
             </div>
-            <Popover open={open} onOpenChange={setOpen}>
+            <p className="mb-1 text-sm font-semibold">Нужна помощь?</p>
+            <p className="mb-3 text-xs text-muted-foreground">Мы на связи в рабочее время</p>
+            <Button size="sm" variant="outline" className="w-full bg-white dark:bg-card">
+              Связаться с нами
+            </Button>
+          </div>
+        )}
+
+        <div className="p-3 border-t">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="w-full justify-start gap-3 px-3"
+          >
+            {isSidebarCollapsed ? <ChevronRight className="size-5" /> : (
+              <>
+                <ChevronLeft className="size-5" />
+                <span>Свернуть меню</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          isSidebarCollapsed ? "pl-20" : "pl-64"
+        }`}
+      >
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-8 backdrop-blur">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <ChevronRight className="size-5" />
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Обзор ключевых показателей системы
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="size-4" />
+                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border">
+                  <Bell className="size-5 text-muted-foreground" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex size-3 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                    <span className="absolute top-0 right-0 flex size-5 items-center justify-center rounded-full border-2 border-background bg-orange-500 text-[10px] font-bold text-white">
                       {unreadCount}
                     </span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end">
-                <div className="flex items-center justify-between border-b px-4 py-2">
+                <div className="flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-sm font-semibold">Уведомления</h3>
-                  <div className="flex items-center gap-2">
-                    <p className="hidden text-[8px] text-muted-foreground/40 sm:block max-w-[100px] leading-tight text-right">
-                      '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-                      
-                      Добавь уведомления сотруднику и администратору о статусе заявки на отпуск (подана, подтверждена, отклонена).
-                    </p>
-                    {unreadCount > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto px-2 py-1 text-xs"
-                        onClick={() => markAllAsRead.mutate()}
-                      >
-                        Прочитать все
-                      </Button>
-                    )}
-                  </div>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-2 py-1 text-xs text-primary"
+                      onClick={() => markAllAsRead.mutate()}
+                    >
+                      Прочитать все
+                    </Button>
+                  )}
                 </div>
                 <ScrollArea className="h-80">
                   {notifications.length === 0 ? (
-                    <div className="text-muted-foreground p-4 text-center text-sm">
+                    <div className="p-8 text-center text-sm text-muted-foreground">
                       Нет уведомлений
                     </div>
                   ) : (
@@ -188,25 +246,23 @@ export function AppLayout({ children }: { children: ReactNode }) {
                       {notifications.map((n) => (
                         <div
                           key={n.id}
-                          className={`flex gap-3 border-b p-3 transition-colors hover:bg-muted/50 ${
-                            !n.read ? "bg-muted/20" : ""
+                          className={`flex gap-3 border-b p-4 transition-colors hover:bg-muted/50 ${
+                            !n.read ? "bg-primary/5" : ""
                           }`}
                         >
                           <div className="mt-0.5">{getIcon(n.type)}</div>
                           <div className="flex-1 space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className={`text-sm leading-none ${!n.read ? "font-semibold" : ""}`}>
-                                {n.title}
-                              </p>
-                              <span className="text-muted-foreground text-[10px]">
-                                {n.created_at ? new Date(n.created_at).toLocaleTimeString("ru-RU", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }) : ""}
-                              </span>
-                            </div>
-                            <p className="text-muted-foreground text-xs leading-normal">
+                            <p className={`text-sm leading-tight ${!n.read ? "font-semibold" : ""}`}>
+                              {n.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
                               {n.message}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
+                              {n.created_at ? new Date(n.created_at).toLocaleTimeString("ru-RU", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }) : ""}
                             </p>
                           </div>
                         </div>
@@ -217,13 +273,30 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </PopoverContent>
             </Popover>
 
-            <Button variant="ghost" size="icon" onClick={signOut} aria-label="Выйти">
-              <LogOut className="size-4" />
-            </Button>
+            <div className="flex items-center gap-3 border-l pl-6">
+              <div className="text-right">
+                <div className="text-sm font-semibold text-foreground leading-none">
+                  {profile?.full_name || "Пользователь"}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground leading-none">
+                  {isAdmin ? "Администратор" : isManager ? "Руководитель" : "Сотрудник"}
+                </div>
+              </div>
+              <Avatar className="h-10 w-10 border-2 border-primary/10">
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {profile?.full_name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <Button variant="ghost" size="icon" onClick={signOut} className="text-muted-foreground">
+                <LogOut className="size-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        </header>
+
+        <main className="mx-auto max-w-7xl p-8">{children}</main>
+      </div>
     </div>
   );
 }
