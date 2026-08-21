@@ -77,8 +77,14 @@ export function vacationDatesInRange(
 }
 
 /** Пересчёт индивидуальной нормы за период с учётом дней отпуска */
-export function personalNorm(vacationDaysInPeriod: number, baseNorm = PERIOD.normHours): number {
-  return Math.max(0, baseNorm - vacationDaysInPeriod * HOURS_PER_VACATION_DAY);
+export function personalNorm(
+  vacationDaysInPeriod: number,
+  baseNorm = PERIOD.normHours,
+  nonWorkingHolidaysCount = 0
+): number {
+  // Каждый нерабочий праздничный день уменьшает норму на SHIFT_WORK_HOURS (11ч)
+  const holidayReduction = nonWorkingHolidaysCount * SHIFT_WORK_HOURS;
+  return Math.max(0, baseNorm - vacationDaysInPeriod * HOURS_PER_VACATION_DAY - holidayReduction);
 }
 
 export const MONTH_NAMES = [
