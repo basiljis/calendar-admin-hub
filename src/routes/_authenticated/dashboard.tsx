@@ -82,40 +82,44 @@ function Dashboard() {
   });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {profile?.full_name || "Мой график"}
+    <div className="space-y-10">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Добро пожаловать, {profile?.full_name?.split(' ')[0] || "Сотрудник"}!
         </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Группа {profile?.shift_group ?? 1} · отчётный период {PERIOD.label}
+        <p className="text-muted-foreground">
+          Обзор ключевых показателей системы · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Clock}
           label="Норма за период"
           value={`${formatHours(norm)} ч`}
-          hint={`База ${formatHours(PERIOD.normHours)} ч − отпуск`}
+          hint={`База ${formatHours(PERIOD.normHours)} ч`}
+          color="blue"
         />
         <StatCard
           icon={CalendarCheck}
           label="Запланировано"
           value={`${formatHours(plannedHours)} ч`}
-          hint={`${workShifts.length} смен по 11 ч`}
+          hint={`${workShifts.length} смен`}
+          color="orange"
         />
         <StatCard
           icon={Sparkles}
           label="Отклонение"
           value={`${diff >= 0 ? "+" : "−"}${formatHours(Math.abs(diff))} ч`}
-          hint={Math.abs(diff) < 0.05 ? "Норма выдержана" : "Скорректируйте смены"}
+          hint={Math.abs(diff) < 0.05 ? "В пределах нормы" : "Требует внимания"}
+          color="blue"
         />
         <StatCard
           icon={Plane}
           label="Дни отпуска"
           value={String(vacationDays)}
-          hint="в пределах периода"
+          hint="Использовано дней"
+          color="orange"
         />
       </div>
 
@@ -209,21 +213,34 @@ function StatCard({
   label,
   value,
   hint,
+  color = "blue",
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
   hint: string;
+  color?: "blue" | "orange";
 }) {
+  const colorClasses = color === "orange" 
+    ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20" 
+    : "bg-blue-50 text-blue-600 dark:bg-blue-950/20";
+
   return (
-    <Card>
+    <Card className="border-none shadow-sm bg-card/50 backdrop-blur">
       <CardContent className="pt-6">
-        <div className="text-muted-foreground flex items-center gap-2 text-xs">
-          <Icon className="size-4" />
-          {label}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="text-3xl font-bold">{value}</p>
+          </div>
+          <div className={`flex size-12 items-center justify-center rounded-2xl ${colorClasses}`}>
+            <Icon className="size-6" />
+          </div>
         </div>
-        <div className="mt-2 text-2xl font-semibold">{value}</div>
-        <div className="text-muted-foreground mt-1 text-xs">{hint}</div>
+        <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className={color === "orange" ? "text-orange-600" : "text-blue-600"}>↑</span>
+          {hint}
+        </div>
       </CardContent>
     </Card>
   );

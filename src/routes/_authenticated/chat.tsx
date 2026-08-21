@@ -347,14 +347,15 @@ function ChatPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
-      <div className="md:col-span-1 space-y-4 overflow-y-auto pr-2">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Чаты</h2>
+    <div className="flex h-[calc(100vh-12rem)] overflow-hidden rounded-2xl border bg-card shadow-sm">
+      
+        <div className="md:col-span-1 border-r bg-card p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Чаты</h2>
           {isAdmin && (
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="icon" variant="outline" className="size-8">
+                <Button size="icon" variant="ghost" className="size-8">
                   <Plus className="size-4" />
                 </Button>
               </DialogTrigger>
@@ -364,7 +365,7 @@ function ChatPage() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Название группы (необязательно)</label>
+                    <label className="text-sm font-medium">Название группы</label>
                     <Input 
                       placeholder="Напр. Смена А" 
                       value={newRoomName}
@@ -372,7 +373,7 @@ function ChatPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Выберите участников</label>
+                    <label className="text-sm font-medium">Участники</label>
                     <div className="max-h-48 overflow-y-auto space-y-2 border rounded-md p-2">
                       {profiles?.filter(p => p.id !== user?.id).map((p) => (
                         <div key={p.id} className="flex items-center space-x-2">
@@ -401,48 +402,49 @@ function ChatPage() {
           )}
         </div>
         
-        <Button 
-          variant={selectedRoom === null ? "secondary" : "ghost"} 
-          className="w-full justify-between gap-2"
-          onClick={() => setSelectedRoom(null)}
-        >
-          <div className="flex items-center gap-2">
-            <Users className="size-4" />
-            Общий чат
-          </div>
-          {getUnreadCount(null) > 0 && (
-            <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
-              {getUnreadCount(null)}
-            </Badge>
-          )}
-        </Button>
+        <div className="space-y-1">
+          <Button 
+            variant={selectedRoom === null ? "secondary" : "ghost"} 
+            className="w-full justify-start gap-3 px-3 py-2 h-auto"
+            onClick={() => setSelectedRoom(null)}
+          >
+            <div className="flex items-center gap-3">
+              <Users className="size-4" />
+              <span>Общий чат</span>
+            </div>
+            {getUnreadCount(null) > 0 && (
+              <Badge variant="destructive" className="ml-auto rounded-full px-2 py-0.5 text-[10px]">
+                {getUnreadCount(null)}
+              </Badge>
+            )}
+          </Button>
 
-        {rooms?.map((room) => {
-          const isSelected = selectedRoom === room.id;
-          return (
-            <Button 
-              key={room.id}
-              variant={isSelected ? "secondary" : "ghost"} 
-              className="w-full justify-between gap-2 overflow-hidden text-ellipsis"
-              onClick={() => setSelectedRoom(room.id)}
-            >
-              <div className="flex items-center gap-2 truncate">
-                {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
-                <span className="truncate">{getRoomName(room)}</span>
-              </div>
-              {getUnreadCount(room.id) > 0 && (
-                <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
-                  {getUnreadCount(room.id)}
-                </Badge>
-              )}
-            </Button>
-          );
-        })}
-      </div>
+          {rooms?.map((room) => {
+            const isSelected = selectedRoom === room.id;
+            return (
+              <Button 
+                key={room.id}
+                variant={isSelected ? "secondary" : "ghost"} 
+                className="w-full justify-start gap-3 px-3 py-2 h-auto"
+                onClick={() => setSelectedRoom(room.id)}
+              >
+                <div className="flex items-center gap-3 truncate">
+                  {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
+                  <span className="truncate">{getRoomName(room)}</span>
+                </div>
+                {getUnreadCount(room.id) > 0 && (
+                  <Badge variant="destructive" className="ml-auto rounded-full px-2 py-0.5 text-[10px]">
+                    {getUnreadCount(room.id)}
+                  </Badge>
+                )}
+              </Button>
+            );
+          })}
+        </div>
 
-      <div className="md:col-span-3 flex flex-col space-y-4">
-        <Card className="flex-1 flex flex-col min-h-0">
-          <CardHeader className="border-b py-3 px-4">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 bg-background/50">
+          <div className="border-b py-3 px-4 bg-card/30">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 {selectedRoom ? (
@@ -530,8 +532,8 @@ function ChatPage() {
                   : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            оформи в таком стиле и окно чата сделай как на картинке сборку и отдельно кнопку"}
               </p>
             )}
-          </CardHeader>
-          <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+        </div>
+        <div className="p-0 flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {isSearching && (
                 <div className="mb-4 p-2 bg-accent/20 border-b flex items-center justify-between">
@@ -659,8 +661,8 @@ function ChatPage() {
                 </Button>
               </form>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
