@@ -160,7 +160,7 @@ function ChatPage() {
 
   const getUnreadCount = (roomId: string | null) => {
     if (!readStatuses || !user) return 0;
-    const status = readStatuses.find(s => s.room_id === roomId);
+    const status = (readStatuses as any[]).find(s => s.room_id === roomId);
     
     // We can't easily count on client without full history, 
     // but we can check if there are messages newer than last_read_at in chatData
