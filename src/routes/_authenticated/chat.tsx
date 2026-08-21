@@ -527,7 +527,7 @@ function ChatPage() {
               <p className="text-xs text-muted-foreground whitespace-pre-line">
                 {selectedRoom 
                   ? "Личное или групповое обсуждение" 
-                  : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Интегрируй уведомления о новых сообщениях (включая непрочитанные) для сотрудников и администратора."}
+                  : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            оформи в таком стиле и окно чата сделай как на картинке сборку и отдельно кнопку"}
               </p>
             )}
           </CardHeader>
