@@ -86,18 +86,39 @@ function StaffPage() {
   });
 
   const addVacation = useMutation({
-    mutationFn: async () => {
-      if (!vacUser || !vacFrom || !vacTo) throw new Error("Заполните сотрудника и даты");
+    mutationFn: async ({ userId, from, to }: { userId: string; from: string; to: string }) => {
       const { error } = await supabase
         .from("vacations")
-        .insert({ user_id: vacUser, start_date: vacFrom, end_date: vacTo });
+        .insert({
+          user_id: userId,
+          start_date: from,
+          end_date: to,
+          status: isAdmin ? "approved" : "pending",
+        });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Отпуск добавлен, норма пересчитана");
+      toast.success(isAdmin ? "Отпуск добавлен и подтвержден" : "Заявка на отпуск отправлена");
       setVacFrom("");
       setVacTo("");
       qc.invalidateQueries({ queryKey: ["staff"] });
+      qc.invalidateQueries({ queryKey: ["my-period"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateVacationStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
+      const { error } = await supabase
+        .from("vacations")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Статус отпуска обновлен");
+      qc.invalidateQueries({ queryKey: ["staff"] });
+      qc.invalidateQueries({ queryKey: ["calendar"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
