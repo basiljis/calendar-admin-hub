@@ -10,14 +10,11 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
+  ResponsiveContainer
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plane, Users, Calendar, AlertCircle } from "lucide-react";
+import { VACATION_DAYS_BASE } from "@/lib/schedule";
 
 export const Route = createFileRoute("/_authenticated/vacations-stats")({
   head: () => ({
@@ -31,8 +28,6 @@ export const Route = createFileRoute("/_authenticated/vacations-stats")({
   }),
   component: VacationsStatsPage,
 });
-
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 function VacationsStatsPage() {
   const { isAdmin } = useAuth();
@@ -48,7 +43,6 @@ function VacationsStatsPage() {
 
       const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]));
       
-      // Calculate days per employee
       const employeeUsage: Record<string, number> = {};
       (vacations || []).forEach(v => {
         const start = new Date(v.start_date);
@@ -57,12 +51,11 @@ function VacationsStatsPage() {
         employeeUsage[v.user_id] = (employeeUsage[v.user_id] || 0) + days;
       });
 
-      const employeeData = Object.entries(employeeUsage).map(([id, days]) => ({
-        name: profileMap.get(id) || "Неизвестно",
-        days
+      const employeeData = (profiles || []).map(p => ({
+        name: p.full_name || "Без имени",
+        days: employeeUsage[p.id] || 0
       })).sort((a, b) => b.days - a.days);
 
-      // Monthly load (number of employees on vacation per month)
       const monthlyLoad: Record<string, Set<string>> = {};
       const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
       
@@ -80,7 +73,7 @@ function VacationsStatsPage() {
       });
 
       const loadData = months.map((name, index) => {
-        const key = `2026-${index}`; // Assuming 2026 as per T3
+        const key = `2026-${index}`;
         return {
           name,
           count: monthlyLoad[key]?.size || 0
@@ -130,7 +123,7 @@ function VacationsStatsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalVacations || 0}</div>
-            <p className="text-xs text-muted-foreground">подтвержденных за все время</p>
+            <p className="text-xs text-muted-foreground">подтвержденных периодов</p>
           </CardContent>
         </Card>
         <Card>
@@ -162,15 +155,19 @@ function VacationsStatsPage() {
             <CardDescription>Суммарное количество подтвержденных дней отпуска</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.employeeData || []} layout="vertical" margin={{ left: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={100} fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="days" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <div className="flex h-full items-center justify-center">Загрузка...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats?.employeeData || []} layout="vertical" margin={{ left: 10, right: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={100} fontSize={12} />
+                  <Tooltip />
+                  <Bar dataKey="days" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -180,15 +177,19 @@ function VacationsStatsPage() {
             <CardDescription>Количество сотрудников в отпуске одновременно</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.loadData || []}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <div className="flex h-full items-center justify-center">Загрузка...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats?.loadData || []}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -204,7 +205,7 @@ function VacationsStatsPage() {
               <TableRow>
                 <TableHead>Сотрудник</TableHead>
                 <TableHead className="text-right">Использовано дней</TableHead>
-                <TableHead className="text-right">Остаток (из 56)</TableHead>
+                <TableHead className="text-right">Остаток (из {VACATION_DAYS_BASE})</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -212,10 +213,10 @@ function VacationsStatsPage() {
                 <TableRow key={row.name}>
                   <TableCell className="font-medium">{row.name}</TableCell>
                   <TableCell className="text-right">{row.days}</TableCell>
-                  <TableCell className="text-right">{Math.max(0, 56 - row.days)}</TableCell>
+                  <TableCell className="text-right">{Math.max(0, VACATION_DAYS_BASE - row.days)}</TableCell>
                 </TableRow>
               ))}
-              {stats?.employeeData.length === 0 && (
+              {stats?.employeeData.length === 0 && !isLoading && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                     Данные отсутствуют
