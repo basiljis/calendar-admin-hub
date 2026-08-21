@@ -190,7 +190,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                                 {n.created_at ? new Date(n.created_at).toLocaleTimeString("ru-RU", {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                })}
+                                }) : ""}
                               </span>
                             </div>
                             <p className="text-muted-foreground text-xs leading-normal">
