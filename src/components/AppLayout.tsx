@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut } from "lucide-react";
+import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 const nav = [
   { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
   { to: "/calendar", label: "Календарь", icon: CalendarDays },
-  { to: "/staff", label: "Сотрудники", icon: Users, managerOnly: true },
+  { to: "/staff", label: "Команда", icon: Users, managerOnly: true },
   { to: "/chat", label: "Чат", icon: MessageSquare },
+  { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -38,7 +39,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Link>
           <nav className="flex flex-1 flex-wrap items-center gap-1">
             {nav
-              .filter((n) => !n.managerOnly || isManager)
+              .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
               .map((n) => (
                 <Link
                   key={n.to}
