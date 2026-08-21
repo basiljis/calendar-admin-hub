@@ -18,6 +18,7 @@ const nav = [
   { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
   { to: "/calendar", label: "Календарь", icon: CalendarDays },
   { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
+  { to: "/vacations-stats", label: "Статистика отпусков", icon: LayoutDashboard, adminOnly: true },
   { to: "/staff", label: "Команда", icon: Users, managerOnly: true },
   { to: "/chat", label: "Чат", icon: MessageSquare },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
