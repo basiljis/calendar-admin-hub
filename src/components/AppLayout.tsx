@@ -187,7 +187,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                                 {n.title}
                               </p>
                               <span className="text-muted-foreground text-[10px]">
-                                {new Date(n.created_at).toLocaleTimeString("ru-RU", {
+                                {n.created_at ? new Date(n.created_at).toLocaleTimeString("ru-RU", {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}
