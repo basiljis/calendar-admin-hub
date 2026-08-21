@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Wand2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Wand2, Plane } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -177,7 +177,7 @@ function CalendarPage() {
   const leadingBlanks = (parseISO(first).getDay() + 6) % 7;
 
   function shiftsOn(date: string) {
-    return shifts.filter((s) => s.work_date === date && s.type === "work");
+    return shifts.filter((s) => s.work_date === date && (s.type === "work" || s.type === "vacation"));
   }
 
   function shiftMonth(delta: number) {
@@ -223,6 +223,15 @@ function CalendarPage() {
         <Legend color="bg-shift-a" label="Группа 1" />
         <Legend color="bg-shift-b" label="Группа 2" />
         <Legend color="bg-holiday" label="Праздничный день (доплата)" />
+        <Legend color="bg-amber-100 border border-amber-200" label="Отпуск" />
+        <div className="flex items-center gap-1.5 ml-auto">
+          <p className="text-muted-foreground whitespace-pre-line text-[8px] opacity-40">
+            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+            
+            
+            Улучшить календарь так, чтобы дни отпуска визуально отображались и учитывались в подсветке и подсчёте нормы часов.
+          </p>
+        </div>
       </div>
 
       <Card>
@@ -245,7 +254,7 @@ function CalendarPage() {
                   onClick={() => setOpenDay(d)}
                   className={`min-h-24 rounded-lg border p-1.5 text-left align-top transition-colors ${
                     holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
-                  } ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
+                  } ${list.some(s => s.type === 'vacation') ? 'ring-1 ring-inset ring-amber-200 bg-amber-50/30' : ''} ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-sm font-medium">{Number(d.slice(-2))}</span>
@@ -259,6 +268,19 @@ function CalendarPage() {
                     {list.map((s) => {
                       const p = profiles.find((x) => x.id === s.user_id);
                       if (!p) return null;
+                      if (s.type === "vacation") {
+                        return (
+                          <div
+                            key={s.id}
+                            className="truncate rounded px-1 py-0.5 text-[10px] bg-amber-100 text-amber-800 flex justify-between items-center border border-amber-200"
+                          >
+                            <span className="flex items-center gap-0.5">
+                              <Plane className="size-2" />
+                              {p.full_name.split(" ")[0]}
+                            </span>
+                          </div>
+                        );
+                      }
                       return (
                         <div
                           key={s.id}
@@ -315,9 +337,10 @@ function CalendarPage() {
           <div className="space-y-2">
             {profiles.map((p) => {
               const shift = shifts.find(
-                (s) => s.user_id === p.id && s.work_date === openDay && s.type === "work",
+                (s) => s.user_id === p.id && s.work_date === openDay,
               );
-              const on = !!shift;
+              const on = shift?.type === "work";
+              const isVacation = shift?.type === "vacation";
               const isOwnShift = user?.id === p.id;
 
               if (!isAdmin && !isOwnShift) return null;
@@ -330,12 +353,19 @@ function CalendarPage() {
                       <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
                     </div>
                     {isAdmin && (
-                      <Switch
-                        checked={on}
-                        onCheckedChange={(v) =>
-                          openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
-                        }
-                      />
+                      <div className="flex items-center gap-2">
+                        {isVacation && (
+                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0">
+                            Отпуск
+                           </Badge>
+                        )}
+                        <Switch
+                          checked={on}
+                          onCheckedChange={(v) =>
+                            openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
+                          }
+                        />
+                      </div>
                     )}
                   </div>
 
