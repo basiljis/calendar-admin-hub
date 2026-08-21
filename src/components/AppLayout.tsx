@@ -190,7 +190,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                                 {new Date(n.created_at).toLocaleDateString("ru-RU", {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                })}
+                                } as Intl.DateTimeFormatOptions)}
                               </span>
                             </div>
                             <p className="text-muted-foreground text-xs leading-normal">
