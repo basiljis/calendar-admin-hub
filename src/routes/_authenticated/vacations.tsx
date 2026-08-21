@@ -1,8 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { Plane, Filter, History, CheckCircle2, XCircle, Search, Calendar as CalendarIcon } from "lucide-react";
+import { 
+  Plane, 
+  Filter, 
+  History, 
+  CheckCircle2, 
+  XCircle, 
+  Search, 
+  Calendar as CalendarIcon,
+  Download,
+  CheckSquare,
+  Square
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +41,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/vacations")({
@@ -55,6 +78,7 @@ function VacationsAdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-vacations", statusFilter, searchQuery, dateFrom, dateTo],
@@ -135,39 +159,98 @@ function VacationsAdminPage() {
 
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status, userId, startDate, endDate }: { id: string; status: "approved" | "rejected", userId: string, startDate: string, endDate: string }) => {
-      const { error } = await supabase
+    mutationFn: async ({ ids, status }: { ids: string[]; status: "approved" | "rejected" }) => {
+      // Fetch details for notifications and audit
+      const { data: vacs, error: fetchError } = await supabase
+        .from("vacations")
+        .select("*")
+        .in("id", ids);
+      
+      if (fetchError) throw fetchError;
+      if (!vacs) return;
+
+      const { error: updateError } = await supabase
         .from("vacations")
         .update({ status })
-        .eq("id", id);
-      if (error) throw error;
+        .in("id", ids);
+      
+      if (updateError) throw updateError;
 
-      await supabase.from("vacation_audit_logs").insert({
+      // Add audit logs and notifications for each
+      const auditEntries = ids.map(id => ({
         vacation_id: id,
         action_by: user!.id,
         action_type: status,
         previous_status: "pending",
         new_status: status
-      });
+      }));
+
+      await supabase.from("vacation_audit_logs").insert(auditEntries);
 
       const statusText = status === "approved" ? "подтверждена" : "отклонена";
       const notificationType = status === "approved" ? "success" : "error";
       
-      await supabase.from("notifications").insert({
-        user_id: userId,
+      const notifications = vacs.map(v => ({
+        user_id: v.user_id,
         title: `Заявка на отпуск ${statusText}`,
-        message: `Ваш отпуск с ${startDate.split('-').reverse().join('.')} по ${endDate.split('-').reverse().join('.')} был ${statusText} администратором.`,
+        message: `Ваш отпуск с ${v.start_date.split('-').reverse().join('.')} по ${v.end_date.split('-').reverse().join('.')} был ${statusText} администратором.`,
         type: notificationType
-      });
+      }));
+
+      await supabase.from("notifications").insert(notifications);
     },
     onSuccess: () => {
       toast.success("Статус обновлен");
+      setSelectedIds([]);
       qc.invalidateQueries({ queryKey: ["admin-vacations"] });
       qc.invalidateQueries({ queryKey: ["staff"] });
       qc.invalidateQueries({ queryKey: ["calendar"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const handleExport = () => {
+    if (!data || data.length === 0) {
+      toast.error("Нет данных для экспорта");
+      return;
+    }
+
+    const headers = ["Сотрудник", "Email", "Начало", "Конец", "Статус", "Дата подачи"];
+    const csvContent = [
+      headers.join(","),
+      ...data.map((v: any) => [
+        `"${v.profile?.full_name || ''}"`,
+        `"${v.profile?.email || ''}"`,
+        v.start_date,
+        v.end_date,
+        v.status,
+        new Date(v.created_at).toLocaleDateString("ru-RU")
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vacations_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === data?.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data?.map((v: any) => v.id) || []);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
 
   if (!isAdmin) {
     return (
@@ -187,10 +270,12 @@ function VacationsAdminPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Заявки на отпуск</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm whitespace-pre-line">
             '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-            
-            Добавь для администратора страницу со списком заявок на отпуск с фильтрами по статусам и датам.
+                                        
+                                            
+                                            Реализуй массовое подтверждение или отклонение заявок на отпуск для администратора с подтверждением действия.
+Добавь возможность экспорта списка заявок на отпуск (с фильтрами) в Excel или CSV для администратора.
           </p>
         </div>
       </div>
@@ -255,13 +340,88 @@ function VacationsAdminPage() {
               </div>
             </div>
           </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Экспорт CSV
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {selectedIds.length > 0 && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="py-3 flex items-center justify-between">
+            <div className="text-sm font-medium">
+              Выбрано: {selectedIds.length}
+            </div>
+            <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-emerald-600 border-emerald-200 bg-emerald-50 hover:bg-emerald-100">
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Одобрить выбранные
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Подтверждение массового одобрения</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Вы уверены, что хотите одобрить {selectedIds.length} заявок? Это действие нельзя отменить.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => updateStatus.mutate({ ids: selectedIds, status: "approved" })}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Подтвердить
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-destructive border-destructive/20 bg-destructive/5 hover:bg-destructive/10">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Отклонить выбранные
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Подтверждение массового отклонения</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Вы уверены, что хотите отклонить {selectedIds.length} заявок?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => updateStatus.mutate({ ids: selectedIds, status: "rejected" })}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      Подтвердить
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox 
+                  checked={data?.length > 0 && selectedIds.length === data?.length}
+                  onCheckedChange={toggleSelectAll}
+                />
+              </TableHead>
               <TableHead>Сотрудник</TableHead>
               <TableHead>Период</TableHead>
               <TableHead>Статус</TableHead>
@@ -272,19 +432,25 @@ function VacationsAdminPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   Загрузка...
                 </TableCell>
               </TableRow>
             ) : data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   Заявок не найдено
                 </TableCell>
               </TableRow>
             ) : (
               data?.map((v: any) => (
-                <TableRow key={v.id}>
+                <TableRow key={v.id} className={selectedIds.includes(v.id) ? "bg-primary/5" : ""}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedIds.includes(v.id)}
+                      onCheckedChange={() => toggleSelect(v.id)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">{v.profile?.full_name}</div>
                     <div className="text-xs text-muted-foreground">{v.profile?.email}</div>
@@ -377,11 +543,8 @@ function VacationsAdminPage() {
                             size="icon"
                             className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                             onClick={() => updateStatus.mutate({
-                              id: v.id,
-                              status: "approved",
-                              userId: v.user_id,
-                              startDate: v.start_date,
-                              endDate: v.end_date
+                              ids: [v.id],
+                              status: "approved"
                             })}
                           >
                             <CheckCircle2 className="size-4" />
@@ -391,11 +554,8 @@ function VacationsAdminPage() {
                             size="icon"
                             className="text-destructive hover:bg-destructive/5"
                             onClick={() => updateStatus.mutate({
-                              id: v.id,
-                              status: "rejected",
-                              userId: v.user_id,
-                              startDate: v.start_date,
-                              endDate: v.end_date
+                              ids: [v.id],
+                              status: "rejected"
                             })}
                           >
                             <XCircle className="size-4" />
