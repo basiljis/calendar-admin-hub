@@ -84,11 +84,11 @@ function Dashboard() {
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Добро пожаловать, {profile?.full_name?.split(' ')[0] || "Сотрудник"}!
         </h1>
-        <p className="text-muted-foreground">
-          Обзор ключевых показателей системы · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
+        <p className="text-muted-foreground/80">
+          Обзор показателей · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
         </p>
       </div>
 
@@ -123,33 +123,33 @@ function Dashboard() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Выработка по месяцам</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {byMonth.map((m) => {
-            const monthNorm = norm / PERIOD.months.length;
-            const pct = monthNorm > 0 ? Math.min(100, (m.hours / monthNorm) * 100) : 0;
-            return (
-              <div key={m.month}>
-                <div className="mb-1 flex justify-between text-sm">
-                  <span className="font-medium">{m.label}</span>
-                  <span className="text-muted-foreground">
-                    {formatHours(m.hours)} ч · {m.shifts} смен
-                  </span>
-                </div>
-                <Progress value={pct} />
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2 border-none shadow-sm bg-card/50 backdrop-blur">
           <CardHeader>
-            <CardTitle className="text-base">Ближайшие смены</CardTitle>
+            <CardTitle className="text-base font-semibold">Выработка по месяцам</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {byMonth.map((m) => {
+              const monthNorm = norm / PERIOD.months.length;
+              const pct = monthNorm > 0 ? Math.min(100, (m.hours / monthNorm) * 100) : 0;
+              return (
+                <div key={m.month} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-foreground/90">{m.label}</span>
+                    <span className="text-muted-foreground">
+                      {formatHours(m.hours)} ч · {m.shifts} смен
+                    </span>
+                  </div>
+                  <Progress value={pct} className="h-2 bg-secondary" />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Ближайшие смены</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {upcoming.length === 0 && (
