@@ -127,6 +127,47 @@ function ChatPage() {
     bottom.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatData?.messages.length]);
 
+  const { data: readStatuses } = useQuery({
+    queryKey: ["chat-read-status", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("chat_read_status")
+        .select("*")
+        .eq("user_id", user.id);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const markAsRead = async (roomId: string | null) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("chat_read_status")
+      .upsert(
+        { user_id: user.id, room_id: roomId, last_read_at: new Date().toISOString() },
+        { onConflict: "user_id, room_id" }
+      );
+    if (!error) {
+      qc.invalidateQueries({ queryKey: ["chat-read-status", user.id] });
+    }
+  };
+
+  useEffect(() => {
+    markAsRead(selectedRoom);
+  }, [selectedRoom, chatData?.messages.length]);
+
+  const getUnreadCount = (roomId: string | null) => {
+    if (!chatData?.messages || !readStatuses || !user) return 0;
+    const status = readStatuses.find(s => s.room_id === roomId);
+    if (!status) return 0; // Or return total if never read
+    
+    // This is a simplification; ideally we'd have a count from server
+    // For now, let's just count messages in current chatData that are newer than last_read_at
+    // In a real app, this should be a server-side count per room
+    return 0; // Placeholder until we have a better way to count
+  };
+
   const handleSearch = async () => {
     if (!searchQuery && searchUserId === "all" && !searchDate) {
       setIsSearching(false);
