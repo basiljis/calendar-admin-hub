@@ -43,6 +43,9 @@ function ChatPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
   const { data: profiles } = useQuery({
