@@ -364,6 +364,35 @@ function ChatPage() {
                         </div>
                       )}
                       <div className="text-sm break-words whitespace-pre-wrap">{m.content}</div>
+                      
+                      {m.attachments && m.attachments.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {m.attachments.map((file: any, idx: number) => (
+                            <div key={idx} className="rounded border bg-background/10 p-2">
+                              {file.type.startsWith('image/') ? (
+                                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                                  <img 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    className="max-h-48 rounded object-contain"
+                                  />
+                                </a>
+                              ) : (
+                                <a 
+                                  href={file.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-xs hover:underline"
+                                >
+                                  <FileIcon className="size-4" />
+                                  <span className="truncate max-w-[150px]">{file.name}</span>
+                                  <span className="opacity-60">({(file.size / 1024).toFixed(1)} KB)</span>
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-70">
                         {new Date(m.created_at).toLocaleString("ru-RU", {
                           day: "2-digit",
