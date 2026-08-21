@@ -58,14 +58,18 @@ export function monthDays(year: number, month: number): string[] {
   return out;
 }
 
-/** Все календарные даты отпусков сотрудника внутри периода */
+/** Все календарные даты подтвержденных отпусков сотрудника внутри периода */
 export function vacationDatesInRange(
-  vacations: { start_date: string; end_date: string }[],
+  vacations: { start_date: string; end_date: string; status?: string }[],
   from: string,
   to: string,
 ): Set<string> {
   const set = new Set<string>();
   for (const v of vacations) {
+    if (v.status === "rejected") continue;
+    // Для расчёта нормы используем только подтвержденные отпуска
+    if (v.status === "pending") continue; 
+
     const start = parseISO(v.start_date);
     const end = parseISO(v.end_date);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {

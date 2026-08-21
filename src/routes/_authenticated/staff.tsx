@@ -43,7 +43,7 @@ const roleLabels: Record<AppRole, string> = {
 };
 
 function StaffPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
   const [vacUser, setVacUser] = useState("");
   const [vacFrom, setVacFrom] = useState("");
@@ -86,18 +86,39 @@ function StaffPage() {
   });
 
   const addVacation = useMutation({
-    mutationFn: async () => {
-      if (!vacUser || !vacFrom || !vacTo) throw new Error("Заполните сотрудника и даты");
+    mutationFn: async ({ userId, from, to }: { userId: string; from: string; to: string }) => {
       const { error } = await supabase
         .from("vacations")
-        .insert({ user_id: vacUser, start_date: vacFrom, end_date: vacTo });
+        .insert({
+          user_id: userId,
+          start_date: from,
+          end_date: to,
+          status: isAdmin ? "approved" : "pending",
+        });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Отпуск добавлен, норма пересчитана");
+      toast.success(isAdmin ? "Отпуск добавлен и подтвержден" : "Заявка на отпуск отправлена");
       setVacFrom("");
       setVacTo("");
       qc.invalidateQueries({ queryKey: ["staff"] });
+      qc.invalidateQueries({ queryKey: ["my-period"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateVacationStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
+      const { error } = await supabase
+        .from("vacations")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Статус отпуска обновлен");
+      qc.invalidateQueries({ queryKey: ["staff"] });
+      qc.invalidateQueries({ queryKey: ["calendar"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -178,21 +199,57 @@ function StaffPage() {
                     {vacs.map((v) => (
                       <div
                         key={v.id}
-                        className="bg-secondary/60 flex items-center justify-between rounded-md px-2 py-1 text-xs"
+                        className={`flex items-center justify-between rounded-md px-2 py-1 text-xs ${
+                          v.status === "approved"
+                            ? "bg-secondary/60"
+                            : v.status === "rejected"
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-amber-100 text-amber-800"
+                        }`}
                       >
-                        <span className="flex items-center gap-1.5">
-                          <Plane className="size-3" />
-                          {v.start_date.split("-").reverse().join(".")} —{" "}
-                          {v.end_date.split("-").reverse().join(".")}
-                        </span>
-                        {isAdmin && (
-                          <button
-                            onClick={() => removeVacation.mutate(v.id)}
-                            aria-label="Удалить отпуск"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        )}
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-1.5">
+                            <Plane className="size-3" />
+                            {v.start_date.split("-").reverse().join(".")} —{" "}
+                            {v.end_date.split("-").reverse().join(".")}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold opacity-70">
+                            {v.status === "approved"
+                              ? "Подтвержден"
+                              : v.status === "rejected"
+                                ? "Отклонен"
+                                : "Ожидает"}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {isAdmin && v.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "approved" })}
+                                className="text-green-600 hover:text-green-700"
+                                title="Подтвердить"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "rejected" })}
+                                className="text-red-600 hover:text-red-700"
+                                title="Отклонить"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          )}
+                          {(isAdmin || (user?.id === p.id && v.status === "pending")) && (
+                            <button
+                              onClick={() => removeVacation.mutate(v.id)}
+                              aria-label="Удалить отпуск"
+                              className="opacity-50 hover:opacity-100"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -203,57 +260,69 @@ function StaffPage() {
         })}
       </div>
 
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Добавить отпуск</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Сотрудник</Label>
-                <Select value={vacUser} onValueChange={setVacUser}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name || p.email || p.id.slice(0, 8)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">С</Label>
-                <Input
-                  type="date"
-                  value={vacFrom}
-                  onChange={(e) => setVacFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">По</Label>
-                <Input type="date" value={vacTo} onChange={(e) => setVacTo(e.target.value)} />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  className="w-full"
-                  onClick={() => addVacation.mutate()}
-                  disabled={addVacation.isPending}
-                >
-                  Добавить
-                </Button>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {isAdmin ? "Добавить или назначить отпуск" : "Подать заявку на отпуск"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Сотрудник</Label>
+              <Select
+                value={vacUser || (isAdmin ? "" : user?.id || "")}
+                disabled={!isAdmin}
+                onValueChange={setVacUser}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.full_name || p.email || p.id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-muted-foreground mt-3 text-xs">
-              Каждый календарный день отпуска уменьшает норму периода примерно на 5,14 ч
-              (1774,4 → 1486,4 ч при 56 днях отпуска за год).
-            </p>
-          </CardContent>
-        </Card>
-      )}
+            <div className="space-y-1.5">
+              <Label className="text-xs">С</Label>
+              <Input
+                type="date"
+                value={vacFrom}
+                onChange={(e) => setVacFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">По</Label>
+              <Input type="date" value={vacTo} onChange={(e) => setVacTo(e.target.value)} />
+            </div>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  const targetUser = isAdmin ? vacUser : user?.id;
+                  if (!targetUser || !vacFrom || !vacTo) {
+                    toast.error("Заполните все поля");
+                    return;
+                  }
+                  addVacation.mutate({ userId: targetUser, from: vacFrom, to: vacTo });
+                }}
+                disabled={addVacation.isPending}
+              >
+                {isAdmin ? "Добавить" : "Отправить"}
+              </Button>
+            </div>
+          </div>
+          <p className="text-muted-foreground mt-3 text-xs">
+            {isAdmin
+              ? "Администратор добавляет подтвержденные отпуска. Сотрудник подает заявку на рассмотрение."
+              : "Ваша заявка будет рассмотрена администратором. Только после подтверждения норма часов будет пересчитана."}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
