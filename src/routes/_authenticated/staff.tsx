@@ -260,57 +260,69 @@ function StaffPage() {
         })}
       </div>
 
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Добавить отпуск</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Сотрудник</Label>
-                <Select value={vacUser} onValueChange={setVacUser}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name || p.email || p.id.slice(0, 8)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">С</Label>
-                <Input
-                  type="date"
-                  value={vacFrom}
-                  onChange={(e) => setVacFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">По</Label>
-                <Input type="date" value={vacTo} onChange={(e) => setVacTo(e.target.value)} />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  className="w-full"
-                  onClick={() => addVacation.mutate()}
-                  disabled={addVacation.isPending}
-                >
-                  Добавить
-                </Button>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {isAdmin ? "Добавить или назначить отпуск" : "Подать заявку на отпуск"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Сотрудник</Label>
+              <Select
+                value={vacUser || (isAdmin ? "" : user?.id)}
+                disabled={!isAdmin}
+                onValueChange={setVacUser}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.full_name || p.email || p.id.slice(0, 8)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <p className="text-muted-foreground mt-3 text-xs">
-              Каждый календарный день отпуска уменьшает норму периода примерно на 5,14 ч
-              (1774,4 → 1486,4 ч при 56 днях отпуска за год).
-            </p>
-          </CardContent>
-        </Card>
-      )}
+            <div className="space-y-1.5">
+              <Label className="text-xs">С</Label>
+              <Input
+                type="date"
+                value={vacFrom}
+                onChange={(e) => setVacFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">По</Label>
+              <Input type="date" value={vacTo} onChange={(e) => setVacTo(e.target.value)} />
+            </div>
+            <div className="flex items-end">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  const targetUser = isAdmin ? vacUser : user?.id;
+                  if (!targetUser || !vacFrom || !vacTo) {
+                    toast.error("Заполните все поля");
+                    return;
+                  }
+                  addVacation.mutate({ userId: targetUser, from: vacFrom, to: vacTo });
+                }}
+                disabled={addVacation.isPending}
+              >
+                {isAdmin ? "Добавить" : "Отправить"}
+              </Button>
+            </div>
+          </div>
+          <p className="text-muted-foreground mt-3 text-xs">
+            {isAdmin
+              ? "Администратор добавляет подтвержденные отпуска. Сотрудник подает заявку на рассмотрение."
+              : "Ваша заявка будет рассмотрена администратором. Только после подтверждения норма часов будет пересчитана."}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
