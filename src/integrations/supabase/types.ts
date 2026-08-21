@@ -49,6 +49,35 @@ export type Database = {
           },
         ]
       }
+      chat_read_status: {
+        Row: {
+          id: string
+          last_read_at: string | null
+          room_id: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string | null
+          room_id?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string | null
+          room_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_read_status_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room_participants: {
         Row: {
           created_at: string
