@@ -52,7 +52,7 @@ type Profile = {
 };
 
 function CalendarPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState({ year: 2026, month: 9 });
   const [openDay, setOpenDay] = useState<string | null>(null);
