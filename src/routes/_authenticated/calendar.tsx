@@ -242,7 +242,7 @@ function CalendarPage() {
               return (
                 <button
                   key={d}
-                  onClick={() => isAdmin && setOpenDay(d)}
+                  onClick={() => setOpenDay(d)}
                   className={`min-h-24 rounded-lg border p-1.5 text-left align-top transition-colors ${
                     holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
                   } ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
