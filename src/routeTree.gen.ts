@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedVacationsRouteImport } from './routes/_authenticated/vacations'
+import { Route as AuthenticatedVacationsStatsRouteImport } from './routes/_authenticated/vacations-stats'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +64,12 @@ const AuthenticatedVacationsRoute = AuthenticatedVacationsRouteImport.update({
   path: '/vacations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVacationsStatsRoute =
+  AuthenticatedVacationsStatsRouteImport.update({
+    id: '/vacations-stats',
+    path: '/vacations-stats',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/vacations': typeof AuthenticatedVacationsRoute
+  '/vacations-stats': typeof AuthenticatedVacationsStatsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/vacations': typeof AuthenticatedVacationsRoute
+  '/vacations-stats': typeof AuthenticatedVacationsStatsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/vacations': typeof AuthenticatedVacationsRoute
+  '/_authenticated/vacations-stats': typeof AuthenticatedVacationsStatsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/staff'
     | '/vacations'
+    | '/vacations-stats'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/staff'
     | '/vacations'
+    | '/vacations-stats'
   id:
     | '__root__'
     | '/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/staff'
     | '/_authenticated/vacations'
+    | '/_authenticated/vacations-stats'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVacationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vacations-stats': {
+      id: '/_authenticated/vacations-stats'
+      path: '/vacations-stats'
+      fullPath: '/vacations-stats'
+      preLoaderRoute: typeof AuthenticatedVacationsStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -211,6 +231,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedVacationsRoute: typeof AuthenticatedVacationsRoute
+  AuthenticatedVacationsStatsRoute: typeof AuthenticatedVacationsStatsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -220,6 +241,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedVacationsRoute: AuthenticatedVacationsRoute,
+  AuthenticatedVacationsStatsRoute: AuthenticatedVacationsStatsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
