@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Send, Trash2, Users, User, Plus, Paperclip, X, FileIcon, Image as ImageIcon } from "lucide-react";
+import { Send, Trash2, Users, User, Plus, Paperclip, X, FileIcon, Image as ImageIcon, Search, Calendar, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
@@ -47,6 +52,14 @@ function ChatPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  // Search state
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchUserId, setSearchUserId] = useState<string>("all");
+  const [searchDate, setSearchDate] = useState<Date | undefined>(undefined);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const { data: profiles } = useQuery({
     queryKey: ["profiles"],
@@ -113,6 +126,53 @@ function ChatPage() {
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatData?.messages.length]);
+
+  const handleSearch = async () => {
+    if (!searchQuery && searchUserId === "all" && !searchDate) {
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    let query = supabase.from("chat_messages").select("*").order("created_at", { ascending: false });
+
+    if (selectedRoom) {
+      query = query.eq("room_id", selectedRoom);
+    } else {
+      query = query.is("room_id", null);
+    }
+
+    if (searchQuery) {
+      query = query.ilike("content", `%${searchQuery}%`);
+    }
+
+    if (searchUserId !== "all") {
+      query = query.eq("user_id", searchUserId);
+    }
+
+    if (searchDate) {
+      const startOfDay = new Date(searchDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(searchDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.gte("created_at", startOfDay.toISOString()).lte("created_at", endOfDay.toISOString());
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setSearchResults(data || []);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchUserId("all");
+    setSearchDate(undefined);
+    setIsSearching(false);
+    setIsSearchOpen(false);
+  };
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -321,33 +381,108 @@ function ChatPage() {
       <div className="md:col-span-3 flex flex-col space-y-4">
         <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader className="border-b py-3 px-4">
-            <CardTitle className="text-lg flex items-center gap-2">
-              {selectedRoom ? (
-                <>
-                  {rooms?.find(r => r.id === selectedRoom)?.is_group ? <Users className="size-5" /> : <User className="size-5" />}
-                  {getRoomName(rooms?.find(r => r.id === selectedRoom))}
-                </>
-              ) : (
-                <>
-                  <Users className="size-5" />
-                  Общий чат
-                </>
-              )}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground whitespace-pre-line">
-              {selectedRoom 
-                ? "Личное или групповое обсуждение" 
-                : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Реализуй поиск по истории сообщений в личных и групповых чатах с фильтрами по пользователю и дате."}
-            </p>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                {selectedRoom ? (
+                  <>
+                    {rooms?.find(r => r.id === selectedRoom)?.is_group ? <Users className="size-5" /> : <User className="size-5" />}
+                    {getRoomName(rooms?.find(r => r.id === selectedRoom))}
+                  </>
+                ) : (
+                  <>
+                    <Users className="size-5" />
+                    Общий чат
+                  </>
+                )}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`size-8 ${isSearchOpen ? "bg-accent" : ""}`}
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+              >
+                <Search className="size-4" />
+              </Button>
+            </div>
+            {isSearchOpen && (
+              <div className="mt-3 space-y-3 bg-muted/30 p-3 rounded-md border animate-in fade-in slide-in-from-top-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium uppercase opacity-60">Текст сообщения</label>
+                    <Input
+                      placeholder="Поиск..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium uppercase opacity-60">Отправитель</label>
+                    <Select value={searchUserId} onValueChange={setSearchUserId}>
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder="Все пользователи" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все пользователи</SelectItem>
+                        {profiles?.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium uppercase opacity-60">Дата</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`h-8 w-full justify-start text-left font-normal text-sm ${!searchDate && "text-muted-foreground"}`}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {searchDate ? format(searchDate, "dd.MM.yyyy") : "Выберите дату"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={searchDate}
+                          onSelect={setSearchDate}
+                          initialFocus
+                          locale={ru}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={clearSearch}>Сбросить</Button>
+                  <Button size="sm" onClick={handleSearch}>Найти</Button>
+                </div>
+              </div>
+            )}
+            {!isSearchOpen && (
+              <p className="text-xs text-muted-foreground whitespace-pre-line">
+                {selectedRoom 
+                  ? "Личное или групповое обсуждение" 
+                  : "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Реализуй поиск по истории сообщений в личных и групповых чатах с фильтрами по пользователю и дате."}
+              </p>
+            )}
           </CardHeader>
           <CardContent className="p-0 flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatData?.messages.length === 0 && (
+              {isSearching && (
+                <div className="mb-4 p-2 bg-accent/20 border-b flex items-center justify-between">
+                  <span className="text-sm font-medium">Результаты поиска: {searchResults.length}</span>
+                  <Button variant="link" size="sm" onClick={() => setIsSearching(false)}>Вернуться в чат</Button>
+                </div>
+              )}
+              {((isSearching ? searchResults : chatData?.messages) ?? []).length === 0 && (
                 <p className="text-muted-foreground py-8 text-center text-sm">
-                  Сообщений пока нет — начните обсуждение.
+                  {isSearching ? "Ничего не найдено." : "Сообщений пока нет — начните обсуждение."}
                 </p>
               )}
-              {chatData?.messages.map((m) => {
+              {((isSearching ? searchResults : chatData?.messages) ?? []).map((m) => {
                 const mine = m.user_id === user?.id;
                 return (
                   <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
