@@ -418,7 +418,7 @@ function VacationsAdminPage() {
             <TableRow>
               <TableHead className="w-[50px]">
                 <Checkbox 
-                  checked={data?.length > 0 && selectedIds.length === data?.length}
+                  checked={!!data?.length && selectedIds.length === data.length}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
