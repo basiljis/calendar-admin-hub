@@ -102,6 +102,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
         return <XCircle className="size-4 text-destructive" />;
       case "warning":
         return <Info className="size-4 text-amber-500" />;
+      case "chat":
+        return <MessageSquare className="size-4 text-blue-500" />;
       default:
         return <Info className="size-4 text-blue-500" />;
     }

@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -126,6 +127,50 @@ function ChatPage() {
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatData?.messages.length]);
+
+  const { data: readStatuses } = useQuery({
+    queryKey: ["chat-read-status", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("chat_read_status")
+        .select("*")
+        .eq("user_id", user.id);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const markAsRead = async (roomId: string | null) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("chat_read_status")
+      .upsert(
+        { user_id: user.id, room_id: roomId ? roomId : null, last_read_at: new Date().toISOString() } as any,
+        { onConflict: "user_id, room_id" }
+      );
+    if (!error) {
+      qc.invalidateQueries({ queryKey: ["chat-read-status", user.id] });
+    }
+  };
+
+  useEffect(() => {
+    markAsRead(selectedRoom);
+  }, [selectedRoom, chatData?.messages.length, user?.id]);
+
+  const getUnreadCount = (roomId: string | null) => {
+    if (!readStatuses || !user) return 0;
+    const status = (readStatuses as any[]).find(s => s.room_id === roomId);
+    
+    // We can't easily count on client without full history, 
+    // but we can check if there are messages newer than last_read_at in chatData
+    if (!status || !chatData?.messages) return 0;
+    
+    return chatData.messages.filter(m => 
+      m.user_id !== user.id && 
+      new Date(m.created_at) > new Date(status.last_read_at)
+    ).length;
+  };
 
   const handleSearch = async () => {
     if (!searchQuery && searchUserId === "all" && !searchDate) {
@@ -358,24 +403,41 @@ function ChatPage() {
         
         <Button 
           variant={selectedRoom === null ? "secondary" : "ghost"} 
-          className="w-full justify-start gap-2"
+          className="w-full justify-between gap-2"
           onClick={() => setSelectedRoom(null)}
         >
-          <Users className="size-4" />
-          Общий чат
+          <div className="flex items-center gap-2">
+            <Users className="size-4" />
+            Общий чат
+          </div>
+          {getUnreadCount(null) > 0 && (
+            <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
+              {getUnreadCount(null)}
+            </Badge>
+          )}
         </Button>
 
-        {rooms?.map((room) => (
-          <Button 
-            key={room.id}
-            variant={selectedRoom === room.id ? "secondary" : "ghost"} 
-            className="w-full justify-start gap-2 overflow-hidden text-ellipsis"
-            onClick={() => setSelectedRoom(room.id)}
-          >
-            {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
-            <span className="truncate">{getRoomName(room)}</span>
-          </Button>
-        ))}
+        {rooms?.map((room) => {
+          const isSelected = selectedRoom === room.id;
+          return (
+            <Button 
+              key={room.id}
+              variant={isSelected ? "secondary" : "ghost"} 
+              className="w-full justify-between gap-2 overflow-hidden text-ellipsis"
+              onClick={() => setSelectedRoom(room.id)}
+            >
+              <div className="flex items-center gap-2 truncate">
+                {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
+                <span className="truncate">{getRoomName(room)}</span>
+              </div>
+              {getUnreadCount(room.id) > 0 && (
+                <Badge variant="destructive" className="px-1.5 py-0 text-[10px] min-w-[1.25rem] justify-center">
+                  {getUnreadCount(room.id)}
+                </Badge>
+              )}
+            </Button>
+          );
+        })}
       </div>
 
       <div className="md:col-span-3 flex flex-col space-y-4">
