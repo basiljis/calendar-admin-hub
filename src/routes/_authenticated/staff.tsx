@@ -110,7 +110,7 @@ function StaffPage() {
 
   const addVacation = useMutation({
     mutationFn: async ({ userId, from, to }: { userId: string; from: string; to: string }) => {
-      const { error: vacError } = await supabase
+      const { data: vacData, error: vacError } = await supabase
         .from("vacations")
         .insert({
           user_id: userId,
