@@ -259,14 +259,26 @@ function StaffPage() {
                           {isAdmin && v.status === "pending" && (
                             <>
                               <button
-                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "approved" })}
+                                onClick={() => updateVacationStatus.mutate({ 
+                                  id: v.id, 
+                                  status: "approved", 
+                                  userId: p.id, 
+                                  startDate: v.start_date, 
+                                  endDate: v.end_date 
+                                })}
                                 className="text-green-600 hover:text-green-700"
                                 title="Подтвердить"
                               >
                                 ✓
                               </button>
                               <button
-                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "rejected" })}
+                                onClick={() => updateVacationStatus.mutate({ 
+                                  id: v.id, 
+                                  status: "rejected", 
+                                  userId: p.id, 
+                                  startDate: v.start_date, 
+                                  endDate: v.end_date 
+                                })}
                                 className="text-red-600 hover:text-red-700"
                                 title="Отклонить"
                               >
