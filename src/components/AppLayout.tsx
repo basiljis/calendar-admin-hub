@@ -1,9 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings } from "lucide-react";
-import type { ReactNode } from "react";
+import { CalendarDays, LayoutDashboard, MessageSquare, Users, LogOut, Settings, Bell, CheckCircle2, XCircle, Info } from "lucide-react";
+import { type ReactNode, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const nav = [
   { to: "/dashboard", label: "Мой график", icon: LayoutDashboard },
@@ -15,12 +24,85 @@ const nav = [
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { profile, isManager, isAdmin } = useAuth();
+  const { profile, user, isManager, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["notifications", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllAsRead = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+    },
+  });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("notifications-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+          toast.info("У вас новое уведомление");
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "success":
+        return <CheckCircle2 className="size-4 text-emerald-500" />;
+      case "error":
+        return <XCircle className="size-4 text-destructive" />;
+      case "warning":
+        return <Info className="size-4 text-amber-500" />;
+      default:
+        return <Info className="size-4 text-blue-500" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,6 +141,70 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {isAdmin ? "Администратор" : isManager ? "Руководитель" : "Сотрудник"}
               </div>
             </div>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="size-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex size-3 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="flex items-center justify-between border-b px-4 py-2">
+                  <h3 className="text-sm font-semibold">Уведомления</h3>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto px-2 py-1 text-xs"
+                      onClick={() => markAllAsRead.mutate()}
+                    >
+                      Прочитать все
+                    </Button>
+                  )}
+                </div>
+                <ScrollArea className="h-80">
+                  {notifications.length === 0 ? (
+                    <div className="text-muted-foreground p-4 text-center text-sm">
+                      Нет уведомлений
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`flex gap-3 border-b p-3 transition-colors hover:bg-muted/50 ${
+                            !n.read ? "bg-muted/20" : ""
+                          }`}
+                        >
+                          <div className="mt-0.5">{getIcon(n.type)}</div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className={`text-sm leading-none ${!n.read ? "font-semibold" : ""}`}>
+                                {n.title}
+                              </p>
+                              <span className="text-muted-foreground text-[10px]">
+                                {n.created_at ? new Date(n.created_at).toLocaleTimeString("ru-RU", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }) : ""}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground text-xs leading-normal">
+                              {n.message}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <Button variant="ghost" size="icon" onClick={signOut} aria-label="Выйти">
               <LogOut className="size-4" />
             </Button>

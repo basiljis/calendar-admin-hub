@@ -87,7 +87,7 @@ function StaffPage() {
 
   const addVacation = useMutation({
     mutationFn: async ({ userId, from, to }: { userId: string; from: string; to: string }) => {
-      const { error } = await supabase
+      const { error: vacError } = await supabase
         .from("vacations")
         .insert({
           user_id: userId,
@@ -95,7 +95,29 @@ function StaffPage() {
           end_date: to,
           status: isAdmin ? "approved" : "pending",
         });
-      if (error) throw error;
+      if (vacError) throw vacError;
+
+      // If employee requesting vacation, notify admins
+      if (!isAdmin) {
+        const { data: admins } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+        
+        if (admins && admins.length > 0) {
+          const profile = profiles.find(p => p.id === userId);
+          const userName = profile?.full_name || "Сотрудник";
+          
+          await Promise.all(admins.map(admin => 
+            supabase.from("notifications").insert({
+              user_id: admin.user_id,
+              title: "Новая заявка на отпуск",
+              message: `${userName} подал(а) заявку на отпуск с ${from.split('-').reverse().join('.')} по ${to.split('-').reverse().join('.')}`,
+              type: "info"
+            })
+          ));
+        }
+      }
     },
     onSuccess: () => {
       toast.success(isAdmin ? "Отпуск добавлен и подтвержден" : "Заявка на отпуск отправлена");
@@ -108,17 +130,29 @@ function StaffPage() {
   });
 
   const updateVacationStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
+    mutationFn: async ({ id, status, userId, startDate, endDate }: { id: string; status: "approved" | "rejected", userId: string, startDate: string, endDate: string }) => {
       const { error } = await supabase
         .from("vacations")
         .update({ status })
         .eq("id", id);
       if (error) throw error;
+
+      // Notify employee
+      const statusText = status === "approved" ? "подтверждена" : "отклонена";
+      const notificationType = status === "approved" ? "success" : "error";
+      
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: `Заявка на отпуск ${statusText}`,
+        message: `Ваш отпуск с ${startDate.split('-').reverse().join('.')} по ${endDate.split('-').reverse().join('.')} был ${statusText} администратором.`,
+        type: notificationType
+      });
     },
     onSuccess: () => {
       toast.success("Статус отпуска обновлен");
       qc.invalidateQueries({ queryKey: ["staff"] });
       qc.invalidateQueries({ queryKey: ["calendar"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -225,14 +259,26 @@ function StaffPage() {
                           {isAdmin && v.status === "pending" && (
                             <>
                               <button
-                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "approved" })}
+                                onClick={() => updateVacationStatus.mutate({ 
+                                  id: v.id, 
+                                  status: "approved", 
+                                  userId: p.id, 
+                                  startDate: v.start_date, 
+                                  endDate: v.end_date 
+                                })}
                                 className="text-green-600 hover:text-green-700"
                                 title="Подтвердить"
                               >
                                 ✓
                               </button>
                               <button
-                                onClick={() => updateVacationStatus.mutate({ id: v.id, status: "rejected" })}
+                                onClick={() => updateVacationStatus.mutate({ 
+                                  id: v.id, 
+                                  status: "rejected", 
+                                  userId: p.id, 
+                                  startDate: v.start_date, 
+                                  endDate: v.end_date 
+                                })}
                                 className="text-red-600 hover:text-red-700"
                                 title="Отклонить"
                               >
