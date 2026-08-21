@@ -115,7 +115,6 @@ function SettingsPage() {
           {"\n"}
           Добавь администратору раздел, где он будет управлять количеством часов, необходимых отработать в месяц, и количеством дней для отпуска. Сделай так, что можно нажать "Применить ко всем" и отдельно у каждого пользователя возможность менять настройки, чтобы можно было каждому отдельному сотруднику набивать количество часов, количество дней отпуска и прочего.
         </div>
-      </div>
         <p className="text-muted-foreground mt-1 text-[10px] leading-tight opacity-70 whitespace-pre-line">
           '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
           {"\n"}
