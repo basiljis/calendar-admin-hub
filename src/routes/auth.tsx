@@ -44,6 +44,12 @@ function AuthPage() {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
   }, [loading, user, navigate]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("disabled=1")) {
+      setAuthError("Учётная запись отключена. Обратитесь к администратору.");
+    }
+  }, []);
+
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
