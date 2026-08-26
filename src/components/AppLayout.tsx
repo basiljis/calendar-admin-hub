@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Hint } from "@/components/Hint";
 
