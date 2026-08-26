@@ -144,6 +144,7 @@ export function CalendarPage() {
         work_date: string;
         hours: number;
         type: "work" | "vacation";
+        break_time?: string;
       }[] = [];
       for (const p of profiles) {
         const vac = vacationDatesInRange(data?.vacations ?? [], first, last);
@@ -152,7 +153,7 @@ export function CalendarPage() {
           if (vac.has(d)) {
             rows.push({ user_id: p.id, work_date: d, hours: 0, type: "vacation" });
           } else if (isWorkingDay(d, p.shift_group)) {
-            rows.push({ user_id: p.id, work_date: d, hours: SHIFT_WORK_HOURS, type: "work" });
+            rows.push({ user_id: p.id, work_date: d, hours: SHIFT_WORK_HOURS, type: "work", break_time: "13:00" });
           }
         }
       }
