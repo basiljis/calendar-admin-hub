@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { HelpHint } from "@/components/Hint";
-import { VacationRequestDialog } from "@/components/VacationRequestDialog";
+
 import { MyVacationRequests } from "@/components/MyVacationRequests";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -89,9 +89,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-10">
-      <div className="flex justify-end">
-        <VacationRequestDialog />
-      </div>
+
 
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
