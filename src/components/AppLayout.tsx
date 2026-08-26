@@ -38,14 +38,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 
 const nav = [
-  { to: "/dashboard", label: "Главная", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
   { to: "/calendar", label: "График", icon: CalendarDays, hint: "Календарь смен 2/2, обеды и отпуска" },
+  { to: "/dashboard", label: "Сводка", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
   { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки, аналитика и роли" },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
 ];
 
 const sectionTitles: Record<string, string> = {
-  "/dashboard": "Мой график",
+  "/dashboard": "Сводка по графику",
   "/calendar": "Календарь смен",
   "/manage": "Управление персоналом",
   "/settings": "Настройки",
@@ -160,7 +160,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="flex h-16 items-center px-6">
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to="/calendar" className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>

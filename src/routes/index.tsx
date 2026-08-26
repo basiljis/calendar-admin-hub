@@ -29,7 +29,7 @@ function IndexRedirect() {
 
   useEffect(() => {
     if (loading) return;
-    navigate({ to: user ? "/dashboard" : "/auth", replace: true });
+    navigate({ to: user ? "/calendar" : "/auth", replace: true });
   }, [loading, user, navigate]);
 
   return (
