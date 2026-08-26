@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { VacationRequestDialog } from "@/components/VacationRequestDialog";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
 import {
@@ -770,6 +771,7 @@ export function CalendarPage() {
             </Select>
           )}
           <ShiftVacationLegend />
+          <VacationRequestDialog className="rounded-full" />
           {isAdmin && (
             <Button
               className="rounded-full"
