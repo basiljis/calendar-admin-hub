@@ -94,6 +94,10 @@ export function CalendarPage() {
   const [detailUser, setDetailUser] = useState<string>("");
   const [now, setNow] = useState(() => new Date());
   const [dayBreaks, setDayBreaks] = useState<Record<string, string>>({});
+  const [genOpen, setGenOpen] = useState(false);
+  const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
+  const [genUntil, setGenUntil] = useState<string>("");
+
 
   // Обновляем прогресс смены в реальном времени
   useEffect(() => {
@@ -143,7 +147,10 @@ export function CalendarPage() {
   const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
   const generate = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (range?: { from: string; to: string }) => {
+      const from = range?.from ?? first;
+      const to = range?.to ?? last;
+      const targetDays = days.filter((d) => d >= from && d <= to);
       const rows: {
         user_id: string;
         work_date: string;
@@ -152,9 +159,9 @@ export function CalendarPage() {
         break_time?: string;
       }[] = [];
       for (const p of profiles) {
-        const vac = vacationDatesInRange(data?.vacations ?? [], first, last);
-        
-        for (const d of days) {
+        const vac = vacationDatesInRange(data?.vacations ?? [], from, to);
+
+        for (const d of targetDays) {
           if (vac.has(d)) {
             rows.push({ user_id: p.id, work_date: d, hours: 0, type: "vacation" });
           } else if (isWorkingDay(d, p.shift_group)) {
@@ -170,10 +177,12 @@ export function CalendarPage() {
     },
     onSuccess: (n) => {
       toast.success(`График сформирован: ${n} записей`);
+      setGenOpen(false);
       qc.invalidateQueries({ queryKey: ["calendar", first] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const toggle = useMutation({
     mutationFn: async ({
@@ -328,13 +337,82 @@ export function CalendarPage() {
             <ChevronRight className="size-4" />
           </Button>
           {isAdmin && (
-            <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+            <Button
+              onClick={() => {
+                const t = new Date();
+                const isCurrentMonth =
+                  t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
+                if (isCurrentMonth && t.getDate() > 1) {
+                  setGenMode("fromToday");
+                  setGenUntil(last);
+                  setGenOpen(true);
+
+                } else {
+                  generate.mutate({ from: first, to: last });
+                }
+              }}
+              disabled={generate.isPending}
+            >
               <Wand2 className="size-4" />
               Сформировать месяц
             </Button>
           )}
         </div>
       </div>
+
+      <Dialog open={genOpen} onOpenChange={setGenOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Формирование расписания</DialogTitle>
+            <DialogDescription>
+              Месяц уже начался. Выберите, за какой период сформировать график.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {[
+              { key: "month", label: "Сформировать на весь месяц" },
+              { key: "fromToday", label: "Сформировать с текущей даты до конца месяца" },
+              { key: "until", label: "Сформировать до выбранной даты" },
+            ].map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => setGenMode(o.key as typeof genMode)}
+                className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
+                  genMode === o.key ? "border-primary bg-primary/10" : "hover:bg-muted"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+            {genMode === "until" && (
+              <input
+                type="date"
+                value={genUntil}
+                min={first}
+                max={last}
+                onChange={(e) => setGenUntil(e.target.value)}
+                className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
+                aria-label="Дата окончания формирования"
+              />
+            )}
+            <Button
+              className="w-full"
+              disabled={generate.isPending || (genMode === "until" && !genUntil)}
+              onClick={() => {
+                const t = new Date();
+                const todayIso = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+                if (genMode === "month") generate.mutate({ from: first, to: last });
+                else if (genMode === "fromToday") generate.mutate({ from: todayIso, to: last });
+                else generate.mutate({ from: todayIso, to: genUntil });
+              }}
+            >
+              Сформировать
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Card>
         <CardContent className="p-2 sm:p-4">
