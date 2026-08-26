@@ -118,11 +118,8 @@ function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Массовая настройка праздников</CardTitle>
-            <CardDescription className="whitespace-pre-line text-[10px] leading-tight opacity-70">
-              '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-              {"\n"}
-              {"\n"}
-              писать только на русском языке
+            <CardDescription>
+              Отметьте выбранный диапазон дат как рабочий или нерабочий по конкретному празднику.
             </CardDescription>
           </CardHeader>
           <CardContent>
