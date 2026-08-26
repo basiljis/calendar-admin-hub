@@ -640,6 +640,44 @@ export function ChatWidget() {
                             ))}
                           </div>
                         )}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          {(reactionsByMessage.get(m.id) ?? []).map((r) => (
+                            <button
+                              key={r.emoji}
+                              onClick={() => void toggleReaction(m.id, r.emoji)}
+                              title="Реакция"
+                              className={`rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition ${
+                                r.mine ? "border-current bg-background/30" : "border-transparent bg-background/15"
+                              }`}
+                            >
+                              {r.emoji} {r.count}
+                            </button>
+                          ))}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                className="rounded-full px-1 py-0.5 opacity-0 transition group-hover:opacity-70 hover:opacity-100"
+                                aria-label="Добавить реакцию"
+                                title="Добавить реакцию"
+                              >
+                                <SmilePlus className="size-3.5" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-1.5" align={mine ? "end" : "start"}>
+                              <div className="flex gap-1">
+                                {QUICK_REACTIONS.map((e) => (
+                                  <button
+                                    key={e}
+                                    onClick={() => void toggleReaction(m.id, e)}
+                                    className="rounded p-1 text-lg hover:bg-accent"
+                                  >
+                                    {e}
+                                  </button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-70">
                           {new Date(m.created_at).toLocaleString("ru-RU", {
                             day: "2-digit",
