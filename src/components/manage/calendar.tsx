@@ -558,8 +558,11 @@ export function CalendarPage() {
 
 
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
-        <div className="grid grid-cols-7 border-b">
-          {WEEKDAYS.map((w) => (
+        <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
+          {(view === "day"
+            ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
+            : WEEKDAYS
+          ).map((w) => (
             <div
               key={w}
               className="text-muted-foreground px-2 py-2.5 text-center text-[11px] font-semibold tracking-wider uppercase"
@@ -568,19 +571,21 @@ export function CalendarPage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7">
-          {Array.from({ length: leadingBlanks }).map((_, i) => {
-            const prevLast = new Date(cursor.year, cursor.month - 1, 0).getDate();
-            return (
-              <div
-                key={`b${i}`}
-                className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
-              >
-                {prevLast - leadingBlanks + 1 + i}
-              </div>
-            );
-          })}
-          {days.map((d) => {
+        <div className={`grid ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
+          {view === "month" &&
+            Array.from({ length: leadingBlanks }).map((_, i) => {
+              const prevLast = new Date(cursor.year, cursor.month - 1, 0).getDate();
+              return (
+                <div
+                  key={`b${i}`}
+                  className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
+                >
+                  {prevLast - leadingBlanks + 1 + i}
+                </div>
+              );
+            })}
+          {visibleDays.map((d) => {
+
             const holiday = data?.holidays.get(d);
             const list = shiftsOn(d);
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
