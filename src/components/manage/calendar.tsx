@@ -152,12 +152,12 @@ export function CalendarPage() {
     queryFn: async () => {
       const [profiles, shifts, holidays, vacations] = await Promise.all([
         supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
-        supabase.from("shifts").select("*").gte("work_date", first).lte("work_date", last),
+        supabase.from("shifts").select("*").gte("work_date", rangeFrom).lte("work_date", rangeTo),
         supabase
           .from("holidays")
           .select("holiday_date, name, is_working")
-          .gte("holiday_date", first)
-          .lte("holiday_date", last),
+          .gte("holiday_date", rangeFrom)
+          .lte("holiday_date", rangeTo),
         supabase.from("vacations").select("*"),
       ]);
       return {
