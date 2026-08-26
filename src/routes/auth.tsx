@@ -91,7 +91,7 @@ function AuthPage() {
   const errorId = authError ? "auth-error" : undefined;
 
   return (
-    <div className="grid h-screen w-screen overflow-hidden bg-white lg:grid-cols-2">
+    <div className="grid h-screen w-screen overflow-hidden bg-background lg:grid-cols-2">
       {/* Левая колонка — форма */}
       <div className="flex h-full flex-col overflow-y-auto px-8 py-10 sm:px-14 sm:py-14">
         <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ function AuthPage() {
           <h1 className="text-primary text-4xl font-bold tracking-tight sm:text-5xl">
             {mode === "in" ? "Здравствуйте!" : "Регистрация"}
           </h1>
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-muted-foreground">
             Добро пожаловать в систему графиков психологов ОКП
           </p>
         </div>
@@ -117,7 +117,7 @@ function AuthPage() {
               role="alert"
               aria-live="assertive"
               aria-atomic="true"
-              className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
             >
               {authError}
             </div>
@@ -138,7 +138,7 @@ function AuthPage() {
             {mode === "up" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fio" className="text-xs text-slate-600">
+                  <Label htmlFor="fio" className="text-xs text-muted-foreground">
                     ФИО полностью
                   </Label>
                   <Input
@@ -155,7 +155,7 @@ function AuthPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-xs text-slate-600">
+                  <Label htmlFor="phone" className="text-xs text-muted-foreground">
                     Телефон
                   </Label>
                   <Input
@@ -174,7 +174,7 @@ function AuthPage() {
               </>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs text-slate-600">
+              <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
               </Label>
               <Input
@@ -193,7 +193,7 @@ function AuthPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs text-slate-600">
+              <Label htmlFor="password" className="text-xs text-muted-foreground">
                 Пароль
               </Label>
               <Input
@@ -220,7 +220,7 @@ function AuthPage() {
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-600">
+          <p className="mt-8 text-center text-sm text-muted-foreground">
             {mode === "in" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
             <button
               type="button"

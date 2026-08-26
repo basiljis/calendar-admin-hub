@@ -207,7 +207,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Hint>
               <PopoverContent side="right" align="start" className="w-56 p-3">
                 <p className="mb-2 text-sm font-semibold">Нужна помощь?</p>
-                <Button size="sm" variant="outline" className="w-full bg-white dark:bg-card">
+                <Button size="sm" variant="outline" className="w-full bg-card">
                   Связаться с нами
                 </Button>
                 <Button
@@ -223,12 +223,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         ) : (
           <div className="mx-4 mb-6 rounded-2xl bg-blue-50 p-4 text-center dark:bg-blue-900/10">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-card">
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-card shadow-sm">
               <Heart className="size-6 text-blue-500" />
             </div>
             <p className="mb-1 text-sm font-semibold">Нужна помощь?</p>
             <p className="mb-3 text-xs text-muted-foreground">Мы на связи в рабочее время</p>
-            <Button size="sm" variant="outline" className="w-full bg-white dark:bg-card">
+            <Button size="sm" variant="outline" className="w-full bg-card">
               Связаться с нами
             </Button>
             <Button
@@ -288,7 +288,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Button data-tour="notifications" variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
                   <Bell className="size-5 text-muted-foreground" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 flex size-5 items-center justify-center rounded-full border-2 border-background bg-orange-500 text-[10px] font-bold text-white">
+                    <span className="absolute top-0 right-0 flex size-5 items-center justify-center rounded-full border-2 border-background bg-destructive text-[10px] font-bold text-destructive-foreground">
                       {unreadCount}
                     </span>
                   )}
