@@ -676,9 +676,9 @@ export function CalendarPage() {
                       return (
                         <div
                           key={s.id}
-                          className="flex items-center gap-1 truncate rounded-md bg-amber-100/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+                          className="flex items-center gap-1.5 truncate rounded-md bg-amber-100/70 px-2 py-1 text-xs font-semibold text-amber-800 sm:text-sm"
                         >
-                          <Plane className="size-2 shrink-0" />
+                          <Plane className="size-3 shrink-0" />
                           <span className="truncate">{p.full_name.split(" ")[0]}</span>
                         </div>
                       );
@@ -699,18 +699,18 @@ export function CalendarPage() {
                       <div
                         key={s.id}
                         title={progress.remainingLabel}
-                        className={`relative overflow-hidden rounded-md px-1.5 py-0.5 text-[10px] ${chipBg}`}
+                        className={`relative overflow-hidden rounded-md px-2 py-1 text-xs sm:text-sm ${chipBg}`}
                       >
                         <div className="flex items-center justify-between gap-1">
-                          <span className="flex min-w-0 items-center gap-1">
+                          <span className="flex min-w-0 items-center gap-1.5">
                             {done ? (
-                              <CheckCircle2 className="size-2.5 shrink-0" />
+                              <CheckCircle2 className="size-3 shrink-0" />
                             ) : (
-                              <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
+                              <span className={`size-2 shrink-0 rounded-full ${dot}`} />
                             )}
-                            <span className="truncate font-medium">{p.full_name.split(" ")[0]}</span>
+                            <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
                           </span>
-                          <span className="shrink-0 opacity-70">
+                          <span className="shrink-0 text-[11px] opacity-70">
                             {progress.status === "active"
                               ? `${Math.round(progress.percent)}%`
                               : s.break_time
