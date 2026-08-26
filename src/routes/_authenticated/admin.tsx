@@ -31,6 +31,7 @@ import {
   setUserRoles,
   updateUserProfileAdmin,
   deleteUserAdmin,
+  bulkSetRole,
 } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -71,12 +72,19 @@ function AdminPage() {
   const saveProfile = useServerFn(updateUserProfileAdmin);
   const removeUser = useServerFn(deleteUserAdmin);
 
+  const applyBulkRole = useServerFn(bulkSetRole);
+
   const [editing, setEditing] = useState<null | {
     id: string;
     full_name: string;
     phone: string;
     position: string;
     shift_group: number;
+  }>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<null | {
+    role: AppRole;
+    action: "assign" | "revoke";
   }>(null);
 
   const { data: users = [], isLoading } = useQuery({
@@ -110,6 +118,30 @@ function AdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: (vars: { userIds: string[]; role: AppRole; action: "assign" | "revoke" }) =>
+      applyBulkRole({ data: vars }),
+    onSuccess: (res) => {
+      if (res.failed === 0) {
+        toast.success(`Готово: изменено ${res.succeeded} пользователей`);
+      } else {
+        toast.warning(
+          `Изменено: ${res.succeeded}, с ошибками: ${res.failed}. Проверьте список ниже.`,
+        );
+        res.results
+          .filter((r) => !r.ok)
+          .forEach((r) => {
+            const u = users.find((x) => x.id === r.userId);
+            toast.error(`${u?.full_name ?? r.userId}: ${r.error}`);
+          });
+      }
+      setSelected(new Set());
+      setBulkConfirm(null);
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (userId: string) => removeUser({ data: { userId } }),
     onSuccess: () => {
@@ -129,6 +161,17 @@ function AdminPage() {
     }
     rolesMutation.mutate({ userId, roles: next });
   }
+
+  function toggleSelect(userId: string, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+  }
+
+  const allSelected = users.length > 0 && users.every((u) => selected.has(u.id));
 
   if (loading) {
     return <p className="p-6 text-muted-foreground">Загрузка…</p>;
@@ -160,6 +203,40 @@ function AdminPage() {
         </p>
       </div>
 
+      {selected.size > 0 && (
+        <Card className="border-primary/40">
+          <CardContent className="flex flex-wrap items-center gap-3 py-4">
+            <span className="text-sm font-medium">Выбрано: {selected.size}</span>
+            <span className="text-muted-foreground text-sm">Роль:</span>
+            <div className="flex flex-wrap gap-2">
+              {allRoles.map((role) => (
+                <div key={role} className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkMutation.isPending}
+                    onClick={() => setBulkConfirm({ role, action: "assign" })}
+                  >
+                    Назначить «{roleLabels[role]}»
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkMutation.isPending}
+                    onClick={() => setBulkConfirm({ role, action: "revoke" })}
+                  >
+                    Отозвать «{roleLabels[role]}»
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+              Снять выбор
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Пользователи ({users.length})</CardTitle>
@@ -172,6 +249,15 @@ function AdminPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(checked) =>
+                          setSelected(checked ? new Set(users.map((u) => u.id)) : new Set())
+                        }
+                        aria-label="Выбрать всех"
+                      />
+                    </TableHead>
                     <TableHead>ФИО</TableHead>
                     <TableHead>Контакты</TableHead>
                     <TableHead>Должность</TableHead>
@@ -182,7 +268,14 @@ function AdminPage() {
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => (
-                    <TableRow key={u.id}>
+                    <TableRow key={u.id} data-state={selected.has(u.id) ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.has(u.id)}
+                          onCheckedChange={(checked) => toggleSelect(u.id, checked === true)}
+                          aria-label={`Выбрать ${u.full_name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         {u.full_name}
                         {u.id === user?.id && (
@@ -256,6 +349,57 @@ function AdminPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!bulkConfirm} onOpenChange={(open) => !open && setBulkConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Подтверждение массового изменения ролей</DialogTitle>
+          </DialogHeader>
+          {bulkConfirm && (
+            <div className="space-y-3 text-sm">
+              <p>
+                Действие:{" "}
+                <span className="font-semibold">
+                  {bulkConfirm.action === "assign" ? "Назначить роль" : "Отозвать роль"} «
+                  {roleLabels[bulkConfirm.role]}»
+                </span>
+              </p>
+              <p>
+                Пользователей: <span className="font-semibold">{selected.size}</span>
+              </p>
+              <ul className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-3 text-muted-foreground">
+                {users
+                  .filter((u) => selected.has(u.id))
+                  .map((u) => (
+                    <li key={u.id}>{u.full_name}</li>
+                  ))}
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                Права администратора проверяются на сервере для каждого изменения отдельно.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkConfirm(null)}>
+              Отмена
+            </Button>
+            <Button
+              disabled={bulkMutation.isPending}
+              variant={bulkConfirm?.action === "revoke" ? "destructive" : "default"}
+              onClick={() =>
+                bulkConfirm &&
+                bulkMutation.mutate({
+                  userIds: Array.from(selected),
+                  role: bulkConfirm.role,
+                  action: bulkConfirm.action,
+                })
+              }
+            >
+              {bulkMutation.isPending ? "Выполняется…" : "Подтвердить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent>
