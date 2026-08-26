@@ -305,8 +305,8 @@ export function CalendarPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold sm:text-2xl tracking-tight">
             {MONTH_NAMES[cursor.month - 1]} {cursor.year}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -315,10 +315,10 @@ export function CalendarPage() {
               : "Смены 2/2 · по отделению"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {isAdmin && (
             <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
-              <SelectTrigger className="h-9 w-56" aria-label="Подробный график сотрудника">
+              <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
                 <SelectValue placeholder="Подробный график сотрудника" />
               </SelectTrigger>
               <SelectContent>
@@ -437,7 +437,7 @@ export function CalendarPage() {
                 <button
                   key={d}
                   onClick={() => setOpenDay(d)}
-                  className={`min-h-24 rounded-lg border p-1.5 text-left align-top transition-colors ${
+                  className={`min-h-20 min-w-0 rounded-lg border p-1 sm:min-h-24 sm:p-1.5 text-left align-top transition-colors ${
                     holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
                   } ${isPastDay ? "opacity-80" : ""} ${isToday ? "ring-2 ring-primary border-primary" : ""} ${list.some(s => s.type === 'vacation') ? 'ring-1 ring-inset ring-amber-200 bg-amber-50/30' : ''} ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
                 >
@@ -537,17 +537,17 @@ export function CalendarPage() {
                               aria-hidden
                             />
                           )}
-                          <span className="relative flex items-center gap-0.5">
-                            {progress.status === "done" && <CheckCircle2 className="size-2.5" />}
-                            {p.full_name.split(" ")[0]}
+                          <span className="relative flex min-w-0 items-center gap-0.5">
+                            {progress.status === "done" && <CheckCircle2 className="size-2.5 shrink-0" />}
+                            <span className="truncate">{p.full_name.split(" ")[0]}</span>
                           </span>
-                          <span className="relative flex items-center gap-1">
+                          <span className="relative flex shrink-0 items-center gap-1">
                             {progress.status === "active" && (
                               <span className="scale-90 opacity-90">
                                 {Math.round(progress.percent)}%
                               </span>
                             )}
-                            {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
+                            {s.break_time && <span className="hidden opacity-80 scale-90 sm:inline">{s.break_time}</span>}
                           </span>
                         </div>
                       );

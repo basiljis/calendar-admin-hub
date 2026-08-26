@@ -308,7 +308,7 @@ function SettingsPage() {
           )}
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+            <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Государственные праздники</CardTitle>
                 <CardDescription>
@@ -316,7 +316,7 @@ function SettingsPage() {
                 </CardDescription>
               </div>
               {isAdmin && (
-                <div className="flex shrink-0 gap-2">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Button onClick={openAddDialog} size="sm" className="gap-2">
                     <Plus className="size-4" />
                     Добавить праздник
@@ -586,14 +586,14 @@ function MonthlyNormsCard({ canEdit }: { canEdit: boolean }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+      <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Норма рабочего времени по месяцам</CardTitle>
           <CardDescription>
             Автоматически рассчитана по производственному календарю с учётом праздников. Изменённые значения сохраняются и используются при пересчёте.
           </CardDescription>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
             <SelectTrigger className="h-9 w-28" aria-label="Год">
               <SelectValue />

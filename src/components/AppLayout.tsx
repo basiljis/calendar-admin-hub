@@ -14,7 +14,8 @@ import {
   ChevronRight,
   User,
   Heart,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -69,6 +70,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const sectionTitle = getSectionTitle(pathname);
 
@@ -153,20 +155,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider delayDuration={200}>
     <div className="flex min-h-screen bg-background text-foreground font-sans">
+      {/* Мобильный оверлей */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden
+        />
+      )}
       {/* Sidebar - Matching reference image style */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-sidebar transition-all duration-300 ${
-          isSidebarCollapsed ? "w-20" : "w-64"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-sidebar transition-transform duration-300 md:z-30 md:translate-x-0 md:transition-all ${
+          mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+        } ${isSidebarCollapsed ? "md:w-20" : "md:w-64"}`}
       >
         <div className="flex h-16 items-center px-6">
           <Link to="/calendar" className="flex items-center gap-2">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
-            {!isSidebarCollapsed && (
-              <span className="text-xl font-bold tracking-tight text-primary">universum.</span>
-            )}
+            <span className={`text-xl font-bold tracking-tight text-primary ${isSidebarCollapsed ? "md:hidden" : ""}`}>universum.</span>
           </Link>
         </div>
 
@@ -180,11 +188,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     to={n.to}
                     data-tour={`nav-${n.to}`}
                     aria-label={n.label}
+                    onClick={() => setMobileNavOpen(false)}
                     className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
                   >
-                    <n.icon className="size-5" />
-                    {!isSidebarCollapsed && <span>{n.label}</span>}
+                    <n.icon className="size-5 shrink-0" />
+                    <span className={isSidebarCollapsed ? "md:hidden" : ""}>{n.label}</span>
                   </Link>
                 </Hint>
               ))}
@@ -243,7 +252,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <div className="p-3 border-t">
+        <div className="hidden p-3 border-t md:block">
           <Hint
             label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             description="Больше места для рабочей области"
@@ -269,21 +278,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-64"
+        className={`min-w-0 flex-1 transition-all duration-300 ${
+          isSidebarCollapsed ? "md:pl-20" : "md:pl-64"
         }`}
       >
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-8 backdrop-blur">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <ChevronRight className="size-5" />
+        <header className="sticky top-0 z-20 grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b bg-background/80 px-4 backdrop-blur sm:px-6 md:px-8">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 md:hidden"
+              aria-label="Открыть меню"
+              onClick={() => setMobileNavOpen(true)}
+            >
+              <Menu className="size-5" />
             </Button>
-            <div className="text-base font-semibold text-foreground">
+            <div className="truncate text-sm font-semibold text-foreground sm:text-base">
               {sectionTitle}
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
             <ThemeToggle />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
@@ -296,7 +311,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
+              <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-0 sm:w-80" align="end" collisionPadding={12}>
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-sm font-semibold">Уведомления</h3>
                   {unreadCount > 0 && (
@@ -347,8 +362,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </PopoverContent>
             </Popover>
 
-            <div data-tour="profile" className="flex items-center gap-3 border-l pl-6">
-              <div className="text-right">
+            <div data-tour="profile" className="flex items-center gap-2 sm:gap-3 sm:border-l sm:pl-6">
+              <div className="hidden text-right sm:block">
                 <div className="text-sm font-semibold text-foreground leading-none">
                   {profile?.full_name || "Пользователь"}
                 </div>
@@ -371,7 +386,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl p-8">{children}</main>
+        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
       <ChatWidget />
       <OnboardingTour />
