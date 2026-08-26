@@ -56,30 +56,28 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      <div className="pointer-events-none absolute -top-1/4 left-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-destructive/10 blur-[6rem]" />
+
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 shadow-2xl backdrop-blur-sm text-center sm:p-12">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Не удалось загрузить страницу
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Что-то пошло не так. Попробуйте обновить страницу или вернитесь на главную.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
+            Попробовать снова
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/">На главную</Link>
+          </Button>
         </div>
       </div>
     </div>
