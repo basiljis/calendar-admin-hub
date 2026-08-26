@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plane, Trash2, History, Mail, Phone } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -31,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
+import { createUserAdmin } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 
 
