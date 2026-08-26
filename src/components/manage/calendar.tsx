@@ -367,7 +367,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                  <HelpHint text="Плановое количество часов по графику смен за выбранный месяц, до вычета отпусков и праздников." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-1">{plannedHours} ч</p>
               </div>
               <div className="bg-chart-1/15 flex size-10 items-center justify-center rounded-xl">
