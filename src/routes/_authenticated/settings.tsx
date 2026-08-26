@@ -343,6 +343,7 @@ function SettingsPage() {
                         <TableCell className="text-muted-foreground text-xs">
                           Производственный календарь 2026
                         </TableCell>
+                        {isAdmin && (
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button
