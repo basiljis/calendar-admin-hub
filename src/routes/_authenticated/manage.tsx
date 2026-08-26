@@ -79,18 +79,11 @@ function ManagePage() {
         }
         className="space-y-6"
       >
-        <TabsList
-          aria-label="Разделы управления персоналом"
-          className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl bg-muted/60 p-1"
-        >
+        <TabsList aria-label="Разделы управления персоналом">
           {tabs.map((t) => (
-            <TabsTrigger
-              key={t.value}
-              value={t.value}
-              className="gap-2 rounded-lg px-4 py-2"
-            >
-              <t.icon className="h-4 w-4" aria-hidden="true" />
-              {t.label}
+            <TabsTrigger key={t.value} value={t.value}>
+              <t.icon className="size-4 shrink-0" aria-hidden="true" />
+              <span className="whitespace-nowrap">{t.label}</span>
             </TabsTrigger>
           ))}
         </TabsList>
