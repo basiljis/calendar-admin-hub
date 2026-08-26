@@ -643,19 +643,31 @@ export function CalendarPage() {
 
                   {on && (
                     <div className="flex items-center gap-3">
-                      <label className="text-xs font-medium shrink-0">Время обеда:</label>
+                      <label className="text-xs font-medium shrink-0">
+                        Время обеда<span className="text-destructive">*</span>:
+                      </label>
                       <input
                         type="time"
+                        required
                         className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue={shift.break_time || ""}
+                        value={dayBreaks[p.id] ?? shift?.break_time ?? ""}
+                        onChange={(e) => setDayBreaks((prev) => ({ ...prev, [p.id]: e.target.value }))}
                         onBlur={(e) => {
-                          if (openDay) {
-                            updateShift.mutate({
-                              userId: p.id,
-                              date: openDay,
-                              breakTime: e.target.value,
-                            });
+                          if (!openDay) return;
+                          const value = e.target.value;
+                          if (!value) {
+                            toast.error("Укажите время обеда");
+                            setDayBreaks((prev) => ({
+                              ...prev,
+                              [p.id]: shift?.break_time || "13:00",
+                            }));
+                            return;
                           }
+                          updateShift.mutate({
+                            userId: p.id,
+                            date: openDay,
+                            breakTime: value,
+                          });
                         }}
                       />
                     </div>
