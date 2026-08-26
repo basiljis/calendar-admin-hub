@@ -68,6 +68,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const sectionTitle = getSectionTitle(pathname);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
