@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
+import { UserAvatar } from "@/components/UserAvatar";
 import {
   Tooltip,
   TooltipContent,
@@ -268,6 +269,12 @@ function TimeGridColumn({
                       ) : (
                         <span className={`size-2 shrink-0 rounded-full ${barColor}`} />
                       )}
+                      <UserAvatar
+                        name={p.full_name}
+                        avatarPath={p.avatar_url}
+                        className={isDay ? "size-6 shrink-0" : "size-4 shrink-0"}
+                        fallbackClassName="text-[9px]"
+                      />
                       <span className={`truncate font-semibold ${isDay ? "text-sm" : "text-[11px]"}`}>
                         {isDay ? p.full_name : p.full_name.split(" ")[0]}
                       </span>
@@ -317,6 +324,7 @@ function TimeGridColumn({
 type Profile = {
   id: string;
   full_name: string;
+  avatar_url?: string | null;
   shift_group: number;
   roles: AppRole[];
 };
@@ -501,7 +509,7 @@ export function CalendarPage() {
 
     queryFn: async () => {
       const [profilesResp, shifts, holidays, vacations, userRoles] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
+        supabase.from("profiles").select("id, full_name, avatar_url, shift_group").order("full_name"),
         supabase.from("shifts").select("*").gte("work_date", rangeFrom).lte("work_date", rangeTo),
         supabase
           .from("holidays")
@@ -1101,6 +1109,12 @@ export function CalendarPage() {
                                 ) : (
                                   <span className={`size-2 shrink-0 rounded-full ${dot}`} />
                                 )}
+                                <UserAvatar
+                                  name={p.full_name}
+                                  avatarPath={p.avatar_url}
+                                  className="size-5 shrink-0"
+                                  fallbackClassName="text-[9px]"
+                                />
                                 <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
                               </span>
                               <span className="shrink-0 text-[11px] opacity-70">

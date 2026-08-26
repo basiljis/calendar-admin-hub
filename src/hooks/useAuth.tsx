@@ -49,6 +49,7 @@ export interface Profile {
   phone: string | null;
   position: string | null;
   shift_group: number;
+  avatar_url?: string | null;
   is_active?: boolean;
   is_approved?: boolean;
 }
@@ -128,6 +129,12 @@ export function useAuth() {
   const isAdmin = effectiveRoles.includes("admin");
   const isManager = effectiveRoles.includes("manager") || isAdmin;
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (data) setProfile(data as Profile);
+  };
+
   return {
     session,
     user,
@@ -137,6 +144,7 @@ export function useAuth() {
     isManager,
     loading,
     setProfile,
+    refreshProfile,
     realIsAdmin,
     rolePreview: activePreview,
   };
