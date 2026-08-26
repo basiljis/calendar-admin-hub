@@ -18,7 +18,6 @@ import { useAuth, type AppRole } from "@/hooks/useAuth";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
