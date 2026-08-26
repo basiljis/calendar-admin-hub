@@ -93,12 +93,18 @@ export function CalendarPage() {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [detailUser, setDetailUser] = useState<string>("");
   const [now, setNow] = useState(() => new Date());
+  const [dayBreaks, setDayBreaks] = useState<Record<string, string>>({});
 
   // Обновляем прогресс смены в реальном времени
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  // Сбрасываем локальные значения обеда при открытии/закрытии диалога дня
+  useEffect(() => {
+    setDayBreaks({});
+  }, [openDay]);
 
   const first = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-01`;
   const days = monthDays(cursor.year, cursor.month);
@@ -143,6 +149,7 @@ export function CalendarPage() {
         work_date: string;
         hours: number;
         type: "work" | "vacation";
+        break_time?: string;
       }[] = [];
       for (const p of profiles) {
         const vac = vacationDatesInRange(data?.vacations ?? [], first, last);
@@ -151,7 +158,7 @@ export function CalendarPage() {
           if (vac.has(d)) {
             rows.push({ user_id: p.id, work_date: d, hours: 0, type: "vacation" });
           } else if (isWorkingDay(d, p.shift_group)) {
-            rows.push({ user_id: p.id, work_date: d, hours: SHIFT_WORK_HOURS, type: "work" });
+            rows.push({ user_id: p.id, work_date: d, hours: SHIFT_WORK_HOURS, type: "work", break_time: "13:00" });
           }
         }
       }
@@ -169,10 +176,26 @@ export function CalendarPage() {
   });
 
   const toggle = useMutation({
-    mutationFn: async ({ userId, date, on }: { userId: string; date: string; on: boolean }) => {
+    mutationFn: async ({
+      userId,
+      date,
+      on,
+      breakTime,
+    }: {
+      userId: string;
+      date: string;
+      on: boolean;
+      breakTime?: string;
+    }) => {
       if (on) {
         const { error } = await supabase.from("shifts").upsert(
-          { user_id: userId, work_date: date, hours: SHIFT_WORK_HOURS, type: "work" },
+          {
+            user_id: userId,
+            work_date: date,
+            hours: SHIFT_WORK_HOURS,
+            type: "work",
+            break_time: breakTime || "13:00",
+          },
           { onConflict: "user_id,work_date" },
         );
         if (error) throw error;
@@ -211,6 +234,9 @@ export function CalendarPage() {
       date: string;
       breakTime: string;
     }) => {
+      if (!breakTime) {
+        throw new Error("Укажите время обеда");
+      }
       const { error } = await supabase
         .from("shifts")
         .update({ break_time: breakTime })
@@ -575,9 +601,20 @@ export function CalendarPage() {
                         )}
                         <Switch
                           checked={on}
-                          onCheckedChange={(v) =>
-                            openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
-                          }
+                          onCheckedChange={(v) => {
+                            if (!openDay) return;
+                            if (v) {
+                              setDayBreaks((prev) => ({ ...prev, [p.id]: "13:00" }));
+                              toggle.mutate({ userId: p.id, date: openDay, on: true, breakTime: "13:00" });
+                            } else {
+                              setDayBreaks((prev) => {
+                                const next = { ...prev };
+                                delete next[p.id];
+                                return next;
+                              });
+                              toggle.mutate({ userId: p.id, date: openDay, on: false });
+                            }
+                          }}
                         />
                       </div>
                     )}
@@ -611,19 +648,31 @@ export function CalendarPage() {
 
                   {on && (
                     <div className="flex items-center gap-3">
-                      <label className="text-xs font-medium shrink-0">Время обеда:</label>
+                      <label className="text-xs font-medium shrink-0">
+                        Время обеда<span className="text-destructive">*</span>:
+                      </label>
                       <input
                         type="time"
+                        required
                         className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue={shift.break_time || ""}
+                        value={dayBreaks[p.id] ?? shift?.break_time ?? ""}
+                        onChange={(e) => setDayBreaks((prev) => ({ ...prev, [p.id]: e.target.value }))}
                         onBlur={(e) => {
-                          if (openDay) {
-                            updateShift.mutate({
-                              userId: p.id,
-                              date: openDay,
-                              breakTime: e.target.value,
-                            });
+                          if (!openDay) return;
+                          const value = e.target.value;
+                          if (!value) {
+                            toast.error("Укажите время обеда");
+                            setDayBreaks((prev) => ({
+                              ...prev,
+                              [p.id]: shift?.break_time || "13:00",
+                            }));
+                            return;
                           }
+                          updateShift.mutate({
+                            userId: p.id,
+                            date: openDay,
+                            breakTime: value,
+                          });
                         }}
                       />
                     </div>
