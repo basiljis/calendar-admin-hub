@@ -403,7 +403,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                  <HelpHint text="Количество часов, которые уже прошли в текущем месяце по календарю, включая завершённые и текущие смены." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
               </div>
               <div className="bg-chart-3/15 flex size-10 items-center justify-center rounded-xl">
