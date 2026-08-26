@@ -313,5 +313,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </div>
       <ChatWidget />
     </div>
+    </TooltipProvider>
   );
 }
