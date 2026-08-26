@@ -512,7 +512,7 @@ export function ChatWidget() {
       className={
         isOpen && isFullscreen
           ? "fixed inset-0 z-50 flex flex-col items-stretch gap-3 p-4"
-          : "fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+          : "fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
       }
     >
       {isOpen && (
@@ -520,7 +520,7 @@ export function ChatWidget() {
           className={
             isFullscreen
               ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl"
-              : "flex max-h-[80vh] w-[95vw] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:w-[480px]"
+              : "flex max-h-[75vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:max-h-[80vh] sm:w-[480px]"
           }
         >
           <div
