@@ -223,18 +223,18 @@ function SettingsPage() {
       </div>
 
       <Tabs defaultValue="norms" className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
+        <TabsList className="flex w-fit flex-wrap">
           <TabsTrigger value="norms" className="gap-2">
-            <Clock className="size-4" />
-            Нормы рабочего времени
+            <Clock className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">Нормы рабочего времени</span>
           </TabsTrigger>
           <TabsTrigger value="holidays" className="gap-2">
-            <Calendar className="size-4" />
-            Праздничные дни
+            <Calendar className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">Праздничные дни</span>
           </TabsTrigger>
           <TabsTrigger value="system" className="gap-2">
-            <ShieldCheck className="size-4" />
-            Система
+            <ShieldCheck className="size-4 shrink-0" />
+            <span className="whitespace-nowrap">Система</span>
           </TabsTrigger>
         </TabsList>
 
