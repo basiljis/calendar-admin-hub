@@ -961,6 +961,7 @@ export function ChatWidget() {
         </div>
       )}
 
+      {!(isOpen && isFullscreen) && (
       <Button
         onClick={toggleOpen}
         size="icon"
@@ -975,6 +976,7 @@ export function ChatWidget() {
           </span>
         )}
       </Button>
+      )}
     </div>
   );
 }
