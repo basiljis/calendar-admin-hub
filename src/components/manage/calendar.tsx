@@ -613,7 +613,6 @@ export function CalendarPage() {
               {groupFilter === "all" ? "Сформировать месяц" : `Сформировать месяц · группа ${groupFilter}`}
             </Button>
           )}
-        </div>
       </div>
 
       <Dialog open={genOpen} onOpenChange={setGenOpen}>
