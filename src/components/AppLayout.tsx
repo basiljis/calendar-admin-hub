@@ -75,7 +75,7 @@ function getSectionTitle(pathname: string) {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { profile, user, isManager, isAdmin, realIsAdmin, rolePreview } = useAuth();
+  const { profile, user, isManager, isAdmin, realIsAdmin, rolePreview, refreshProfile } = useAuth();
   const [photoOpen, setPhotoOpen] = useState(false);
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -426,7 +426,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 >
                   <UserAvatar
                     name={profile?.full_name}
-                    avatarPath={(profile as any)?.avatar_url}
+                    avatarPath={profile?.avatar_url}
                     className="h-10 w-10 border-2 border-primary/10"
                     fallbackClassName="text-sm"
                   />
@@ -441,6 +441,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
+        {user && (
+          <ProfilePhotoDialog
+            open={photoOpen}
+            onOpenChange={setPhotoOpen}
+            userId={user.id}
+            fullName={profile?.full_name}
+            avatarPath={profile?.avatar_url}
+            onSaved={() => void refreshProfile()}
+          />
+        )}
         {rolePreview && (
           <div className="flex items-center justify-center gap-3 border-b bg-primary/10 px-4 py-2 text-sm text-primary">
             <Eye className="size-4 shrink-0" />
