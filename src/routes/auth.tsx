@@ -36,6 +36,7 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
@@ -44,6 +45,7 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
+    setAuthSuccess(null);
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
@@ -52,12 +54,14 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
+    setAuthSuccess("Вход выполнен. Переходим в систему…");
     navigate({ to: "/dashboard", replace: true });
   }
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
+    setAuthSuccess(null);
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -73,10 +77,12 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    if (!data.session) {
-      toast.success("Проверьте почту — мы отправили ссылку для подтверждения.");
-      return;
-    }
+    const successMessage = data.session
+      ? "Регистрация завершена. Переходим в систему…"
+      : "Проверьте почту — мы отправили ссылку для подтверждения.";
+    setAuthSuccess(successMessage);
+    toast.success(successMessage);
+    if (!data.session) return;
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -108,9 +114,21 @@ function AuthPage() {
               id="auth-error"
               role="alert"
               aria-live="assertive"
+              aria-atomic="true"
               className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             >
               {authError}
+            </div>
+          )}
+          {authSuccess && (
+            <div
+              id="auth-success"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            >
+              {authSuccess}
             </div>
           )}
 
@@ -205,6 +223,7 @@ function AuthPage() {
               type="button"
               onClick={() => {
                 setAuthError(null);
+                setAuthSuccess(null);
                 setMode(mode === "in" ? "up" : "in");
               }}
               className="text-primary font-semibold hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
