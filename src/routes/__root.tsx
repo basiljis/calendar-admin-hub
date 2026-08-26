@@ -17,20 +17,31 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* Decorative blurred blobs */}
+      <div className="pointer-events-none absolute -top-1/4 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[8rem]" />
+      <div className="pointer-events-none absolute -bottom-1/4 right-1/4 h-[28rem] w-[28rem] rounded-full bg-accent/30 blur-[6rem]" />
+
+      <div className="relative z-10 w-full max-w-lg rounded-3xl border border-border bg-card/80 p-10 shadow-2xl backdrop-blur-sm sm:p-14">
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            Ошибка
+          </p>
+          <h1 className="mt-2 bg-gradient-to-b from-foreground to-muted-foreground bg-clip-text text-9xl font-bold leading-none tracking-tighter text-transparent">
+            404
+          </h1>
+          <h2 className="mt-4 text-2xl font-semibold text-card-foreground">
+            Страница не найдена
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+            Запрошенный адрес не существует или был перемещён. Проверьте ссылку или вернитесь на главную страницу.
+          </p>
+
+          <div className="mt-8">
+            <Button asChild size="lg" className="rounded-full px-8 shadow-lg">
+              <Link to="/">Вернуться на главную</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
