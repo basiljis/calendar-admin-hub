@@ -219,6 +219,9 @@ function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        <MonthlyNormsCard canEdit={isManager} />
+
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle>Массовая настройка праздников</CardTitle>
