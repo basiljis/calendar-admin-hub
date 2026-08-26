@@ -320,6 +320,110 @@ type Profile = {
   roles: AppRole[];
 };
 
+// Годовой обзор: 12 мини-календарей с подсветкой смен, отпусков и праздников
+function YearGrid({
+  year,
+  shifts,
+  holidays,
+  today,
+  detailUserId,
+  onPickMonth,
+  onPickDay,
+}: {
+  year: number;
+  shifts: ShiftItem[];
+  holidays: Map<string, { name: string; is_working: boolean }>;
+  today: string;
+  detailUserId: string;
+  onPickMonth: (month: number) => void;
+  onPickDay: (date: string) => void;
+}) {
+  const byDate = new Map<string, ShiftItem[]>();
+  for (const s of shifts) {
+    if (detailUserId && s.user_id !== detailUserId) continue;
+    const arr = byDate.get(s.work_date) ?? [];
+    arr.push(s);
+    byDate.set(s.work_date, arr);
+  }
+
+  return (
+    <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3 xl:grid-cols-4">
+      {MONTH_NAMES.map((name, mi) => {
+        const month = mi + 1;
+        const monthList = monthDays(year, month);
+        const blanks = (parseISO(monthList[0]!).getDay() + 6) % 7;
+        const workCount = monthList.filter((d) =>
+          (byDate.get(d) ?? []).some((s) => s.type === "work"),
+        ).length;
+
+        return (
+          <div key={name} className="bg-card rounded-xl border p-3 shadow-sm">
+            <button
+              type="button"
+              onClick={() => onPickMonth(month)}
+              className="hover:text-primary mb-2 flex w-full items-baseline justify-between text-left"
+            >
+              <span className="text-sm font-semibold">{name}</span>
+              <span className="text-muted-foreground text-[11px]">{workCount} раб. дн.</span>
+            </button>
+            <div className="text-muted-foreground/70 grid grid-cols-7 gap-0.5 text-center text-[9px] font-semibold uppercase">
+              {WEEKDAYS.map((w) => (
+                <span key={w}>{w.slice(0, 2)}</span>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-0.5">
+              {Array.from({ length: blanks }).map((_, i) => (
+                <span key={`b${i}`} />
+              ))}
+              {monthList.map((d) => {
+                const list = byDate.get(d) ?? [];
+                const hasVacation = list.some((s) => s.type === "vacation");
+                const hasWork = list.some((s) => s.type === "work");
+                const holiday = holidays.get(d);
+                const isToday = d === today;
+                const tone = hasVacation
+                  ? "bg-amber-100 text-amber-900 dark:bg-amber-400/25 dark:text-amber-100"
+                  : hasWork
+                    ? "bg-primary/15 text-foreground font-medium"
+                    : holiday && !holiday.is_working
+                      ? "bg-holiday/50 text-holiday-foreground"
+                      : "text-muted-foreground hover:bg-muted";
+                return (
+                  <Tooltip key={d}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onPickDay(d)}
+                        className={`flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors ${tone} ${
+                          isToday ? "ring-primary ring-2" : ""
+                        }`}
+                      >
+                        {Number(d.slice(-2))}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p className="font-medium">{d.split("-").reverse().join(".")}</p>
+                      {holiday && <p className="opacity-80">{holiday.name}</p>}
+                      <p className="opacity-80">
+                        {hasVacation
+                          ? "Отпуск"
+                          : hasWork
+                            ? `Смен: ${list.filter((s) => s.type === "work").length}`
+                            : "Смен нет"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
   const employeeCanCreateShifts = useEmployeeCanCreateShifts();
