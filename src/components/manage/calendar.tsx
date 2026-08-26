@@ -776,37 +776,51 @@ export function CalendarPage() {
                       : p.shift_group === 1
                         ? "bg-shift-a"
                         : "bg-shift-b";
+                    const breakLabel = s.break_time
+                      ? `${s.break_time}–${addHour(s.break_time)}`
+                      : "не выбран";
+                    const tooltipLabel = `Начало: ${START_LABEL} | Обед: ${breakLabel} | Конец: ${END_LABEL}`;
                     return (
-                      <div
-                        key={s.id}
-                        title={progress.remainingLabel}
-                        className={`relative overflow-hidden rounded-md px-2 py-1 text-xs sm:text-sm ${chipBg}`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="flex min-w-0 items-center gap-1.5">
-                            {done ? (
-                              <CheckCircle2 className="size-3 shrink-0" />
-                            ) : (
-                              <span className={`size-2 shrink-0 rounded-full ${dot}`} />
+                      <Tooltip key={s.id}>
+                        <TooltipTrigger asChild>
+                          <div
+                            title={progress.remainingLabel}
+                            className={`relative overflow-hidden rounded-md px-2 py-1 text-xs sm:text-sm ${chipBg}`}
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="flex min-w-0 items-center gap-1.5">
+                                {done ? (
+                                  <CheckCircle2 className="size-3 shrink-0" />
+                                ) : (
+                                  <span className={`size-2 shrink-0 rounded-full ${dot}`} />
+                                )}
+                                <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
+                              </span>
+                              <span className="shrink-0 text-[11px] opacity-70">
+                                {progress.status === "active"
+                                  ? `${Math.round(progress.percent)}%`
+                                  : s.break_time
+                                    ? <span className="hidden sm:inline">{s.break_time}</span>
+                                    : null}
+                              </span>
+                            </div>
+                            {progress.status === "active" && (
+                              <span
+                                className="absolute inset-x-0 bottom-0 h-0.5 bg-emerald-600 transition-all duration-1000"
+                                style={{ width: `${progress.percent}%` }}
+                                aria-hidden
+                              />
                             )}
-                            <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
-                          </span>
-                          <span className="shrink-0 text-[11px] opacity-70">
-                            {progress.status === "active"
-                              ? `${Math.round(progress.percent)}%`
-                              : s.break_time
-                                ? <span className="hidden sm:inline">{s.break_time}</span>
-                                : null}
-                          </span>
-                        </div>
-                        {progress.status === "active" && (
-                          <span
-                            className="absolute inset-x-0 bottom-0 h-0.5 bg-emerald-600 transition-all duration-1000"
-                            style={{ width: `${progress.percent}%` }}
-                            aria-hidden
-                          />
-                        )}
-                      </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          <p className="font-medium">{p.full_name}</p>
+                          <p className="opacity-80">{tooltipLabel}</p>
+                          {progress.status !== "future" && (
+                            <p className="mt-0.5 opacity-70">{progress.remainingLabel}</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
                     );
                   })}
                 </div>
