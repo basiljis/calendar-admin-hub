@@ -63,6 +63,7 @@ export function EmojiPicker({
           variant="outline"
           disabled={disabled}
           aria-label="Вставить смайлик"
+          title="Смайлики"
           className="shrink-0"
         >
           <Smile className="size-4" />
