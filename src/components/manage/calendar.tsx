@@ -268,6 +268,39 @@ export function CalendarPage() {
         </div>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-xs">Предполагается в месяце</p>
+            <p className="mt-1 text-2xl font-semibold">{plannedHours} ч</p>
+            <p className="text-muted-foreground mt-1 text-xs">По графику 2/2 без учёта отпусков</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-xs">Выходит с учётом отпуска</p>
+            <p className="mt-1 text-2xl font-semibold text-amber-600">{monthHours} ч</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {vacationHours > 0 ? `Минус ${vacationHours} ч отпусков` : "Отпусков в месяце нет"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-muted-foreground text-xs">Уже прошло</p>
+            <p className="mt-1 text-2xl font-semibold text-emerald-600">{passedHours} ч</p>
+            <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">
+              <div className="h-full bg-emerald-600" style={{ width: `${passedPercent}%` }} />
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {passedPercent}% · осталось {Math.max(0, monthHours - passedHours)} ч
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+
+
       <Card>
         <CardContent className="p-2 sm:p-4">
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
