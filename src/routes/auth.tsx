@@ -41,7 +41,7 @@ function AuthPage() {
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+    if (!loading && user) navigate({ to: "/calendar", replace: true });
   }, [loading, user, navigate]);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ function AuthPage() {
       return;
     }
     setAuthSuccess("Вход выполнен. Переходим в систему…");
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/calendar", replace: true });
   }
 
   async function signUp(e: React.FormEvent) {

@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/chat")({
-  component: () => <Navigate to="/dashboard" />,
+  component: () => <Navigate to="/calendar" />,
 });
