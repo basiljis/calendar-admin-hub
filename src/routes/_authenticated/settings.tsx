@@ -238,17 +238,17 @@ function SettingsPage() {
         }
         className="space-y-6"
       >
-        <TabsList aria-label="Разделы настроек" className="flex w-fit flex-wrap">
-          <TabsTrigger value="norms" className="gap-2">
-            <Clock className="size-4 shrink-0" />
+        <TabsList aria-label="Разделы настроек">
+          <TabsTrigger value="norms">
+            <Clock className="size-4 shrink-0" aria-hidden="true" />
             <span className="whitespace-nowrap">Нормы рабочего времени</span>
           </TabsTrigger>
-          <TabsTrigger value="holidays" className="gap-2">
-            <Calendar className="size-4 shrink-0" />
+          <TabsTrigger value="holidays">
+            <Calendar className="size-4 shrink-0" aria-hidden="true" />
             <span className="whitespace-nowrap">Праздничные дни</span>
           </TabsTrigger>
-          <TabsTrigger value="system" className="gap-2">
-            <ShieldCheck className="size-4 shrink-0" />
+          <TabsTrigger value="system">
+            <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
             <span className="whitespace-nowrap">Система</span>
           </TabsTrigger>
         </TabsList>
