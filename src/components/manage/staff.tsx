@@ -301,6 +301,45 @@ export function StaffPage() {
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={`border-0 text-[10px] ${
+                            (p as any).is_active === false
+                              ? "bg-destructive/15 text-destructive"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
+                        >
+                          {(p as any).is_active === false ? "Отключён" : "Активен"}
+                        </Badge>
+                        {(isAdmin || isManager) && p.id !== user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            disabled={toggleActive.isPending}
+                            title={
+                              (p as any).is_active === false
+                                ? "Активировать учётную запись"
+                                : "Деактивировать учётную запись (без удаления)"
+                            }
+                            aria-label={`Изменить статус учётной записи: ${p.full_name}`}
+                            onClick={() =>
+                              toggleActive.mutate({
+                                userId: p.id,
+                                active: (p as any).is_active === false,
+                              })
+                            }
+                          >
+                            {(p as any).is_active === false ? (
+                              <Power className="size-4 text-emerald-600" />
+                            ) : (
+                              <PowerOff className="size-4 text-destructive" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center font-medium">{formatHours(norm)} ч</TableCell>
                     <TableCell className="text-center font-medium">{formatHours(planned)} ч</TableCell>
                     <TableCell className="text-center">
