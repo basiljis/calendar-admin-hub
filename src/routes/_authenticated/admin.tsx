@@ -31,6 +31,7 @@ import {
   setUserRoles,
   updateUserProfileAdmin,
   deleteUserAdmin,
+  bulkSetRole,
 } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -71,12 +72,19 @@ function AdminPage() {
   const saveProfile = useServerFn(updateUserProfileAdmin);
   const removeUser = useServerFn(deleteUserAdmin);
 
+  const applyBulkRole = useServerFn(bulkSetRole);
+
   const [editing, setEditing] = useState<null | {
     id: string;
     full_name: string;
     phone: string;
     position: string;
     shift_group: number;
+  }>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<null | {
+    role: AppRole;
+    action: "assign" | "revoke";
   }>(null);
 
   const { data: users = [], isLoading } = useQuery({
