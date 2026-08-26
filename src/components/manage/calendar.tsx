@@ -313,12 +313,15 @@ export function CalendarPage() {
 
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  const monthHours = shifts
+  // Сводка всегда считается за месяц, независимо от режима отображения
+  const monthShifts = shifts.filter((s) => s.work_date >= first && s.work_date <= last);
+
+  const monthHours = monthShifts
     .filter((s) => s.type === "work")
     .reduce((a, s) => a + Number(s.hours), 0);
 
   // Часы, «потерянные» из-за отпусков: дни отпуска, которые по графику были бы рабочими
-  const vacationHours = shifts
+  const vacationHours = monthShifts
     .filter((s) => s.type === "vacation")
     .reduce((a, s) => {
       const p = profiles.find((x) => x.id === s.user_id);
@@ -329,7 +332,7 @@ export function CalendarPage() {
   const plannedHours = monthHours + vacationHours;
 
   // Уже отработано: завершённые смены (дни до сегодня; сегодня — после 20:00)
-  const passedHours = shifts
+  const passedHours = monthShifts
     .filter(
       (s) =>
         s.type === "work" &&
