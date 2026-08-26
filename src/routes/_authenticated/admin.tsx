@@ -203,6 +203,40 @@ function AdminPage() {
         </p>
       </div>
 
+      {selected.size > 0 && (
+        <Card className="border-primary/40">
+          <CardContent className="flex flex-wrap items-center gap-3 py-4">
+            <span className="text-sm font-medium">Выбрано: {selected.size}</span>
+            <span className="text-muted-foreground text-sm">Роль:</span>
+            <div className="flex flex-wrap gap-2">
+              {allRoles.map((role) => (
+                <div key={role} className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkMutation.isPending}
+                    onClick={() => setBulkConfirm({ role, action: "assign" })}
+                  >
+                    Назначить «{roleLabels[role]}»
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkMutation.isPending}
+                    onClick={() => setBulkConfirm({ role, action: "revoke" })}
+                  >
+                    Отозвать «{roleLabels[role]}»
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+              Снять выбор
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Пользователи ({users.length})</CardTitle>
@@ -215,6 +249,15 @@ function AdminPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(checked) =>
+                          setSelected(checked ? new Set(users.map((u) => u.id)) : new Set())
+                        }
+                        aria-label="Выбрать всех"
+                      />
+                    </TableHead>
                     <TableHead>ФИО</TableHead>
                     <TableHead>Контакты</TableHead>
                     <TableHead>Должность</TableHead>
@@ -225,7 +268,14 @@ function AdminPage() {
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => (
-                    <TableRow key={u.id}>
+                    <TableRow key={u.id} data-state={selected.has(u.id) ? "selected" : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.has(u.id)}
+                          onCheckedChange={(checked) => toggleSelect(u.id, checked === true)}
+                          aria-label={`Выбрать ${u.full_name}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         {u.full_name}
                         {u.id === user?.id && (
