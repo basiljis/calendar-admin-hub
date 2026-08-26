@@ -21,7 +21,7 @@ export function useAvatarUrl(path?: string | null) {
 export function getInitials(name?: string | null) {
   const parts = (name || "").trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "U";
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "U";
 }
 
 interface UserAvatarProps {
