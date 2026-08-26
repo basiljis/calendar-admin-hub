@@ -922,6 +922,25 @@ export function CalendarPage() {
             ))}
           </div>
         </div>
+        {view === "year" ? (
+          <YearGrid
+            year={cursor.year}
+            shifts={shifts as ShiftItem[]}
+            holidays={data?.holidays ?? new Map()}
+            today={todayStr}
+            detailUserId={detailUserId}
+            onPickMonth={(m) => {
+              setCursor({ year: cursor.year, month: m });
+              setView("month");
+            }}
+            onPickDay={(d) => {
+              setCursor({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
+              setAnchor(d);
+              setView("day");
+            }}
+          />
+        ) : (
+          <>
         <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
           {(view === "day"
             ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
