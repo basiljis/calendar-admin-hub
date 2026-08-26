@@ -440,7 +440,7 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day" | "year">("month");
   const [anchor, setAnchor] = useState<string>(() => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
@@ -474,9 +474,18 @@ export function CalendarPage() {
       return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
     });
   })();
-  const visibleDays = view === "month" ? days : view === "week" ? weekDays : [anchor];
-  const rangeFrom = visibleDays[0]! < first ? visibleDays[0]! : first;
-  const rangeTo = visibleDays[visibleDays.length - 1]! > last ? visibleDays[visibleDays.length - 1]! : last;
+  const visibleDays =
+    view === "month" || view === "year" ? days : view === "week" ? weekDays : [anchor];
+  const yearFrom = `${cursor.year}-01-01`;
+  const yearTo = `${cursor.year}-12-31`;
+  const rangeFrom =
+    view === "year" ? yearFrom : visibleDays[0]! < first ? visibleDays[0]! : first;
+  const rangeTo =
+    view === "year"
+      ? yearTo
+      : visibleDays[visibleDays.length - 1]! > last
+        ? visibleDays[visibleDays.length - 1]!
+        : last;
 
   function shiftAnchor(deltaDays: number) {
     const d = parseISO(anchor);
@@ -695,19 +704,24 @@ export function CalendarPage() {
 
   const ruDate = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
   const headerTitle =
-    view === "month"
+    view === "year"
+      ? `${cursor.year} год`
+      : view === "month"
       ? `${MONTH_NAMES[cursor.month - 1]} ${cursor.year}`
       : view === "week"
         ? `${ruDate.format(parseISO(weekDays[0]!))} — ${ruDate.format(parseISO(weekDays[6]!))} ${parseISO(weekDays[6]!).getFullYear()}`
         : `${ruDate.format(parseISO(anchor))} ${parseISO(anchor).getFullYear()}`;
-  const navLabel = view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
+  const navLabel =
+    view === "year" ? "год" : view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
 
   function goPrev() {
-    if (view === "month") shiftMonth(-1);
+    if (view === "year") setCursor({ year: cursor.year - 1, month: cursor.month });
+    else if (view === "month") shiftMonth(-1);
     else shiftAnchor(view === "week" ? -7 : -1);
   }
   function goNext() {
-    if (view === "month") shiftMonth(1);
+    if (view === "year") setCursor({ year: cursor.year + 1, month: cursor.month });
+    else if (view === "month") shiftMonth(1);
     else shiftAnchor(view === "week" ? 7 : 1);
   }
   function goToday() {
@@ -890,6 +904,7 @@ export function CalendarPage() {
               { key: "month", label: "Месяц" },
               { key: "week", label: "Неделя" },
               { key: "day", label: "День" },
+              { key: "year", label: "Год" },
             ] as const).map((o) => (
               <button
                 key={o.key}
@@ -1101,7 +1116,7 @@ export function CalendarPage() {
                     shifts={list}
                     profiles={profiles}
                     now={now}
-                    view={view}
+                    view={view === "week" ? "week" : "day"}
                   />
                 )}
               </button>
