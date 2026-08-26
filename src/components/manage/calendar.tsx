@@ -82,6 +82,7 @@ type Profile = {
   id: string;
   full_name: string;
   shift_group: number;
+  roles: AppRole[];
 };
 
 export function CalendarPage() {
