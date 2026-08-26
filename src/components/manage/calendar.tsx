@@ -928,7 +928,9 @@ export function CalendarPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
-                      <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                      {p.roles.includes("employee") && (
+                        <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                      )}
                     </div>
                     {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">
