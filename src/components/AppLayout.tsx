@@ -2,7 +2,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   LayoutDashboard,
-  MessageSquare,
   Users,
   LogOut,
   Settings,
@@ -31,6 +30,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { ChatWidget } from "@/components/ChatWidget";
+
 
 const nav = [
   { to: "/dashboard", label: "Главная", icon: LayoutDashboard },
@@ -38,7 +39,7 @@ const nav = [
   { to: "/calendar", label: "График", icon: CalendarDays },
   { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
   { to: "/vacations-stats", label: "Отчеты", icon: LayoutDashboard, adminOnly: true },
-  { to: "/chat", label: "Чат", icon: MessageSquare },
+  
   { to: "/admin", label: "Администрирование", icon: ShieldCheck, adminOnly: true },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
@@ -122,7 +123,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       case "warning":
         return <Info className="size-4 text-amber-500" />;
       case "chat":
-        return <MessageSquare className="size-4 text-blue-500" />;
+        return <Info className="size-4 text-blue-500" />;
       default:
         return <Info className="size-4 text-blue-500" />;
     }
@@ -299,6 +300,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         <main className="mx-auto max-w-7xl p-8">{children}</main>
       </div>
+      <ChatWidget />
     </div>
   );
 }
