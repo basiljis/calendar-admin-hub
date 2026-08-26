@@ -875,7 +875,7 @@ export function ChatWidget() {
         onClick={toggleOpen}
         size="icon"
         className="relative h-14 w-14 rounded-full shadow-lg"
-        aria-label={isOpen ? "Закрыть чат" : "Открыть чат"}
+        data-tour="chat-button" aria-label={isOpen ? "Закрыть чат" : "Открыть чат"}
         title={isOpen ? "Закрыть чат" : "Открыть чат команды"}
       >
         {isOpen ? <X className="size-6" /> : <MessageSquare className="size-6" />}
