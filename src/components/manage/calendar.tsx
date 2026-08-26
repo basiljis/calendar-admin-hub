@@ -122,8 +122,14 @@ function TimeGridColumn({
   view: "week" | "day";
 }) {
   const totalMin = (SHIFT_END_HOUR - SHIFT_START_HOUR) * 60;
-  const labelWidth = view === "day" ? "w-9" : "w-6";
-  const labelSize = view === "day" ? "text-[11px]" : "text-[9px]";
+  const isDay = view === "day";
+  const labelWidth = isDay ? "w-12" : "w-8";
+  const labelSize = isDay ? "text-[11px]" : "text-[9px]";
+
+  // Индикатор текущего времени (только для сегодняшнего дня)
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const nowMin = now.getHours() * 60 + now.getMinutes() - SHIFT_START_HOUR * 60;
+  const showNowLine = todayIso === date && nowMin >= 0 && nowMin <= totalMin;
 
   return (
     <div className="mt-2 flex h-full min-h-0 flex-1 gap-1 overflow-hidden">
@@ -133,7 +139,7 @@ function TimeGridColumn({
           return (
             <span
               key={h}
-              className={`absolute right-0 -translate-y-1/2 text-muted-foreground/70 ${labelSize}`}
+              className={`text-muted-foreground/70 absolute right-1 -translate-y-1/2 tabular-nums ${labelSize}`}
               style={{ top: `${top}%` }}
             >
               {String(h).padStart(2, "0")}:00
@@ -141,20 +147,31 @@ function TimeGridColumn({
           );
         })}
       </div>
-      <div className="relative flex-1">
+      <div className="border-muted-foreground/15 relative flex-1 border-l">
         {HOURS.map((h) => {
           const top = minutesToPct((h - SHIFT_START_HOUR) * 60);
           return (
             <div
               key={h}
-              className="pointer-events-none absolute inset-x-0 border-b border-dashed border-muted-foreground/15"
+              className="border-muted-foreground/15 pointer-events-none absolute inset-x-0 border-b border-dashed"
               style={{ top: `${top}%` }}
             />
           );
         })}
 
+        {showNowLine && (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-20 flex items-center"
+            style={{ top: `${minutesToPct(nowMin)}%` }}
+            aria-hidden
+          >
+            <span className="-ml-1 size-2 rounded-full bg-rose-500" />
+            <span className="h-px flex-1 bg-rose-500" />
+          </div>
+        )}
+
         {shifts.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-center text-[10px] text-muted-foreground/70">
+          <div className="text-muted-foreground/70 absolute inset-0 flex items-center justify-center text-center text-[10px]">
             Смен нет
           </div>
         )}
@@ -171,7 +188,7 @@ function TimeGridColumn({
               <Tooltip key={s.id}>
                 <TooltipTrigger asChild>
                   <div
-                    className="absolute inset-y-0.5 rounded-md border border-amber-300 bg-amber-100/70 p-1 text-[10px] font-medium text-amber-900"
+                    className="absolute inset-y-0.5 rounded-lg border border-amber-300 bg-amber-100/70 p-1.5 text-[10px] font-medium text-amber-900"
                     style={{ left: `${left + 0.5}%`, width: `${width - 1}%` }}
                   >
                     <Plane className="mb-0.5 size-3" />
@@ -190,49 +207,94 @@ function TimeGridColumn({
           const pr = getShiftProgress(date, now);
           const done = pr.status === "done";
           const accent = done
-            ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+            ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-100"
             : p.shift_group === 1
-              ? "border-shift-a bg-shift-a/15 text-foreground"
-              : "border-shift-b bg-shift-b/15 text-foreground";
+              ? "border-shift-a/50 bg-shift-a/15 text-foreground"
+              : "border-shift-b/50 bg-shift-b/15 text-foreground";
+          const barColor = done
+            ? "bg-emerald-500"
+            : p.shift_group === 1
+              ? "bg-shift-a"
+              : "bg-shift-b";
 
-          const breakStart = Math.max(0, timeToMinutes(s.break_time || "13:00") - SHIFT_START_HOUR * 60);
-          const breakEnd = Math.min(totalMin, breakStart + 60);
-          const beforePct = (breakStart / totalMin) * 100;
-          const breakPct = ((breakEnd - breakStart) / totalMin) * 100;
-          const afterPct = ((totalMin - breakEnd) / totalMin) * 100;
-          const breakLabel = s.break_time
-            ? `${s.break_time}–${addHour(s.break_time)}`
-            : "не выбран";
+          // Блок смены позиционируем по реальному времени начала и конца
+          const startMin = 0;
+          const endMin = totalMin;
+          const topPct = minutesToPct(startMin);
+          const heightPct = minutesToPct(endMin - startMin);
+
+          const breakStartMin = s.break_time
+            ? Math.min(totalMin, Math.max(0, timeToMinutes(s.break_time) - SHIFT_START_HOUR * 60))
+            : null;
+          const breakEndMin = breakStartMin === null ? null : Math.min(totalMin, breakStartMin + 60);
+          const breakLabel = s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран";
 
           return (
             <Tooltip key={s.id}>
               <TooltipTrigger asChild>
                 <div
-                  className={`absolute inset-y-0.5 flex flex-col overflow-hidden rounded-md border text-[10px] sm:text-xs ${accent}`}
-                  style={{ left: `${left + 0.5}%`, width: `${width - 1}%` }}
+                  className={`absolute overflow-hidden rounded-lg border shadow-sm ${accent}`}
+                  style={{
+                    left: `${left + 0.5}%`,
+                    width: `${width - 1}%`,
+                    top: `${topPct}%`,
+                    height: `${heightPct}%`,
+                  }}
                 >
-                  <div className="w-full" style={{ height: `${beforePct}%` }} />
-                  <div
-                    className="w-full bg-amber-200/80 dark:bg-amber-400/40"
-                    style={{ height: `${breakPct}%` }}
-                  />
-                  <div className="w-full" style={{ height: `${afterPct}%` }} />
-                  <div className="pointer-events-none absolute inset-x-0 top-0.5 px-1">
+                  {/* Цветная полоса начала смены */}
+                  <span className={`absolute inset-x-0 top-0 h-1 ${barColor}`} aria-hidden />
+
+                  {/* Обеденный перерыв — отдельным цветом */}
+                  {breakStartMin !== null && breakEndMin !== null && (
+                    <div
+                      className="absolute inset-x-0 flex items-center justify-center border-y border-amber-400/50 bg-amber-200/80 dark:bg-amber-400/35"
+                      style={{
+                        top: `${(breakStartMin / (endMin - startMin)) * 100}%`,
+                        height: `${((breakEndMin - breakStartMin) / (endMin - startMin)) * 100}%`,
+                      }}
+                    >
+                      <span className="truncate px-1 text-[10px] font-semibold text-amber-900 dark:text-amber-100">
+                        {isDay ? `Обед ${breakLabel}` : "Обед"}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Начало смены */}
+                  <div className="pointer-events-none absolute inset-x-0 top-1 px-1.5">
                     <div className="flex items-center gap-1">
                       {done ? (
                         <CheckCircle2 className="size-3 shrink-0" />
                       ) : (
-                        <span
-                          className={`size-2 shrink-0 rounded-full ${
-                            done ? "bg-emerald-600" : p.shift_group === 1 ? "bg-shift-a" : "bg-shift-b"
-                          }`}
-                        />
+                        <span className={`size-2 shrink-0 rounded-full ${barColor}`} />
                       )}
-                      <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
+                      <span className={`truncate font-semibold ${isDay ? "text-sm" : "text-[11px]"}`}>
+                        {isDay ? p.full_name : p.full_name.split(" ")[0]}
+                      </span>
                     </div>
-                    <div className="opacity-80">{START_LABEL} – {END_LABEL}</div>
-                    <div className="opacity-80">Обед: {breakLabel}</div>
+                    <div className={`opacity-80 ${isDay ? "text-xs" : "text-[10px]"}`}>
+                      Начало {START_LABEL}
+                    </div>
+                    {isDay && (
+                      <div className="text-[11px] opacity-70">Обед {breakLabel}</div>
+                    )}
                   </div>
+
+                  {/* Конец смены */}
+                  <div
+                    className={`pointer-events-none absolute inset-x-0 bottom-1 px-1.5 text-right opacity-80 ${
+                      isDay ? "text-xs" : "text-[10px]"
+                    }`}
+                  >
+                    Конец {END_LABEL}
+                  </div>
+
+                  {pr.status === "active" && (
+                    <span
+                      className="pointer-events-none absolute inset-x-0 top-0 bg-emerald-500/10"
+                      style={{ height: `${pr.percent}%` }}
+                      aria-hidden
+                    />
+                  )}
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
@@ -240,9 +302,7 @@ function TimeGridColumn({
                 <p className="opacity-80">
                   Начало: {START_LABEL} | Обед: {breakLabel} | Конец: {END_LABEL}
                 </p>
-                {pr.status !== "future" && (
-                  <p className="mt-0.5 opacity-70">{pr.remainingLabel}</p>
-                )}
+                {pr.status !== "future" && <p className="mt-0.5 opacity-70">{pr.remainingLabel}</p>}
               </TooltipContent>
             </Tooltip>
           );
@@ -251,6 +311,7 @@ function TimeGridColumn({
     </div>
   );
 }
+
 
 type Profile = {
   id: string;
