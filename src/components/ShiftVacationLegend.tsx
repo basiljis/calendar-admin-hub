@@ -1,56 +1,98 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { HelpHint } from "@/components/Hint";
+import { useState } from "react";
+import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth";
 
-const shiftItems = [
-  { label: "Группа 1", color: "bg-shift-a" },
-  { label: "Группа 2", color: "bg-shift-b" },
-  { label: "Смена завершена", color: "bg-emerald-600" },
-  { label: "Текущая смена (заливка)", color: "bg-gradient-to-r from-emerald-600 to-shift-a" },
-  { label: "Праздничный день", color: "bg-holiday" },
+type LegendItem = { label: string; swatch: string; hint: string };
+
+const shiftItems: LegendItem[] = [
+  { label: "Группа 1", swatch: "bg-shift-a", hint: "Смена первой группы по графику 2/2." },
+  { label: "Группа 2", swatch: "bg-shift-b", hint: "Смена второй группы по графику 2/2." },
+  { label: "Смена завершена", swatch: "bg-emerald-600", hint: "Рабочий день уже закончился (после 20:00)." },
+  {
+    label: "Текущая смена",
+    swatch: "bg-gradient-to-r from-emerald-600 via-emerald-400 to-muted",
+    hint: "Идёт прямо сейчас: заливка показывает, сколько времени прошло.",
+  },
+  { label: "Праздничный день", swatch: "bg-holiday", hint: "Нерабочий праздничный день — норма часов уменьшается." },
 ];
 
-const vacationItems = [
-  { label: "День отпуска в календаре", color: "bg-amber-100 border border-amber-200" },
-  { label: "Ожидает подтверждения", color: "bg-amber-100 border border-amber-200" },
-  { label: "Подтверждён", color: "bg-primary" },
-  { label: "Отклонён", color: "bg-destructive" },
-];
+function vacationItems(isManager: boolean): LegendItem[] {
+  return isManager
+    ? [
+        { label: "Отпуск в календаре", swatch: "bg-amber-300", hint: "Подтверждённый отпуск сотрудника в сетке графика." },
+        { label: "Ожидает решения", swatch: "bg-orange-500", hint: "Заявка подана и ждёт вашего подтверждения." },
+        { label: "Подтверждён", swatch: "bg-primary", hint: "Заявка одобрена, дни списаны из остатка." },
+        { label: "Отклонён", swatch: "bg-destructive", hint: "Заявка отклонена, дни не списываются." },
+      ]
+    : [
+        { label: "Мой отпуск", swatch: "bg-amber-300", hint: "Ваш подтверждённый отпуск в сетке графика." },
+        { label: "На рассмотрении", swatch: "bg-orange-500", hint: "Заявка отправлена, ждёт решения администратора." },
+        { label: "Подтверждена", swatch: "bg-primary", hint: "Заявка одобрена, дни списаны из остатка." },
+        { label: "Отклонена", swatch: "bg-destructive", hint: "Заявка отклонена, дни остаются в остатке." },
+      ];
+}
+
+function Row({ item }: { item: LegendItem }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className={`mt-0.5 size-2.5 shrink-0 rounded-[3px] ${item.swatch}`} />
+      <div className="leading-tight">
+        <div className="text-[11px] font-medium">{item.label}</div>
+        <div className="text-muted-foreground text-[10px]">{item.hint}</div>
+      </div>
+    </div>
+  );
+}
 
 export function ShiftVacationLegend({ className }: { className?: string }) {
+  const { isManager } = useAuth();
+  const [open, setOpen] = useState(false);
+
   return (
-    <Card className={`border-none shadow-sm bg-card/50 backdrop-blur ${className ?? ""}`}>
-      <CardContent className="p-4">
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-3 text-xs">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className={`h-8 gap-1.5 px-2 text-xs ${className ?? ""}`}>
+          <Info className="size-3.5" />
+          Легенда
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-base">Обозначения</DialogTitle>
+          <DialogDescription className="text-xs">
+            {isManager
+              ? "Цвета смен и статусов заявок всей команды."
+              : "Цвета смен и статусов ваших заявок на отпуск."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-1.5 font-medium text-foreground/90">
-              <span>Смены</span>
-              <HelpHint text="Цвета групп и реального статуса смены в текущий момент." />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {shiftItems.map((item) => (
-                <span key={item.label} className="flex items-center gap-1.5">
-                  <span className={`size-3 rounded ${item.color}`} />
-                  {item.label}
-                </span>
+            <div className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">Смены</div>
+            <div className="grid gap-2">
+              {shiftItems.map((i) => (
+                <Row key={i.label} item={i} />
               ))}
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-1.5 font-medium text-foreground/90">
-              <span>Отпуска</span>
-              <HelpHint text="Статусы заявок на отпуск и их цвета в таблицах и календаре." />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {vacationItems.map((item) => (
-                <span key={item.label} className="flex items-center gap-1.5">
-                  <span className={`size-3 rounded ${item.color}`} />
-                  {item.label}
-                </span>
+            <div className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">Отпуска</div>
+            <div className="grid gap-2">
+              {vacationItems(isManager).map((i) => (
+                <Row key={i.label} item={i} />
               ))}
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
