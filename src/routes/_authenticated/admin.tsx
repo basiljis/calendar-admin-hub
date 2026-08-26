@@ -350,6 +350,57 @@ function AdminPage() {
         </CardContent>
       </Card>
 
+      <Dialog open={!!bulkConfirm} onOpenChange={(open) => !open && setBulkConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Подтверждение массового изменения ролей</DialogTitle>
+          </DialogHeader>
+          {bulkConfirm && (
+            <div className="space-y-3 text-sm">
+              <p>
+                Действие:{" "}
+                <span className="font-semibold">
+                  {bulkConfirm.action === "assign" ? "Назначить роль" : "Отозвать роль"} «
+                  {roleLabels[bulkConfirm.role]}»
+                </span>
+              </p>
+              <p>
+                Пользователей: <span className="font-semibold">{selected.size}</span>
+              </p>
+              <ul className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-3 text-muted-foreground">
+                {users
+                  .filter((u) => selected.has(u.id))
+                  .map((u) => (
+                    <li key={u.id}>{u.full_name}</li>
+                  ))}
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                Права администратора проверяются на сервере для каждого изменения отдельно.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkConfirm(null)}>
+              Отмена
+            </Button>
+            <Button
+              disabled={bulkMutation.isPending}
+              variant={bulkConfirm?.action === "revoke" ? "destructive" : "default"}
+              onClick={() =>
+                bulkConfirm &&
+                bulkMutation.mutate({
+                  userIds: Array.from(selected),
+                  role: bulkConfirm.role,
+                  action: bulkConfirm.action,
+                })
+              }
+            >
+              {bulkMutation.isPending ? "Выполняется…" : "Подтвердить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent>
           <DialogHeader>
