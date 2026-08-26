@@ -221,166 +221,181 @@ function SettingsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6">
-        <MonthlyNormsCard canEdit={isManager} />
+      <Tabs defaultValue="norms" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="norms" className="gap-2">
+            <Clock className="size-4" />
+            Нормы рабочего времени
+          </TabsTrigger>
+          <TabsTrigger value="holidays" className="gap-2">
+            <Calendar className="size-4" />
+            Праздничные дни
+          </TabsTrigger>
+        </TabsList>
 
-        {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Массовая настройка праздников</CardTitle>
-            <CardDescription>
-              Отметьте выбранный диапазон дат как рабочий или нерабочий по конкретному празднику.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date-from">Дата с</Label>
-                <Input
-                  id="date-from"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-[180px]"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="date-to">Дата по</Label>
-                <Input
-                  id="date-to"
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-[180px]"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: false })}
-                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
-                  className="gap-2 bg-rose-600 text-white hover:bg-rose-700 disabled:bg-rose-300 disabled:text-rose-50"
-                >
-                  <XCircle className="size-4" />
-                  Сделать нерабочими
-                </Button>
-                <Button
-                  onClick={() => bulkUpdateHolidays.mutate({ isWorking: true })}
-                  disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
-                  className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300 disabled:text-emerald-50"
-                >
-                  <CheckCircle2 className="size-4" />
-                  Сделать рабочими
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        )}
+        <TabsContent value="norms" className="mt-0">
+          <MonthlyNormsCard canEdit={isManager} />
+        </TabsContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-            <div>
-              <CardTitle>Государственные праздники</CardTitle>
-              <CardDescription>
-                Список праздников, влияющих на расчет нормы рабочих часов
-              </CardDescription>
-            </div>
-            {isAdmin && (
-              <div className="flex shrink-0 gap-2">
-                <Button onClick={openAddDialog} size="sm" className="gap-2">
-                  <Plus className="size-4" />
-                  Добавить праздник
-                </Button>
-                <Button
-                  onClick={() => reimportHolidays.mutate()}
-                  disabled={reimportHolidays.isPending}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
-                  Обновить данные
-                </Button>
+        <TabsContent value="holidays" className="mt-0 space-y-6">
+          {isAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Массовая настройка праздников</CardTitle>
+                <CardDescription>
+                  Отметьте выбранный диапазон дат как рабочий или нерабочий по конкретному празднику.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date-from">Дата с</Label>
+                    <Input
+                      id="date-from"
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-[180px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date-to">Дата по</Label>
+                    <Input
+                      id="date-to"
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-[180px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => bulkUpdateHolidays.mutate({ isWorking: false })}
+                      disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                      className="gap-2 bg-rose-600 text-white hover:bg-rose-700 disabled:bg-rose-300 disabled:text-rose-50"
+                    >
+                      <XCircle className="size-4" />
+                      Сделать нерабочими
+                    </Button>
+                    <Button
+                      onClick={() => bulkUpdateHolidays.mutate({ isWorking: true })}
+                      disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
+                      className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300 disabled:text-emerald-50"
+                    >
+                      <CheckCircle2 className="size-4" />
+                      Сделать рабочими
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+              <div>
+                <CardTitle>Государственные праздники</CardTitle>
+                <CardDescription>
+                  Список праздников, влияющих на расчет нормы рабочих часов
+                </CardDescription>
               </div>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Дата</TableHead>
-                    <TableHead>Название</TableHead>
-                    <TableHead>Статус</TableHead>
-                    <TableHead>Источник</TableHead>
-                    {isAdmin && <TableHead className="text-right">Действия</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
+              {isAdmin && (
+                <div className="flex shrink-0 gap-2">
+                  <Button onClick={openAddDialog} size="sm" className="gap-2">
+                    <Plus className="size-4" />
+                    Добавить праздник
+                  </Button>
+                  <Button
+                    onClick={() => reimportHolidays.mutate()}
+                    disabled={reimportHolidays.isPending}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
+                    Обновить данные
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        Загрузка...
-                      </TableCell>
+                      <TableHead>Дата</TableHead>
+                      <TableHead>Название</TableHead>
+                      <TableHead>Статус</TableHead>
+                      <TableHead>Источник</TableHead>
+                      {isAdmin && <TableHead className="text-right">Действия</TableHead>}
                     </TableRow>
-                  ) : holidays?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        Праздники не найдены
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    holidays?.map((h) => (
-                      <TableRow key={h.holiday_date}>
-                        <TableCell className="font-medium">
-                          {new Date(h.holiday_date).toLocaleDateString("ru-RU")}
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          Загрузка...
                         </TableCell>
-                        <TableCell>{h.name}</TableCell>
-                        <TableCell>
-                          {h.is_working ? (
-                            <Badge variant="outline">Рабочий</Badge>
-                          ) : (
-                            <Badge className="bg-holiday text-holiday-foreground border-0">Выходной</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          Производственный календарь 2026
-                        </TableCell>
-                        {isAdmin && (
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(h)}
-                              aria-label={`Редактировать ${h.name}`}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                if (window.confirm(`Удалить праздник «${h.name}» (${new Date(h.holiday_date).toLocaleDateString("ru-RU")})?`)) {
-                                  deleteHoliday.mutate(h.holiday_date);
-                                }
-                              }}
-                              aria-label={`Удалить ${h.name}`}
-                            >
-                              <Trash2 className="size-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        )}
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                    ) : holidays?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          Праздники не найдены
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      holidays?.map((h) => (
+                        <TableRow key={h.holiday_date}>
+                          <TableCell className="font-medium">
+                            {new Date(h.holiday_date).toLocaleDateString("ru-RU")}
+                          </TableCell>
+                          <TableCell>{h.name}</TableCell>
+                          <TableCell>
+                            {h.is_working ? (
+                              <Badge variant="outline">Рабочий</Badge>
+                            ) : (
+                              <Badge className="bg-holiday text-holiday-foreground border-0">Выходной</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">
+                            Производственный календарь 2026
+                          </TableCell>
+                          {isAdmin && (
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openEditDialog(h)}
+                                  aria-label={`Редактировать ${h.name}`}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    if (window.confirm(`Удалить праздник «${h.name}» (${new Date(h.holiday_date).toLocaleDateString("ru-RU")})?`)) {
+                                      deleteHoliday.mutate(h.holiday_date);
+                                    }
+                                  }}
+                                  aria-label={`Удалить ${h.name}`}
+                                >
+                                  <Trash2 className="size-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
