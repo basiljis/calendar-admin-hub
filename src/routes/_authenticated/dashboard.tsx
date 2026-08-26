@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { HelpHint } from "@/components/Hint";
 import { VacationRequestDialog } from "@/components/VacationRequestDialog";
 import { MyVacationRequests } from "@/components/MyVacationRequests";
 import { format } from "date-fns";
@@ -38,7 +39,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
+  const level: "employee" | "manager" | "admin" = isAdmin ? "admin" : isManager ? "manager" : "employee";
 
   const { data } = useQuery({
     queryKey: ["my-period", user?.id],
@@ -98,6 +100,29 @@ function Dashboard() {
           value={`${formatHours(norm)} ч`}
           hint={`База ${formatHours(PERIOD.normHours)} ч`}
           color="blue"
+          help={
+            <div className="space-y-1">
+              <p className="font-medium">Как считается норма</p>
+              <p>
+                База периода {formatHours(PERIOD.normHours)} ч минус 11 ч за каждый день
+                подтверждённого отпуска ({vacationDays} дн.) и минус 11 ч за каждый нерабочий
+                праздничный день ({nonWorkingHolidaysCount} дн.).
+              </p>
+              {level !== "employee" && (
+                <p className="opacity-80">
+                  Расчёт: {formatHours(PERIOD.normHours)} − 11×{vacationDays} − 11×
+                  {nonWorkingHolidaysCount} = {formatHours(norm)} ч. Праздники и нормы месяцев
+                  редактируются в разделе «Настройки».
+                </p>
+              )}
+              {level === "admin" && (
+                <p className="opacity-80">
+                  Админ: изменение статуса праздника «рабочий/выходной» пересчитывает норму сразу
+                  для всех сотрудников.
+                </p>
+              )}
+            </div>
+          }
         />
         <StatCard
           icon={CalendarCheck}
@@ -105,6 +130,21 @@ function Dashboard() {
           value={`${formatHours(plannedHours)} ч`}
           hint={`${workShifts.length} смен`}
           color="orange"
+          help={
+            <div className="space-y-1">
+              <p className="font-medium">Как считается план</p>
+              <p>
+                Сумма часов всех рабочих смен графика 2/2 за период: {workShifts.length} смен ×
+                продолжительность смены = {formatHours(plannedHours)} ч. Отпуск, больничный и
+                выходные в сумму не входят.
+              </p>
+              {level !== "employee" && (
+                <p className="opacity-80">
+                  Часы смены можно скорректировать вручную в разделе «Управление» → «Смены».
+                </p>
+              )}
+            </div>
+          }
         />
         <StatCard
           icon={Sparkles}
@@ -112,6 +152,23 @@ function Dashboard() {
           value={`${diff >= 0 ? "+" : "−"}${formatHours(Math.abs(diff))} ч`}
           hint={Math.abs(diff) < 0.05 ? "В пределах нормы" : "Требует внимания"}
           color="blue"
+          help={
+            <div className="space-y-1">
+              <p className="font-medium">Как считается отклонение</p>
+              <p>
+                Запланировано минус норма: {formatHours(plannedHours)} − {formatHours(norm)} ={" "}
+                {diff >= 0 ? "+" : "−"}
+                {formatHours(Math.abs(diff))} ч. Плюс — переработка, минус — недоработка при
+                суммированном учёте за период.
+              </p>
+              {level !== "employee" && (
+                <p className="opacity-80">
+                  Руководителю: отклонение нужно свести к нулю до конца учётного периода —
+                  корректируйте смены или согласуйте перенос отпуска.
+                </p>
+              )}
+            </div>
+          }
         />
         <StatCard
           icon={Plane}
@@ -119,6 +176,25 @@ function Dashboard() {
           value={String(vacationDays)}
           hint="Использовано дней"
           color="orange"
+          help={
+            <div className="space-y-1">
+              <p className="font-medium">Как считаются дни отпуска</p>
+              <p>
+                Количество календарных дней подтверждённых заявок, попадающих в период. Каждый день
+                снижает норму на 11 ч.
+              </p>
+              {level === "employee" && (
+                <p className="opacity-80">
+                  Подтверждённый отпуск изменить может только администратор или руководитель.
+                </p>
+              )}
+              {level !== "employee" && (
+                <p className="opacity-80">
+                  Годовой лимит — 56 дней. Заявки подтверждаются в разделе «Управление» → «Заявки».
+                </p>
+              )}
+            </div>
+          }
         />
       </div>
 
@@ -223,12 +299,14 @@ function StatCard({
   value,
   hint,
   color = "blue",
+  help,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
   hint: string;
   color?: "blue" | "orange";
+  help?: React.ReactNode;
 }) {
   const colorClasses = color === "orange" 
     ? "bg-orange-50 text-orange-600 dark:bg-orange-950/20" 
@@ -239,7 +317,10 @@ function StatCard({
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              {label}
+              {help && <HelpHint text={help} side="top" />}
+            </p>
             <p className="text-3xl font-bold">{value}</p>
           </div>
           <div className={`flex size-12 items-center justify-center rounded-2xl ${colorClasses}`}>
