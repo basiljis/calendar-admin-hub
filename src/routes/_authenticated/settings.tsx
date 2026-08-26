@@ -593,7 +593,7 @@ function MonthlyNormsCard({ canEdit }: { canEdit: boolean }) {
             Автоматически рассчитана по производственному календарю с учётом праздников. Изменённые значения сохраняются и используются при пересчёте.
           </CardDescription>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
             <SelectTrigger className="h-9 w-28" aria-label="Год">
               <SelectValue />
