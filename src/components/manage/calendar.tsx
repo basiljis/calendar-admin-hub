@@ -93,6 +93,7 @@ export function CalendarPage() {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [detailUser, setDetailUser] = useState<string>("");
   const [now, setNow] = useState(() => new Date());
+  const [dayBreaks, setDayBreaks] = useState<Record<string, string>>({});
 
   // Обновляем прогресс смены в реальном времени
   useEffect(() => {
