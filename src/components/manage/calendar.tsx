@@ -290,8 +290,8 @@ export function CalendarPage() {
                 <p className="text-foreground/80 text-sm font-medium">Выходит с учётом отпуска</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
               </div>
-              <div className="bg-chart-2/10 flex size-10 items-center justify-center rounded-xl">
-                <Briefcase className="size-5 text-chart-2" />
+              <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
+                <Plane className="size-5 text-chart-2" />
               </div>
             </div>
             <p className="text-muted-foreground mt-3 text-xs font-medium">
