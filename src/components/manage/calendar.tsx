@@ -601,7 +601,7 @@ export function CalendarPage() {
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
                       ? "min-h-40 sm:min-h-64"
-                      : "min-h-64"
+                      : "min-h-[28rem] p-3 sm:p-4"
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
