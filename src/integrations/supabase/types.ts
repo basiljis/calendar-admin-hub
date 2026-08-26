@@ -248,6 +248,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_approved: boolean
           phone: string | null
           position: string | null
           shift_group: number
@@ -260,6 +261,7 @@ export type Database = {
           full_name?: string
           id: string
           is_active?: boolean
+          is_approved?: boolean
           phone?: string | null
           position?: string | null
           shift_group?: number
@@ -272,6 +274,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_approved?: boolean
           phone?: string | null
           position?: string | null
           shift_group?: number

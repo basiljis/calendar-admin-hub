@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff, ShieldCheck, ShieldQuestion } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
-import { createUserAdmin, setUserActive } from "@/lib/admin-users.functions";
+import { createUserAdmin, setUserActive, setUserApproved } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 
 
@@ -93,6 +93,17 @@ export function StaffPage() {
       await setActiveFn({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(vars.active ? "Учётная запись активирована" : "Учётная запись деактивирована");
+      qc.invalidateQueries({ queryKey: ["staff"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const setApprovedFn = useServerFn(setUserApproved);
+  const toggleApproved = useMutation({
+    mutationFn: async (vars: { userId: string; approved: boolean }) =>
+      await setApprovedFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.approved ? "Пользователь подтверждён" : "Подтверждение отозвано");
       qc.invalidateQueries({ queryKey: ["staff"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -323,6 +334,37 @@ export function StaffPage() {
                         >
                           {(p as any).is_active === false ? "Отключён" : "Активен"}
                         </Badge>
+                        {(p as any).is_approved === false && (
+                          <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800">
+                            Ждёт подтверждения
+                          </Badge>
+                        )}
+                        {(isAdmin || isManager) && p.id !== user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            disabled={toggleApproved.isPending}
+                            title={
+                              (p as any).is_approved === false
+                                ? "Подтвердить регистрацию пользователя"
+                                : "Отозвать подтверждение регистрации"
+                            }
+                            aria-label={`Подтверждение регистрации: ${p.full_name}`}
+                            onClick={() =>
+                              toggleApproved.mutate({
+                                userId: p.id,
+                                approved: (p as any).is_approved === false,
+                              })
+                            }
+                          >
+                            {(p as any).is_approved === false ? (
+                              <ShieldQuestion className="size-4 text-amber-600" />
+                            ) : (
+                              <ShieldCheck className="size-4 text-emerald-600" />
+                            )}
+                          </Button>
+                        )}
                         {(isAdmin || isManager) && p.id !== user?.id && (
                           <Button
                             variant="ghost"

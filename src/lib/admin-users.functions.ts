@@ -282,6 +282,7 @@ export const createUserAdmin = createServerFn({ method: "POST" })
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: created.user.id, email: data.email, full_name: data.full_name,
       phone: data.phone, position: data.position, shift_group: data.shift_group,
+      is_approved: true,
     });
     if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
@@ -361,4 +362,43 @@ export const setUserActive = createServerFn({ method: "POST" })
     } as any);
 
     return { ok: true, active: data.active };
+  });
+
+export const setUserApproved = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        approved: z.boolean(),
+      })
+      .parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    const [{ data: isAdmin }, { data: isManager }] = await Promise.all([
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "manager" }),
+    ]);
+    if (!isAdmin && !isManager) {
+      throw new Error("Недостаточно прав для подтверждения пользователя");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ is_approved: data.approved })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("notifications").insert({
+      user_id: data.userId,
+      title: data.approved ? "Учётная запись подтверждена" : "Подтверждение отозвано",
+      message: data.approved
+        ? "Ваша регистрация подтверждена. Доступ к системе открыт."
+        : "Доступ к системе приостановлен до повторного подтверждения.",
+      type: "system",
+    });
+
+    return { ok: true, approved: data.approved };
   });
