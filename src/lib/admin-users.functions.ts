@@ -71,6 +71,67 @@ export const setUserRoles = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const bulkSetRole = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        userIds: z.array(z.string().uuid()).min(1).max(200),
+        role: z.enum(["admin", "manager", "employee"]),
+        action: z.enum(["assign", "revoke"]),
+      })
+      .parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    // Права проверяются на сервере для КАЖДОГО изменения, а не один раз на пакет.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const results: Array<{ userId: string; ok: boolean; error?: string }> = [];
+
+    for (const userId of data.userIds) {
+      try {
+        await assertAdmin(context);
+
+        if (data.action === "revoke") {
+          if (userId === context.userId && data.role === "admin") {
+            throw new Error("Нельзя снять с себя роль администратора");
+          }
+          const { data: current, error: curErr } = await supabaseAdmin
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId);
+          if (curErr) throw new Error(curErr.message);
+          const remaining = (current ?? []).filter((r: any) => r.role !== data.role);
+          if ((current ?? []).length > 0 && remaining.length === 0) {
+            throw new Error("У пользователя должна остаться хотя бы одна роль");
+          }
+          const { error } = await supabaseAdmin
+            .from("user_roles")
+            .delete()
+            .eq("user_id", userId)
+            .eq("role", data.role);
+          if (error) throw new Error(error.message);
+        } else {
+          const { error } = await supabaseAdmin
+            .from("user_roles")
+            .upsert({ user_id: userId, role: data.role }, { onConflict: "user_id,role" });
+          if (error) throw new Error(error.message);
+        }
+
+        results.push({ userId, ok: true });
+      } catch (e: any) {
+        results.push({ userId, ok: false, error: e?.message ?? "Ошибка" });
+      }
+    }
+
+    return {
+      ok: results.every((r) => r.ok),
+      succeeded: results.filter((r) => r.ok).length,
+      failed: results.filter((r) => !r.ok).length,
+      results,
+    };
+  });
+
 export const updateUserProfileAdmin = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z
