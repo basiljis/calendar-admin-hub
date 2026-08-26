@@ -568,7 +568,8 @@ export function VacationsAdminPage() {
                                         <Badge variant="outline" className="text-[10px]">
                                           {log.action_type === "requested" ? "Подана" : 
                                            log.action_type === "approved" ? "Подтверждена" : 
-                                           log.action_type === "rejected" ? "Отклонена" : log.action_type}
+                                           log.action_type === "rejected" ? "Отклонена" :
+                                           log.action_type === "adjusted" ? "Скорректирована" : log.action_type}
                                         </Badge>
                                       </TableCell>
                                       <TableCell className="text-right text-xs text-muted-foreground">
