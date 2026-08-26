@@ -308,7 +308,7 @@ function SettingsPage() {
           )}
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+            <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Государственные праздники</CardTitle>
                 <CardDescription>
@@ -316,7 +316,7 @@ function SettingsPage() {
                 </CardDescription>
               </div>
               {isAdmin && (
-                <div className="flex shrink-0 gap-2">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Button onClick={openAddDialog} size="sm" className="gap-2">
                     <Plus className="size-4" />
                     Добавить праздник
@@ -586,7 +586,7 @@ function MonthlyNormsCard({ canEdit }: { canEdit: boolean }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+      <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Норма рабочего времени по месяцам</CardTitle>
           <CardDescription>
