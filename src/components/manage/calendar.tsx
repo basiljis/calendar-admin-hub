@@ -100,6 +100,11 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [anchor, setAnchor] = useState<string>(() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  });
 
 
   // Обновляем прогресс смены в реальном времени
