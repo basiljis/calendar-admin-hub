@@ -413,6 +413,32 @@ export function CalendarPage() {
         </div>
 
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div
+            role="group"
+            aria-label="Режим отображения календаря"
+            className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
+          >
+            {([
+              { key: "month", label: "Месяц" },
+              { key: "week", label: "Неделя" },
+              { key: "day", label: "День" },
+            ] as const).map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                aria-pressed={view === o.key}
+                onClick={() => setView(o.key)}
+                className={`focus-visible:ring-ring h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                  view === o.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+
           {isAdmin && (
             <Select
               value={groupFilter}
