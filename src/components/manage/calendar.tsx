@@ -343,6 +343,29 @@ export function CalendarPage() {
 
   const passedPercent = monthHours > 0 ? Math.round((passedHours / monthHours) * 100) : 0;
 
+  const ruDate = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
+  const headerTitle =
+    view === "month"
+      ? `${MONTH_NAMES[cursor.month - 1]} ${cursor.year}`
+      : view === "week"
+        ? `${ruDate.format(parseISO(weekDays[0]!))} — ${ruDate.format(parseISO(weekDays[6]!))} ${parseISO(weekDays[6]!).getFullYear()}`
+        : `${ruDate.format(parseISO(anchor))} ${parseISO(anchor).getFullYear()}`;
+  const navLabel = view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
+
+  function goPrev() {
+    if (view === "month") shiftMonth(-1);
+    else shiftAnchor(view === "week" ? -7 : -1);
+  }
+  function goNext() {
+    if (view === "month") shiftMonth(1);
+    else shiftAnchor(view === "week" ? 7 : 1);
+  }
+  function goToday() {
+    const t = new Date();
+    setCursor({ year: t.getFullYear(), month: t.getMonth() + 1 });
+    setAnchor(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 shadow-sm sm:p-4">
@@ -352,8 +375,8 @@ export function CalendarPage() {
               variant="ghost"
               size="icon"
               className="size-8 rounded-full"
-              onClick={() => shiftMonth(-1)}
-              aria-label="Предыдущий месяц"
+              onClick={goPrev}
+              aria-label={`Предыдущий ${navLabel}`}
             >
               <ChevronLeft className="size-4" />
             </Button>
@@ -361,10 +384,7 @@ export function CalendarPage() {
               variant="ghost"
               size="sm"
               className="h-8 rounded-full px-3 text-xs font-semibold"
-              onClick={() => {
-                const t = new Date();
-                setCursor({ year: t.getFullYear(), month: t.getMonth() + 1 });
-              }}
+              onClick={goToday}
             >
               Сегодня
             </Button>
@@ -372,15 +392,15 @@ export function CalendarPage() {
               variant="ghost"
               size="icon"
               className="size-8 rounded-full"
-              onClick={() => shiftMonth(1)}
-              aria-label="Следующий месяц"
+              onClick={goNext}
+              aria-label={`Следующий ${navLabel}`}
             >
               <ChevronRight className="size-4" />
             </Button>
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
-              {MONTH_NAMES[cursor.month - 1]} {cursor.year}
+              {headerTitle}
             </h1>
             <p className="text-muted-foreground truncate text-xs sm:text-sm">
               {detailProfile
@@ -391,6 +411,7 @@ export function CalendarPage() {
             </p>
           </div>
         </div>
+
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {isAdmin && (
             <Select
