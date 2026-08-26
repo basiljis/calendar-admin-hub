@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmojiPicker } from "@/components/EmojiPicker";
+
 import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
@@ -55,7 +57,26 @@ export function ChatWidget() {
   const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  const insertEmoji = (emoji: string) => {
+    const el = messageInputRef.current;
+    if (!el) {
+      setText((prev) => prev + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + emoji + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + emoji.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -632,12 +653,15 @@ export function ChatWidget() {
                     <Paperclip className="size-4" />
                   </Button>
                   <Input
+                    ref={messageInputRef}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Сообщение…"
                     disabled={isUploading}
                     className="min-w-0"
                   />
+                  <EmojiPicker disabled={isUploading} onSelect={insertEmoji} />
+
                   <Button
                     type="submit"
                     size="icon"
