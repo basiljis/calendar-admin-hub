@@ -681,6 +681,9 @@ export function CalendarPage() {
                           <div className="text-sm opacity-80">
                             Обед: {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
                           </div>
+                          {p.roles.includes("employee") && (
+                            <div className="text-sm opacity-80">Группа {p.shift_group}</div>
+                          )}
                           {pr.status === "active" && (
                             <>
                               <div className="bg-background/60 mt-2 h-1.5 w-full overflow-hidden rounded-full">
