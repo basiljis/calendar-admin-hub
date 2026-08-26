@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, CalendarDays, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,17 +75,6 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
-  async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Не удалось войти через Google");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-3 sm:p-5">
@@ -110,21 +98,6 @@ function AuthPage() {
           </div>
 
           <div className="mt-10">
-            <Button
-              variant="outline"
-              className="h-12 w-full rounded-xl text-sm font-medium"
-              onClick={google}
-            >
-              Войти через Google
-              <span className="text-primary ml-1 font-bold">G</span>
-            </Button>
-
-            <div className="my-6 flex items-center gap-4">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs text-slate-400">или</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-
             <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
               {mode === "up" && (
                 <>
