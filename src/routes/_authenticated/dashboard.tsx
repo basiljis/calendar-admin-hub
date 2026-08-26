@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   const { data } = useQuery({
     queryKey: ["my-period", user?.id],
