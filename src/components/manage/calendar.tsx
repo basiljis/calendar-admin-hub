@@ -239,17 +239,7 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-xs">
-        <Legend color="bg-shift-a" label="Группа 1" />
-        <Legend color="bg-shift-b" label="Группа 2" />
-        <Legend color="bg-emerald-600" label="Смена завершена" />
-        <Legend color="bg-gradient-to-r from-emerald-600 to-shift-a" label="Смена идёт (заливка = прошедшее время)" />
-        <Legend color="bg-holiday" label="Праздничный день" />
-        <Legend color="bg-amber-100 border border-amber-200" label="Отпуск" />
-        <p className="ml-auto text-xs text-muted-foreground">
-          Дни отпуска учитываются в подсчёте нормы часов.
-        </p>
-      </div>
+      <ShiftVacationLegend />
 
       <Card>
         <CardContent className="p-2 sm:p-4">
