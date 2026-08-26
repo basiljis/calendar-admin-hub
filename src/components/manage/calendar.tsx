@@ -18,6 +18,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 import { HelpHint } from "@/components/Hint";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   MONTH_NAMES,
   PERIOD,
   SHIFT_WORK_HOURS,
@@ -32,6 +39,17 @@ import {
 // Смена длится 12 часов: 08:00 — 20:00 (1 час — перерыв на обед)
 const SHIFT_START_HOUR = 8;
 const SHIFT_END_HOUR = 20;
+
+function addHour(time: string, hours = 1): string {
+  const [h, m] = time.split(":").map(Number);
+  if (Number.isNaN(h)) return time;
+  const d = new Date(2000, 0, 1, h, m ?? 0);
+  d.setHours(d.getHours() + hours);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+const START_LABEL = `${String(SHIFT_START_HOUR).padStart(2, "0")}:00`;
+const END_LABEL = `${String(SHIFT_END_HOUR).padStart(2, "0")}:00`;
 
 type ShiftProgress = {
   status: "future" | "active" | "done";
@@ -73,6 +91,7 @@ export function CalendarPage() {
     return { year: t.getFullYear(), month: t.getMonth() + 1 };
   });
   const [openDay, setOpenDay] = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<string>("");
   const [now, setNow] = useState(() => new Date());
 
   // Обновляем прогресс смены в реальном времени
@@ -111,6 +130,11 @@ export function CalendarPage() {
 
   const profiles = data?.profiles ?? [];
   const shifts = data?.shifts ?? [];
+
+  // Сотрудник всегда видит подробный график по себе.
+  // Администратор/руководитель выбирает сотрудника из списка.
+  const detailUserId = isAdmin ? detailUser : (user?.id ?? "");
+  const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
   const generate = useMutation({
     mutationFn: async () => {
@@ -249,10 +273,27 @@ export function CalendarPage() {
             {MONTH_NAMES[cursor.month - 1]} {cursor.year}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Смены 2/2 · по отделению
+            {detailProfile
+              ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
+              : "Смены 2/2 · по отделению"}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
+              <SelectTrigger className="h-9 w-56" aria-label="Подробный график сотрудника">
+                <SelectValue placeholder="Подробный график сотрудника" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все сотрудники (общий вид)</SelectItem>
+                {profiles.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.full_name || "Без имени"} · группа {p.shift_group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <ShiftVacationLegend />
           <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)}>
             <ChevronLeft className="size-4" />
@@ -303,7 +344,58 @@ export function CalendarPage() {
                     )}
                   </div>
                   <div className="mt-1 space-y-0.5">
-                    {list.map((s) => {
+                    {detailUserId ? (() => {
+                      const s = list.find((x) => x.user_id === detailUserId);
+                      if (!s) {
+                        return (
+                          <div className="text-muted-foreground text-[10px]">Выходной</div>
+                        );
+                      }
+                      if (s.type === "vacation") {
+                        return (
+                          <div className="flex items-center gap-1 rounded border border-amber-200 bg-amber-100 px-1 py-0.5 text-[10px] text-amber-800">
+                            <Plane className="size-2.5" /> Отпуск
+                          </div>
+                        );
+                      }
+                      const pr = getShiftProgress(d, now);
+                      return (
+                        <div
+                          className={`space-y-0.5 rounded border px-1 py-1 text-[10px] leading-tight ${
+                            pr.status === "done"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                              : pr.status === "active"
+                                ? "border-primary bg-primary/10 text-foreground"
+                                : "border-border bg-secondary/50 text-foreground"
+                          }`}
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Начало</span>
+                            <span className="font-medium">{START_LABEL}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Обед</span>
+                            <span className="font-medium">
+                              {s.break_time
+                                ? `${s.break_time}–${addHour(s.break_time)}`
+                                : "не выбран"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Конец</span>
+                            <span className="font-medium">{END_LABEL}</span>
+                          </div>
+                          {pr.status === "active" && (
+                            <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+                              <div
+                                className="h-full bg-emerald-600"
+                                style={{ width: `${pr.percent}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })() : list.map((s) => {
                       const p = profiles.find((x) => x.id === s.user_id);
                       if (!p) return null;
                       if (s.type === "vacation") {
