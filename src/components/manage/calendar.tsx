@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
 import {
   Select,
