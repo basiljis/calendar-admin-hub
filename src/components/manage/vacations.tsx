@@ -328,6 +328,8 @@ export function VacationsAdminPage() {
         </div>
       </div>
 
+      <ShiftVacationLegend />
+
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
