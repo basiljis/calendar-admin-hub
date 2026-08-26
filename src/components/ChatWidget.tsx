@@ -787,6 +787,16 @@ export function ChatWidget() {
               </ScrollArea>
 
               <div className="border-t p-3 space-y-2">
+                {typingLabel && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex gap-0.5">
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current" />
+                    </span>
+                    {typingLabel}
+                  </div>
+                )}
                 {attachments.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {attachments.map((a) => (
