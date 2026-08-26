@@ -343,11 +343,10 @@ export function CalendarPage() {
                 const isCurrentMonth =
                   t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
                 if (isCurrentMonth && t.getDate() > 1) {
-                  const td = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
                   setGenMode("fromToday");
                   setGenUntil(last);
                   setGenOpen(true);
-                  void td;
+
                 } else {
                   generate.mutate({ from: first, to: last });
                 }
