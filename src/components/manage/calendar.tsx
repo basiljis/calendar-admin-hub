@@ -384,7 +384,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                  <HelpHint text="Расчётная норма часов после вычета подтверждённых отпусков и нерабочих праздничных дней." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
               </div>
               <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
