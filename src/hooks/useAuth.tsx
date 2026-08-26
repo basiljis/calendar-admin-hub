@@ -1,8 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "manager" | "employee";
+
+// ---- Режим предпросмотра роли (только для администраторов) ----
+export type RolePreview = "manager" | "employee1" | "employee2" | null;
+
+const PREVIEW_KEY = "role_preview";
+const previewListeners = new Set<() => void>();
+
+function getPreviewSnapshot(): RolePreview {
+  try {
+    const v = window.localStorage.getItem(PREVIEW_KEY);
+    return v === "manager" || v === "employee1" || v === "employee2" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function subscribePreview(cb: () => void) {
+  previewListeners.add(cb);
+  return () => {
+    previewListeners.delete(cb);
+  };
+}
+
+export function setRolePreview(value: RolePreview) {
+  try {
+    if (value) window.localStorage.setItem(PREVIEW_KEY, value);
+    else window.localStorage.removeItem(PREVIEW_KEY);
+  } catch {
+    // ignore
+  }
+  previewListeners.forEach((l) => l());
+}
+
+export const rolePreviewLabels: Record<Exclude<RolePreview, null>, string> = {
+  manager: "Руководитель",
+  employee1: "Сотрудник группы 1",
+  employee2: "Сотрудник группы 2",
+};
 
 export interface Profile {
   id: string;
@@ -72,8 +110,34 @@ export function useAuth() {
     };
   }, [user]);
 
-  const isAdmin = roles.includes("admin");
-  const isManager = roles.includes("manager") || isAdmin;
+  const preview = useSyncExternalStore(subscribePreview, getPreviewSnapshot, () => null);
 
-  return { session, user, roles, profile, isAdmin, isManager, loading, setProfile };
+  const realIsAdmin = roles.includes("admin");
+  const activePreview: RolePreview = realIsAdmin ? preview : null;
+
+  const effectiveRoles: AppRole[] = activePreview
+    ? activePreview === "manager"
+      ? ["manager"]
+      : ["employee"]
+    : roles;
+  const effectiveProfile: Profile | null =
+    profile && activePreview && activePreview !== "manager"
+      ? { ...profile, shift_group: activePreview === "employee1" ? 1 : 2 }
+      : profile;
+
+  const isAdmin = effectiveRoles.includes("admin");
+  const isManager = effectiveRoles.includes("manager") || isAdmin;
+
+  return {
+    session,
+    user,
+    roles: effectiveRoles,
+    profile: effectiveProfile,
+    isAdmin,
+    isManager,
+    loading,
+    setProfile,
+    realIsAdmin,
+    rolePreview: activePreview,
+  };
 }

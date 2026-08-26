@@ -21,7 +21,15 @@ import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, setRolePreview, rolePreviewLabels, type RolePreview } from "@/hooks/useAuth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Eye, X } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -66,7 +74,7 @@ function getSectionTitle(pathname: string) {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { profile, user, isManager, isAdmin } = useAuth();
+  const { profile, user, isManager, isAdmin, realIsAdmin, rolePreview } = useAuth();
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -299,6 +307,36 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+            {realIsAdmin && (
+              <Hint
+                label="Режим просмотра роли"
+                description="Посмотреть систему глазами руководителя или сотрудника"
+                side="bottom"
+              >
+                <div className="flex items-center gap-1">
+                  <Eye className="size-4 text-muted-foreground" />
+                  <Select
+                    value={rolePreview ?? "admin"}
+                    onValueChange={(v) =>
+                      setRolePreview(v === "admin" ? null : (v as Exclude<RolePreview, null>))
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label="Режим просмотра роли"
+                      className="h-9 w-[190px] rounded-full text-xs"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Администратор</SelectItem>
+                      <SelectItem value="manager">{rolePreviewLabels.manager}</SelectItem>
+                      <SelectItem value="employee1">{rolePreviewLabels.employee1}</SelectItem>
+                      <SelectItem value="employee2">{rolePreviewLabels.employee2}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Hint>
+            )}
             <ThemeToggle />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
@@ -391,6 +429,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
+
+        {rolePreview && (
+          <div className="flex items-center justify-center gap-3 border-b bg-primary/10 px-4 py-2 text-sm text-primary">
+            <Eye className="size-4 shrink-0" />
+            <span>
+              Режим просмотра: <strong>{rolePreviewLabels[rolePreview]}</strong> — вы видите
+              систему так, как её видит эта роль.
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setRolePreview(null)}
+            >
+              <X className="mr-1 size-3" />
+              Вернуться к администратору
+            </Button>
+          </div>
+        )}
 
         <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
