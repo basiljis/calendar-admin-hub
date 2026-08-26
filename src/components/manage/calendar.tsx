@@ -218,7 +218,7 @@ export function CalendarPage() {
     onSuccess: (n) => {
       toast.success(`График сформирован: ${n} записей`);
       setGenOpen(false);
-      qc.invalidateQueries({ queryKey: ["calendar", first] });
+      qc.invalidateQueries({ queryKey: ["calendar"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -257,7 +257,7 @@ export function CalendarPage() {
         if (error) throw error;
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -269,7 +269,7 @@ export function CalendarPage() {
         .eq("holiday_date", date);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -293,7 +293,7 @@ export function CalendarPage() {
         .eq("work_date", date);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
