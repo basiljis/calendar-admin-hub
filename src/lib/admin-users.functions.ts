@@ -161,6 +161,89 @@ export const updateUserProfileAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const getUserDetailAdmin = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ userId: z.string().uuid() }).parse(data))
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [
+      { data: profile, error: pErr },
+      { data: roles, error: rErr },
+      { data: shifts, error: sErr },
+      { data: vacations, error: vErr },
+      { data: notifications, error: nErr },
+      { data: auditLogs, error: aErr },
+    ] = await Promise.all([
+      supabaseAdmin.from("profiles").select("*").eq("id", data.userId).single(),
+      supabaseAdmin.from("user_roles").select("*").eq("user_id", data.userId),
+      supabaseAdmin
+        .from("shifts")
+        .select("*")
+        .eq("user_id", data.userId)
+        .order("work_date", { ascending: false })
+        .limit(60),
+      supabaseAdmin
+        .from("vacations")
+        .select("*")
+        .eq("user_id", data.userId)
+        .order("start_date", { ascending: false }),
+      supabaseAdmin
+        .from("notifications")
+        .select("*")
+        .eq("user_id", data.userId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabaseAdmin
+        .from("vacation_audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+    if (pErr) throw new Error("Пользователь не найден");
+    if (rErr) throw new Error(rErr.message);
+    if (sErr) throw new Error(sErr.message);
+    if (vErr) throw new Error(vErr.message);
+    if (nErr) throw new Error(nErr.message);
+    if (aErr) throw new Error(aErr.message);
+
+    const vacationIds = new Set((vacations ?? []).map((v: any) => v.id));
+    const audit = (auditLogs ?? []).filter((l: any) => vacationIds.has(l.vacation_id));
+
+    // Актёр действий аудита
+    const actorIds = [...new Set(audit.map((l: any) => l.action_by as string))];
+    const { data: actors } = actorIds.length
+      ? await supabaseAdmin.from("profiles").select("id, full_name").in("id", actorIds)
+      : { data: [] };
+    const actorName = new Map((actors ?? []).map((a: any) => [a.id as string, a.full_name as string]));
+
+    return {
+      profile: {
+        id: profile.id as string,
+        full_name: (profile.full_name as string) || "",
+        email: (profile.email as string | null) ?? null,
+        phone: (profile.phone as string | null) ?? null,
+        position: (profile.position as string | null) ?? null,
+        shift_group: (profile.shift_group as number) ?? 1,
+        created_at: profile.created_at as string,
+      },
+      roles: (roles ?? []).map((r: any) => r.role as AppRole),
+      shifts: shifts ?? [],
+      vacations: vacations ?? [],
+      notifications: notifications ?? [],
+      audit: audit.map((l: any) => ({
+        id: l.id as string,
+        vacation_id: l.vacation_id as string,
+        action_type: l.action_type as string,
+        previous_status: (l.previous_status as string | null) ?? null,
+        new_status: (l.new_status as string | null) ?? null,
+        created_at: l.created_at as string,
+        actor: actorName.get(l.action_by as string) ?? "Неизвестно",
+      })),
+    };
+  });
+
 export const deleteUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ userId: z.string().uuid() }).parse(data))
   .middleware([requireSupabaseAuth])

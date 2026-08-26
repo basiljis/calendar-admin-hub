@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -277,7 +277,13 @@ function AdminPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        {u.full_name}
+                        <Link
+                          to="/admin/users/$userId"
+                          params={{ userId: u.id }}
+                          className="text-primary hover:underline"
+                        >
+                          {u.full_name}
+                        </Link>
                         {u.id === user?.id && (
                           <Badge variant="secondary" className="ml-2">
                             это вы
