@@ -610,10 +610,10 @@ export function CalendarPage() {
               >
                 <div className="flex items-start justify-between gap-1">
                   <span
-                    className={`flex size-6 items-center justify-center rounded-full text-sm ${
+                    className={`flex size-7 items-center justify-center rounded-full text-base ${
                       isToday
                         ? "bg-primary text-primary-foreground font-semibold"
-                        : "font-medium"
+                        : "font-semibold"
                     }`}
                   >
                     {Number(d.slice(-2))}
