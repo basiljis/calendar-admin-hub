@@ -173,9 +173,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
-            {!isSidebarCollapsed && (
-              <span className="text-xl font-bold tracking-tight text-primary">universum.</span>
-            )}
+            <span className={`text-xl font-bold tracking-tight text-primary ${isSidebarCollapsed ? "md:hidden" : ""}`}>universum.</span>
           </Link>
         </div>
 
