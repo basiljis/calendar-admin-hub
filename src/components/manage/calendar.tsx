@@ -67,7 +67,10 @@ type Profile = {
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
-  const [cursor, setCursor] = useState({ year: 2026, month: 9 });
+  const [cursor, setCursor] = useState(() => {
+    const t = new Date();
+    return { year: t.getFullYear(), month: t.getMonth() + 1 };
+  });
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
