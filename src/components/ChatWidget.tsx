@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmojiPicker } from "@/components/EmojiPicker";
@@ -117,7 +118,7 @@ export function ChatWidget() {
   const { data: profiles } = useQuery({
     queryKey: ["profiles"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, full_name");
+      const { data } = await supabase.from("profiles").select("id, full_name, avatar_url");
       return data ?? [];
     },
   });
@@ -143,7 +144,8 @@ export function ChatWidget() {
       }
       const { data: messages } = await query;
       const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
-      return { messages: messages ?? [], names };
+      const avatars = new Map((profiles ?? []).map((p) => [p.id, (p as any).avatar_url as string | null]));
+      return { messages: messages ?? [], names, avatars };
     },
     enabled: !!profiles,
   });
@@ -776,7 +778,14 @@ export function ChatWidget() {
                 {((isSearching ? searchResults : chatData?.messages) ?? []).map((m) => {
                   const mine = m.user_id === user?.id;
                   return (
-                    <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"} mb-3`}>
+                    <div key={m.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"} mb-3`}>
+                      {!mine && (
+                        <UserAvatar
+                          name={chatData?.names.get(m.user_id)}
+                          avatarPath={chatData?.avatars?.get(m.user_id)}
+                          className="size-7 shrink-0"
+                        />
+                      )}
                       <div
                         className={`group max-w-[85%] rounded-2xl px-3.5 py-2 ${
                           mine
