@@ -285,7 +285,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </PopoverContent>
             </Popover>
 
-            <div className="flex items-center gap-3 border-l pl-6">
+            <div data-tour="profile" className="flex items-center gap-3 border-l pl-6">
               <div className="text-right">
                 <div className="text-sm font-semibold text-foreground leading-none">
                   {profile?.full_name || "Пользователь"}
