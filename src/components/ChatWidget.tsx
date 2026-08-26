@@ -648,6 +648,8 @@ export function ChatWidget() {
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
+                    aria-label="Прикрепить файл"
+                    title="Прикрепить файл"
                     className="shrink-0"
                   >
                     <Paperclip className="size-4" />
@@ -666,6 +668,7 @@ export function ChatWidget() {
                     type="submit"
                     size="icon"
                     aria-label="Отправить"
+                    title="Отправить сообщение (Enter)"
                     disabled={isUploading}
                     className="shrink-0"
                   >
@@ -683,6 +686,7 @@ export function ChatWidget() {
         size="icon"
         className="relative h-14 w-14 rounded-full shadow-lg"
         aria-label={isOpen ? "Закрыть чат" : "Открыть чат"}
+        title={isOpen ? "Закрыть чат" : "Открыть чат команды"}
       >
         {isOpen ? <X className="size-6" /> : <MessageSquare className="size-6" />}
         {!isOpen && unreadCount > 0 && (
