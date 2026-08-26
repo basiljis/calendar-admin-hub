@@ -101,6 +101,11 @@ export function CalendarPage() {
     return () => clearInterval(id);
   }, []);
 
+  // Сбрасываем локальные значения обеда при открытии/закрытии диалога дня
+  useEffect(() => {
+    setDayBreaks({});
+  }, [openDay]);
+
   const first = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-01`;
   const days = monthDays(cursor.year, cursor.month);
   const last = days[days.length - 1]!;
