@@ -353,7 +353,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {profile?.full_name || "Пользователь"}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground leading-none">
-                  {isAdmin ? "Администратор" : isManager ? "Руководитель" : "Сотрудник"}
+                  {profile?.shift_group ? `Группа ${profile.shift_group}` : "Группа не назначена"}
                 </div>
               </div>
               <Avatar className="h-10 w-10 border-2 border-primary/10">
