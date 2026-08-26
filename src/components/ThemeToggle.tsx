@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/Hint";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export type Theme = "light" | "dark";
 
@@ -44,6 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   const label = isDark ? "Светлая тема" : "Тёмная тема";
 
   return (
+    <TooltipProvider>
     <Hint label={label} description="Переключение оформления интерфейса" side="bottom">
       <Button
         variant="ghost"
@@ -60,5 +62,6 @@ export function ThemeToggle({ className }: { className?: string }) {
         )}
       </Button>
     </Hint>
+    </TooltipProvider>
   );
 }
