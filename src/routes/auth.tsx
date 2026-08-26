@@ -114,9 +114,21 @@ function AuthPage() {
               id="auth-error"
               role="alert"
               aria-live="assertive"
+              aria-atomic="true"
               className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             >
               {authError}
+            </div>
+          )}
+          {authSuccess && (
+            <div
+              id="auth-success"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            >
+              {authSuccess}
             </div>
           )}
 
