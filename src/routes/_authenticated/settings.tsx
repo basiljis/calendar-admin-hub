@@ -282,22 +282,24 @@ function SettingsPage() {
                 Список праздников, влияющих на расчет нормы рабочих часов
               </CardDescription>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <Button onClick={openAddDialog} size="sm" className="gap-2">
-                <Plus className="size-4" />
-                Добавить праздник
-              </Button>
-              <Button
-                onClick={() => reimportHolidays.mutate()}
-                disabled={reimportHolidays.isPending}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
-                Обновить данные
-              </Button>
-            </div>
+            {isAdmin && (
+              <div className="flex shrink-0 gap-2">
+                <Button onClick={openAddDialog} size="sm" className="gap-2">
+                  <Plus className="size-4" />
+                  Добавить праздник
+                </Button>
+                <Button
+                  onClick={() => reimportHolidays.mutate()}
+                  disabled={reimportHolidays.isPending}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
+                  Обновить данные
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
