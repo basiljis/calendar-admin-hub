@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save } from "lucide-react";
+import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save, ShieldCheck } from "lucide-react";
+import { SystemSettings } from "@/components/settings/SystemSettings";
 import { MONTH_NAMES } from "@/lib/schedule";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
