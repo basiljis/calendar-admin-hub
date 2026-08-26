@@ -791,6 +791,7 @@ export function CalendarPage() {
                     );
                   })}
                 </div>
+                )}
               </button>
             );
           })}
