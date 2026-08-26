@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,8 +13,9 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plane, Users, Calendar, AlertCircle, Filter, RotateCcw } from "lucide-react";
-import { VACATION_DAYS_BASE } from "@/lib/schedule";
+import { Plane, Users, Calendar, AlertCircle, Filter, RotateCcw, ImageDown, FileSpreadsheet } from "lucide-react";
+import { VACATION_DAYS_BASE, HOURS_PER_VACATION_DAY, SHIFT_WORK_HOURS } from "@/lib/schedule";
+import { exportToExcel, downloadChartPng } from "@/lib/export";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,44 @@ const toDate = (s: string) => new Date(`${s}T00:00:00`);
 const daysBetween = (a: Date, b: Date) =>
   Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
 
+const fmt = (n: number) => n.toFixed(1).replace(".0", "");
+
+type TipProps = { active?: boolean; payload?: { payload: Record<string, number | string> }[]; label?: string };
+
+/** Подсказка: дни отпуска и снятые часы нормы по сотруднику */
+function EmployeeTooltip({ active, payload }: TipProps) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]!.payload as { name: string; days: number };
+  return (
+    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="font-semibold text-popover-foreground mb-1">{row.name}</div>
+      <div className="text-muted-foreground">Дней отпуска: <span className="font-medium text-foreground">{row.days}</span></div>
+      <div className="text-muted-foreground">
+        Снято часов нормы: <span className="font-medium text-foreground">{fmt(row.days * HOURS_PER_VACATION_DAY)} ч</span>
+      </div>
+      <div className="text-muted-foreground">
+        Остаток дней: <span className="font-medium text-foreground">{Math.max(0, VACATION_DAYS_BASE - row.days)}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Подсказка: сколько людей в отпуске и сколько часов смен недоступно */
+function LoadTooltip({ active, payload, label }: TipProps) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]!.payload as { count: number };
+  return (
+    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="font-semibold text-popover-foreground mb-1">{label}</div>
+      <div className="text-muted-foreground">В отпуске: <span className="font-medium text-foreground">{row.count} чел.</span></div>
+      <div className="text-muted-foreground">
+        Часов смен вне графика: <span className="font-medium text-foreground">≈ {fmt(row.count * SHIFT_WORK_HOURS)} ч/смена</span>
+      </div>
+    </div>
+  );
+}
+
+
 export function VacationsStatsPage() {
   const { isAdmin } = useAuth();
 
@@ -47,6 +86,10 @@ export function VacationsStatsPage() {
   const [employee, setEmployee] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+
+  const employeeChartRef = useRef<HTMLDivElement>(null);
+  const loadChartRef = useRef<HTMLDivElement>(null);
+
 
   const resetFilters = () => {
     setYear(String(new Date().getFullYear()));
@@ -146,6 +189,39 @@ export function VacationsStatsPage() {
           : `${MONTHS_FULL[Number(month)]} ${year}`,
     };
   }, [raw, year, month, group, employee, dateFrom, dateTo]);
+
+  const exportEmployeesExcel = () => {
+    exportToExcel(
+      [
+        {
+          name: "По сотрудникам",
+          rows: (stats?.employeeData || []).map((r) => ({
+            Сотрудник: r.name,
+            "Дней отпуска": r.days,
+            "Снято часов нормы": Number((r.days * HOURS_PER_VACATION_DAY).toFixed(1)),
+            "Остаток дней": Math.max(0, VACATION_DAYS_BASE - r.days),
+          })),
+        },
+      ],
+      `Отпуска_по_сотрудникам_${stats?.periodLabel || ""}.xlsx`,
+    );
+  };
+
+  const exportLoadExcel = () => {
+    exportToExcel(
+      [
+        {
+          name: "Загрузка по месяцам",
+          rows: (stats?.loadData || []).map((r) => ({
+            Месяц: r.name,
+            "Сотрудников в отпуске": r.count,
+            "Часов смен вне графика": Number((r.count * SHIFT_WORK_HOURS).toFixed(1)),
+          })),
+        },
+      ],
+      `Загрузка_команды_${stats?.periodLabel || ""}.xlsx`,
+    );
+  };
 
   if (!isAdmin) {
     return (
@@ -277,11 +353,29 @@ export function VacationsStatsPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Использовано дней по сотрудникам</CardTitle>
-            <CardDescription>Суммарное количество подтвержденных дней отпуска</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                Использовано дней по сотрудникам
+                <HelpHint text={`Наведите на столбец: показываются дни отпуска, снятые часы нормы (1 день ≈ ${fmt(HOURS_PER_VACATION_DAY)} ч) и остаток дней.`} />
+              </CardTitle>
+              <CardDescription>
+                Подтвержденные дни отпуска за выбранный период. Один день отпуска уменьшает годовую норму
+                примерно на {fmt(HOURS_PER_VACATION_DAY)} ч.
+              </CardDescription>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button variant="outline" size="icon" title="Скачать картинку (PNG)" aria-label="Скачать график картинкой"
+                onClick={() => downloadChartPng(employeeChartRef.current, `Отпуска_по_сотрудникам_${stats?.periodLabel || ""}`)}>
+                <ImageDown className="size-4" />
+              </Button>
+              <Button variant="outline" size="icon" title="Скачать Excel" aria-label="Скачать данные в Excel"
+                onClick={exportEmployeesExcel}>
+                <FileSpreadsheet className="size-4" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[300px]" ref={employeeChartRef}>
             {isLoading ? (
               <div className="flex h-full items-center justify-center">Загрузка...</div>
             ) : (
@@ -290,7 +384,7 @@ export function VacationsStatsPage() {
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={100} fontSize={12} />
-                  <Tooltip />
+                  <Tooltip content={<EmployeeTooltip />} />
                   <Bar dataKey="days" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -299,11 +393,29 @@ export function VacationsStatsPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Загрузка команды по месяцам</CardTitle>
-            <CardDescription>Количество сотрудников в отпуске одновременно</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                Загрузка команды по месяцам
+                <HelpHint text={`Наведите на столбец: число сотрудников в отпуске и объём смен вне графика (смена = ${SHIFT_WORK_HOURS} рабочих часов).`} />
+              </CardTitle>
+              <CardDescription>
+                Сколько сотрудников одновременно находятся в отпуске в каждом месяце и сколько часов смен
+                при этом выпадает из графика.
+              </CardDescription>
+            </div>
+            <div className="flex gap-1 shrink-0">
+              <Button variant="outline" size="icon" title="Скачать картинку (PNG)" aria-label="Скачать график картинкой"
+                onClick={() => downloadChartPng(loadChartRef.current, `Загрузка_команды_${stats?.periodLabel || ""}`)}>
+                <ImageDown className="size-4" />
+              </Button>
+              <Button variant="outline" size="icon" title="Скачать Excel" aria-label="Скачать данные в Excel"
+                onClick={exportLoadExcel}>
+                <FileSpreadsheet className="size-4" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[300px]" ref={loadChartRef}>
             {isLoading ? (
               <div className="flex h-full items-center justify-center">Загрузка...</div>
             ) : (
@@ -312,7 +424,7 @@ export function VacationsStatsPage() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
-                  <Tooltip />
+                  <Tooltip content={<LoadTooltip />} />
                   <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
