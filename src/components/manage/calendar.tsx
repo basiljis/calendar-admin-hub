@@ -171,10 +171,26 @@ export function CalendarPage() {
   });
 
   const toggle = useMutation({
-    mutationFn: async ({ userId, date, on }: { userId: string; date: string; on: boolean }) => {
+    mutationFn: async ({
+      userId,
+      date,
+      on,
+      breakTime,
+    }: {
+      userId: string;
+      date: string;
+      on: boolean;
+      breakTime?: string;
+    }) => {
       if (on) {
         const { error } = await supabase.from("shifts").upsert(
-          { user_id: userId, work_date: date, hours: SHIFT_WORK_HOURS, type: "work" },
+          {
+            user_id: userId,
+            work_date: date,
+            hours: SHIFT_WORK_HOURS,
+            type: "work",
+            break_time: breakTime || "13:00",
+          },
           { onConflict: "user_id,work_date" },
         );
         if (error) throw error;
