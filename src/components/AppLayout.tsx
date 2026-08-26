@@ -35,14 +35,11 @@ import { ChatWidget } from "@/components/ChatWidget";
 
 const nav = [
   { to: "/dashboard", label: "Главная", icon: LayoutDashboard },
-  { to: "/staff", label: "Специалисты", icon: Users, managerOnly: true },
   { to: "/calendar", label: "График", icon: CalendarDays },
-  { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
-  { to: "/vacations-stats", label: "Отчеты", icon: LayoutDashboard, adminOnly: true },
-  
-  { to: "/admin", label: "Администрирование", icon: ShieldCheck, adminOnly: true },
+  { to: "/manage", label: "Управление", icon: Users, managerOnly: true },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
