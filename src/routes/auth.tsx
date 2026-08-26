@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, CalendarDays, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,7 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
@@ -52,6 +53,7 @@ function AuthPage() {
     if (error) {
       setAuthError(error.message);
       toast.error(error.message);
+      emailRef.current?.focus();
       return;
     }
     setAuthSuccess("Вход выполнен. Переходим в систему…");
@@ -176,6 +178,7 @@ function AuthPage() {
                 Email
               </Label>
               <Input
+                ref={emailRef}
                 id="email"
                 name="email"
                 type="email"
