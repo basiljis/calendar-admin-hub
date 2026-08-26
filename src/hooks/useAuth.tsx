@@ -11,6 +11,7 @@ export interface Profile {
   phone: string | null;
   position: string | null;
   shift_group: number;
+  is_active?: boolean;
 }
 
 export function useAuth() {
