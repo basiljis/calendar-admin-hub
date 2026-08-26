@@ -460,7 +460,7 @@ export function StaffPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="add-vacation-card">
         <CardHeader>
           <CardTitle className="text-base">
             {isAdmin ? "Добавить или назначить отпуск" : "Подать заявку на отпуск"}
