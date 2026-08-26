@@ -100,6 +100,11 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [anchor, setAnchor] = useState<string>(() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  });
 
 
   // Обновляем прогресс смены в реальном времени
@@ -117,17 +122,42 @@ export function CalendarPage() {
   const days = monthDays(cursor.year, cursor.month);
   const last = days[days.length - 1]!;
 
+  // Видимый период зависит от режима отображения: месяц / неделя / день
+  const weekDays = (() => {
+    const d = parseISO(anchor);
+    const offset = (d.getDay() + 6) % 7;
+    const start = new Date(d);
+    start.setDate(d.getDate() - offset);
+    return Array.from({ length: 7 }, (_, i) => {
+      const x = new Date(start);
+      x.setDate(start.getDate() + i);
+      return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+    });
+  })();
+  const visibleDays = view === "month" ? days : view === "week" ? weekDays : [anchor];
+  const rangeFrom = visibleDays[0]! < first ? visibleDays[0]! : first;
+  const rangeTo = visibleDays[visibleDays.length - 1]! > last ? visibleDays[visibleDays.length - 1]! : last;
+
+  function shiftAnchor(deltaDays: number) {
+    const d = parseISO(anchor);
+    d.setDate(d.getDate() + deltaDays);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    setAnchor(iso);
+    setCursor({ year: d.getFullYear(), month: d.getMonth() + 1 });
+  }
+
   const { data } = useQuery({
-    queryKey: ["calendar", first],
+    queryKey: ["calendar", rangeFrom, rangeTo],
+
     queryFn: async () => {
       const [profiles, shifts, holidays, vacations] = await Promise.all([
         supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
-        supabase.from("shifts").select("*").gte("work_date", first).lte("work_date", last),
+        supabase.from("shifts").select("*").gte("work_date", rangeFrom).lte("work_date", rangeTo),
         supabase
           .from("holidays")
           .select("holiday_date, name, is_working")
-          .gte("holiday_date", first)
-          .lte("holiday_date", last),
+          .gte("holiday_date", rangeFrom)
+          .lte("holiday_date", rangeTo),
         supabase.from("vacations").select("*"),
       ]);
       return {
@@ -188,7 +218,7 @@ export function CalendarPage() {
     onSuccess: (n) => {
       toast.success(`График сформирован: ${n} записей`);
       setGenOpen(false);
-      qc.invalidateQueries({ queryKey: ["calendar", first] });
+      qc.invalidateQueries({ queryKey: ["calendar"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -227,7 +257,7 @@ export function CalendarPage() {
         if (error) throw error;
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -239,7 +269,7 @@ export function CalendarPage() {
         .eq("holiday_date", date);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -263,7 +293,7 @@ export function CalendarPage() {
         .eq("work_date", date);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar", first] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -283,12 +313,15 @@ export function CalendarPage() {
 
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  const monthHours = shifts
+  // Сводка всегда считается за месяц, независимо от режима отображения
+  const monthShifts = shifts.filter((s) => s.work_date >= first && s.work_date <= last);
+
+  const monthHours = monthShifts
     .filter((s) => s.type === "work")
     .reduce((a, s) => a + Number(s.hours), 0);
 
   // Часы, «потерянные» из-за отпусков: дни отпуска, которые по графику были бы рабочими
-  const vacationHours = shifts
+  const vacationHours = monthShifts
     .filter((s) => s.type === "vacation")
     .reduce((a, s) => {
       const p = profiles.find((x) => x.id === s.user_id);
@@ -299,7 +332,7 @@ export function CalendarPage() {
   const plannedHours = monthHours + vacationHours;
 
   // Уже отработано: завершённые смены (дни до сегодня; сегодня — после 20:00)
-  const passedHours = shifts
+  const passedHours = monthShifts
     .filter(
       (s) =>
         s.type === "work" &&
@@ -310,6 +343,29 @@ export function CalendarPage() {
 
   const passedPercent = monthHours > 0 ? Math.round((passedHours / monthHours) * 100) : 0;
 
+  const ruDate = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
+  const headerTitle =
+    view === "month"
+      ? `${MONTH_NAMES[cursor.month - 1]} ${cursor.year}`
+      : view === "week"
+        ? `${ruDate.format(parseISO(weekDays[0]!))} — ${ruDate.format(parseISO(weekDays[6]!))} ${parseISO(weekDays[6]!).getFullYear()}`
+        : `${ruDate.format(parseISO(anchor))} ${parseISO(anchor).getFullYear()}`;
+  const navLabel = view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
+
+  function goPrev() {
+    if (view === "month") shiftMonth(-1);
+    else shiftAnchor(view === "week" ? -7 : -1);
+  }
+  function goNext() {
+    if (view === "month") shiftMonth(1);
+    else shiftAnchor(view === "week" ? 7 : 1);
+  }
+  function goToday() {
+    const t = new Date();
+    setCursor({ year: t.getFullYear(), month: t.getMonth() + 1 });
+    setAnchor(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 shadow-sm sm:p-4">
@@ -319,8 +375,8 @@ export function CalendarPage() {
               variant="ghost"
               size="icon"
               className="size-8 rounded-full"
-              onClick={() => shiftMonth(-1)}
-              aria-label="Предыдущий месяц"
+              onClick={goPrev}
+              aria-label={`Предыдущий ${navLabel}`}
             >
               <ChevronLeft className="size-4" />
             </Button>
@@ -328,10 +384,7 @@ export function CalendarPage() {
               variant="ghost"
               size="sm"
               className="h-8 rounded-full px-3 text-xs font-semibold"
-              onClick={() => {
-                const t = new Date();
-                setCursor({ year: t.getFullYear(), month: t.getMonth() + 1 });
-              }}
+              onClick={goToday}
             >
               Сегодня
             </Button>
@@ -339,15 +392,15 @@ export function CalendarPage() {
               variant="ghost"
               size="icon"
               className="size-8 rounded-full"
-              onClick={() => shiftMonth(1)}
-              aria-label="Следующий месяц"
+              onClick={goNext}
+              aria-label={`Следующий ${navLabel}`}
             >
               <ChevronRight className="size-4" />
             </Button>
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
-              {MONTH_NAMES[cursor.month - 1]} {cursor.year}
+              {headerTitle}
             </h1>
             <p className="text-muted-foreground truncate text-xs sm:text-sm">
               {detailProfile
@@ -358,7 +411,34 @@ export function CalendarPage() {
             </p>
           </div>
         </div>
+
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div
+            role="group"
+            aria-label="Режим отображения календаря"
+            className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
+          >
+            {([
+              { key: "month", label: "Месяц" },
+              { key: "week", label: "Неделя" },
+              { key: "day", label: "День" },
+            ] as const).map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                aria-pressed={view === o.key}
+                onClick={() => setView(o.key)}
+                className={`focus-visible:ring-ring h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                  view === o.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+
           {isAdmin && (
             <Select
               value={groupFilter}
@@ -478,8 +558,11 @@ export function CalendarPage() {
 
 
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
-        <div className="grid grid-cols-7 border-b">
-          {WEEKDAYS.map((w) => (
+        <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
+          {(view === "day"
+            ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
+            : WEEKDAYS
+          ).map((w) => (
             <div
               key={w}
               className="text-muted-foreground px-2 py-2.5 text-center text-[11px] font-semibold tracking-wider uppercase"
@@ -488,19 +571,21 @@ export function CalendarPage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7">
-          {Array.from({ length: leadingBlanks }).map((_, i) => {
-            const prevLast = new Date(cursor.year, cursor.month - 1, 0).getDate();
-            return (
-              <div
-                key={`b${i}`}
-                className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
-              >
-                {prevLast - leadingBlanks + 1 + i}
-              </div>
-            );
-          })}
-          {days.map((d) => {
+        <div className={`grid ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
+          {view === "month" &&
+            Array.from({ length: leadingBlanks }).map((_, i) => {
+              const prevLast = new Date(cursor.year, cursor.month - 1, 0).getDate();
+              return (
+                <div
+                  key={`b${i}`}
+                  className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
+                >
+                  {prevLast - leadingBlanks + 1 + i}
+                </div>
+              );
+            })}
+          {visibleDays.map((d) => {
+
             const holiday = data?.holidays.get(d);
             const list = shiftsOn(d);
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -511,7 +596,13 @@ export function CalendarPage() {
               <button
                 key={d}
                 onClick={() => setOpenDay(d)}
-                className={`group relative min-h-20 min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:min-h-28 sm:p-2 ${
+                className={`group relative min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:p-2 ${
+                  view === "month"
+                    ? "min-h-20 sm:min-h-28"
+                    : view === "week"
+                      ? "min-h-40 sm:min-h-64"
+                      : "min-h-64"
+                } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
@@ -641,7 +732,8 @@ export function CalendarPage() {
               </button>
             );
           })}
-          {Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
+          {view === "month" &&
+            Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
             <div
               key={`t${i}`}
               className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
