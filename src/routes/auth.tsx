@@ -77,27 +77,26 @@ function AuthPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-3 sm:p-5">
-      <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-xl lg:grid-cols-2">
-        {/* Левая колонка — форма */}
-        <div className="flex flex-col px-6 py-10 sm:px-12 sm:py-14">
-          <div className="flex items-center gap-2">
-            <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
-              <CalendarDays className="size-5" />
-            </span>
-            <span className="text-primary text-xl font-bold tracking-tight">График ОКП</span>
-          </div>
+    <div className="grid h-screen w-screen overflow-hidden bg-white lg:grid-cols-2">
+      {/* Левая колонка — форма */}
+      <div className="flex h-full flex-col overflow-y-auto px-8 py-10 sm:px-14 sm:py-14">
+        <div className="flex items-center gap-2">
+          <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
+            <CalendarDays className="size-5" />
+          </span>
+          <span className="text-primary text-xl font-bold tracking-tight">График ОКП</span>
+        </div>
 
-          <div className="mt-14 sm:mt-20">
-            <h1 className="text-primary text-4xl font-bold tracking-tight sm:text-5xl">
-              {mode === "in" ? "Здравствуйте!" : "Регистрация"}
-            </h1>
-            <p className="mt-3 text-sm text-slate-500">
-              Добро пожаловать в систему графиков психологов ОКП
-            </p>
-          </div>
+        <div className="mt-14 sm:mt-20">
+          <h1 className="text-primary text-4xl font-bold tracking-tight sm:text-5xl">
+            {mode === "in" ? "Здравствуйте!" : "Регистрация"}
+          </h1>
+          <p className="mt-3 text-sm text-slate-500">
+            Добро пожаловать в систему графиков психологов ОКП
+          </p>
+        </div>
 
-          <div className="mt-10">
+        <div className="mt-10">
             <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
               {mode === "up" && (
                 <>
