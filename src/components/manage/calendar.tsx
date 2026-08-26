@@ -94,6 +94,10 @@ export function CalendarPage() {
   const [detailUser, setDetailUser] = useState<string>("");
   const [now, setNow] = useState(() => new Date());
   const [dayBreaks, setDayBreaks] = useState<Record<string, string>>({});
+  const [genOpen, setGenOpen] = useState(false);
+  const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
+  const [genUntil, setGenUntil] = useState<string>("");
+
 
   // Обновляем прогресс смены в реальном времени
   useEffect(() => {
