@@ -83,6 +83,175 @@ function getShiftProgress(date: string, now: Date): ShiftProgress {
   };
 }
 
+const HOURS = Array.from({ length: SHIFT_END_HOUR - SHIFT_START_HOUR + 1 }, (_, i) => SHIFT_START_HOUR + i);
+
+function timeToMinutes(time: string): number {
+  const parts = time.split(":").map(Number);
+  const h = parts[0] ?? 0;
+  const m = parts[1] ?? 0;
+  if (Number.isNaN(h)) return 0;
+  return h * 60 + (Number.isNaN(m) ? 0 : m);
+}
+
+function minutesToPct(minutes: number): number {
+  return (minutes / ((SHIFT_END_HOUR - SHIFT_START_HOUR) * 60)) * 100;
+}
+
+type ShiftItem = {
+  id: string;
+  user_id: string;
+  work_date: string;
+  hours: number;
+  type: "work" | "vacation" | "off" | "sick";
+  break_time?: string | null;
+  note?: string | null;
+  created_at?: string;
+};
+
+function TimeGridColumn({
+  date,
+  shifts,
+  profiles,
+  now,
+  view,
+}: {
+  date: string;
+  shifts: ShiftItem[];
+  profiles: Profile[];
+  now: Date;
+  view: "week" | "day";
+}) {
+  const totalMin = (SHIFT_END_HOUR - SHIFT_START_HOUR) * 60;
+  const labelWidth = view === "day" ? "w-9" : "w-6";
+  const labelSize = view === "day" ? "text-[11px]" : "text-[9px]";
+
+  return (
+    <div className="mt-2 flex h-full min-h-0 flex-1 gap-1 overflow-hidden">
+      <div className={`relative shrink-0 ${labelWidth}`}>
+        {HOURS.map((h) => {
+          const top = minutesToPct((h - SHIFT_START_HOUR) * 60);
+          return (
+            <span
+              key={h}
+              className={`absolute right-0 -translate-y-1/2 text-muted-foreground/70 ${labelSize}`}
+              style={{ top: `${top}%` }}
+            >
+              {String(h).padStart(2, "0")}:00
+            </span>
+          );
+        })}
+      </div>
+      <div className="relative flex-1">
+        {HOURS.map((h) => {
+          const top = minutesToPct((h - SHIFT_START_HOUR) * 60);
+          return (
+            <div
+              key={h}
+              className="pointer-events-none absolute inset-x-0 border-b border-dashed border-muted-foreground/15"
+              style={{ top: `${top}%` }}
+            />
+          );
+        })}
+
+        {shifts.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-center text-[10px] text-muted-foreground/70">
+            Смен нет
+          </div>
+        )}
+
+        {shifts.map((s, idx) => {
+          const p = profiles.find((x) => x.id === s.user_id);
+          if (!p) return null;
+          const count = shifts.length;
+          const width = 100 / count;
+          const left = idx * width;
+
+          if (s.type === "vacation") {
+            return (
+              <Tooltip key={s.id}>
+                <TooltipTrigger asChild>
+                  <div
+                    className="absolute inset-y-0.5 rounded-md border border-amber-300 bg-amber-100/70 p-1 text-[10px] font-medium text-amber-900"
+                    style={{ left: `${left + 0.5}%`, width: `${width - 1}%` }}
+                  >
+                    <Plane className="mb-0.5 size-3" />
+                    <span className="line-clamp-2">{p.full_name.split(" ")[0]}</span>
+                    <span className="opacity-70">Отпуск</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p className="font-medium">{p.full_name}</p>
+                  <p className="opacity-80">Отпуск</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          const pr = getShiftProgress(date, now);
+          const done = pr.status === "done";
+          const accent = done
+            ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+            : p.shift_group === 1
+              ? "border-shift-a bg-shift-a/15 text-foreground"
+              : "border-shift-b bg-shift-b/15 text-foreground";
+
+          const breakStart = Math.max(0, timeToMinutes(s.break_time || "13:00") - SHIFT_START_HOUR * 60);
+          const breakEnd = Math.min(totalMin, breakStart + 60);
+          const beforePct = (breakStart / totalMin) * 100;
+          const breakPct = ((breakEnd - breakStart) / totalMin) * 100;
+          const afterPct = ((totalMin - breakEnd) / totalMin) * 100;
+          const breakLabel = s.break_time
+            ? `${s.break_time}–${addHour(s.break_time)}`
+            : "не выбран";
+
+          return (
+            <Tooltip key={s.id}>
+              <TooltipTrigger asChild>
+                <div
+                  className={`absolute inset-y-0.5 flex flex-col overflow-hidden rounded-md border text-[10px] sm:text-xs ${accent}`}
+                  style={{ left: `${left + 0.5}%`, width: `${width - 1}%` }}
+                >
+                  <div className="w-full" style={{ height: `${beforePct}%` }} />
+                  <div
+                    className="w-full bg-amber-200/80 dark:bg-amber-400/40"
+                    style={{ height: `${breakPct}%` }}
+                  />
+                  <div className="w-full" style={{ height: `${afterPct}%` }} />
+                  <div className="pointer-events-none absolute inset-x-0 top-0.5 px-1">
+                    <div className="flex items-center gap-1">
+                      {done ? (
+                        <CheckCircle2 className="size-3 shrink-0" />
+                      ) : (
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${
+                            done ? "bg-emerald-600" : p.shift_group === 1 ? "bg-shift-a" : "bg-shift-b"
+                          }`}
+                        />
+                      )}
+                      <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
+                    </div>
+                    <div className="opacity-80">{START_LABEL} – {END_LABEL}</div>
+                    <div className="opacity-80">Обед: {breakLabel}</div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                <p className="font-medium">{p.full_name}</p>
+                <p className="opacity-80">
+                  Начало: {START_LABEL} | Обед: {breakLabel} | Конец: {END_LABEL}
+                </p>
+                {pr.status !== "future" && (
+                  <p className="mt-0.5 opacity-70">{pr.remainingLabel}</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 type Profile = {
   id: string;
   full_name: string;
@@ -622,7 +791,9 @@ export function CalendarPage() {
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
-                } ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
+                } ${isAdmin ? "cursor-pointer" : "cursor-default"} ${
+                  view !== "month" ? "flex flex-col" : ""
+                }`}
               >
                 <div className="flex items-start justify-between gap-1">
                   <span
@@ -640,71 +811,7 @@ export function CalendarPage() {
                     </span>
                   )}
                 </div>
-                {view === "day" ? (
-                  <div className="mt-3 space-y-2.5">
-                    {list.length === 0 && (
-                      <div className="text-muted-foreground/70 rounded-xl border border-dashed p-6 text-center text-sm">
-                        На этот день смен нет
-                      </div>
-                    )}
-                    {list.map((s) => {
-                      const p = profiles.find((x) => x.id === s.user_id);
-                      if (!p) return null;
-                      if (s.type === "vacation") {
-                        return (
-                          <div
-                            key={s.id}
-                            className="rounded-lg border-t-4 border-amber-400 bg-amber-100/70 p-3 text-amber-900"
-                          >
-                            <div className="flex items-center gap-2 text-base font-bold">
-                              <Plane className="size-4 shrink-0" />
-                              <span className="truncate">{p.full_name}</span>
-                            </div>
-                            <div className="mt-1 text-sm opacity-80">Отпуск</div>
-                          </div>
-                        );
-                      }
-                      const pr = getShiftProgress(d, now);
-                      const accent =
-                        pr.status === "done"
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-900"
-                          : p.shift_group === 1
-                            ? "border-shift-a bg-shift-a/12 text-foreground"
-                            : "border-shift-b bg-shift-b/12 text-foreground";
-                      return (
-                        <div
-                          key={s.id}
-                          className={`relative overflow-hidden rounded-lg border-t-4 p-3 ${accent}`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="truncate text-base font-bold">{p.full_name}</span>
-                            {pr.status === "done" && <CheckCircle2 className="size-4 shrink-0" />}
-                          </div>
-                          <div className="mt-1 text-sm opacity-80">
-                            {START_LABEL} – {END_LABEL}
-                          </div>
-                          <div className="text-sm opacity-80">
-                            Обед: {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
-                          </div>
-                          {p.roles.includes("employee") && (
-                            <div className="text-sm opacity-80">Группа {p.shift_group}</div>
-                          )}
-                          {pr.status === "active" && (
-                            <>
-                              <div className="bg-background/60 mt-2 h-1.5 w-full overflow-hidden rounded-full">
-                                <div
-                                  className="h-full bg-emerald-600 transition-all duration-1000"
-                                  style={{ width: `${pr.percent}%` }}
-                                />
-                              </div>
-                              <div className="mt-1 text-xs opacity-70">{pr.remainingLabel}</div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
+                {view === "month" ? (
                 <div className="mt-1 space-y-1">
                   {detailUserId ? (() => {
                     const s = list.find((x) => x.user_id === detailUserId);
@@ -824,6 +931,14 @@ export function CalendarPage() {
                     );
                   })}
                 </div>
+                ) : (
+                  <TimeGridColumn
+                    date={d}
+                    shifts={list}
+                    profiles={profiles}
+                    now={now}
+                    view={view}
+                  />
                 )}
               </button>
             );
