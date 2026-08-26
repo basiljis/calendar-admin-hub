@@ -189,7 +189,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <ScrollArea className="flex-1 px-3 py-4">
           <nav data-tour="sidebar-nav" className="space-y-1">
             {nav
-              .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
+              .filter((n) => !n.managerOnly || isManager)
               .map((n) => (
                 <Hint key={n.to} label={n.label} description={n.hint} side="right">
                   <Link
