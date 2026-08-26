@@ -14,7 +14,8 @@ import {
   ChevronRight,
   User,
   Heart,
-  ShieldCheck
+  ShieldCheck,
+  Menu
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -310,7 +311,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
+              <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-0 sm:w-80" align="end" collisionPadding={12}>
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-sm font-semibold">Уведомления</h3>
                   {unreadCount > 0 && (
@@ -361,8 +362,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </PopoverContent>
             </Popover>
 
-            <div data-tour="profile" className="flex items-center gap-3 border-l pl-6">
-              <div className="text-right">
+            <div data-tour="profile" className="flex items-center gap-2 sm:gap-3 sm:border-l sm:pl-6">
+              <div className="hidden text-right sm:block">
                 <div className="text-sm font-semibold text-foreground leading-none">
                   {profile?.full_name || "Пользователь"}
                 </div>
@@ -385,7 +386,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto max-w-7xl p-8">{children}</main>
+        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
       <ChatWidget />
       <OnboardingTour />
