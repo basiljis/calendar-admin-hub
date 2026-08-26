@@ -250,6 +250,7 @@ export type Database = {
           phone: string | null
           position: string | null
           shift_group: number
+          theme: string
           updated_at: string
         }
         Insert: {
@@ -260,6 +261,7 @@ export type Database = {
           phone?: string | null
           position?: string | null
           shift_group?: number
+          theme?: string
           updated_at?: string
         }
         Update: {
@@ -270,6 +272,7 @@ export type Database = {
           phone?: string | null
           position?: string | null
           shift_group?: number
+          theme?: string
           updated_at?: string
         }
         Relationships: []
