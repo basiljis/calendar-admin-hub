@@ -148,8 +148,7 @@ function SettingsPage() {
                 <Button
                   onClick={() => bulkUpdateHolidays.mutate({ isWorking: false })}
                   disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
-                  variant="outline"
-                  className="gap-2 border-holiday text-holiday hover:bg-holiday hover:text-white"
+                  className="gap-2 bg-rose-600 text-white hover:bg-rose-700 disabled:bg-rose-300 disabled:text-rose-50"
                 >
                   <XCircle className="size-4" />
                   Сделать нерабочими
@@ -157,8 +156,7 @@ function SettingsPage() {
                 <Button
                   onClick={() => bulkUpdateHolidays.mutate({ isWorking: true })}
                   disabled={bulkUpdateHolidays.isPending || !dateFrom || !dateTo}
-                  variant="outline"
-                  className="gap-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                  className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-300 disabled:text-emerald-50"
                 >
                   <CheckCircle2 className="size-4" />
                   Сделать рабочими
