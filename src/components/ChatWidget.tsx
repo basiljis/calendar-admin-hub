@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Search,
   Calendar,
+  SmilePlus,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -44,6 +45,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
 
 export function ChatWidget() {
   const { user, isAdmin } = useAuth();
