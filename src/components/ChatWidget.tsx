@@ -254,6 +254,65 @@ export function ChatWidget() {
     };
   }, [qc, user?.id]);
 
+  // Индикатор печати
+  const typingChannelRef = useRef<any>(null);
+  const typingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const lastTypingSentRef = useRef(0);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    setTypingUsers([]);
+    const channel = supabase
+      .channel(`chat-typing-${selectedRoom ?? "general"}`, {
+        config: { broadcast: { self: false } },
+      })
+      .on("broadcast", { event: "typing" }, ({ payload }: any) => {
+        const id = payload?.userId as string | undefined;
+        if (!id || id === user.id) return;
+        setTypingUsers((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        const timers = typingTimersRef.current;
+        const existing = timers.get(id);
+        if (existing) clearTimeout(existing);
+        timers.set(
+          id,
+          setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((u) => u !== id));
+            timers.delete(id);
+          }, 3500)
+        );
+      })
+      .subscribe();
+    typingChannelRef.current = channel;
+    return () => {
+      typingChannelRef.current = null;
+      typingTimersRef.current.forEach((t) => clearTimeout(t));
+      typingTimersRef.current.clear();
+      void supabase.removeChannel(channel);
+    };
+  }, [selectedRoom, user?.id]);
+
+  const notifyTyping = () => {
+    if (!user || !typingChannelRef.current) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1200) return;
+    lastTypingSentRef.current = now;
+    void typingChannelRef.current.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { userId: user.id },
+    });
+  };
+
+  const typingLabel = (() => {
+    if (typingUsers.length === 0) return null;
+    const names = typingUsers.map((id) => namesRef.current.get(id) || "Сотрудник");
+    if (names.length === 1) return `${names[0]} печатает…`;
+    if (names.length === 2) return `${names[0]} и ${names[1]} печатают…`;
+    return `${names.length} участников печатают…`;
+  })();
+
+
   useEffect(() => {
     if (isOpen) {
       bottom.current?.scrollIntoView({ behavior: "smooth" });
