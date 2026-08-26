@@ -670,7 +670,7 @@ export function CalendarPage() {
                       <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
                       <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
                     </div>
-                    {isAdmin && (
+                    {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">
                         {isVacation && (
                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0">
