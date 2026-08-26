@@ -25,10 +25,10 @@ export function getInitials(name?: string | null) {
 }
 
 interface UserAvatarProps {
-  name?: string | null;
-  avatarPath?: string | null;
-  className?: string;
-  fallbackClassName?: string;
+  name?: string | null | undefined;
+  avatarPath?: string | null | undefined;
+  className?: string | undefined;
+  fallbackClassName?: string | undefined;
 }
 
 export function UserAvatar({ name, avatarPath, className, fallbackClassName }: UserAvatarProps) {
