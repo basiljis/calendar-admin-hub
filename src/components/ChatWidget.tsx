@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmojiPicker } from "@/components/EmojiPicker";
+
 import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
