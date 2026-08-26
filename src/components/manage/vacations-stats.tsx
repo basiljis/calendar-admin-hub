@@ -1,81 +1,151 @@
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plane, Users, Calendar, AlertCircle } from "lucide-react";
+import { Plane, Users, Calendar, AlertCircle, Filter, RotateCcw } from "lucide-react";
 import { VACATION_DAYS_BASE } from "@/lib/schedule";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { HelpHint } from "@/components/Hint";
 
+const MONTHS = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
+const MONTHS_FULL = [
+  "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+  "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+];
+const YEARS = [2024, 2025, 2026, 2027, 2028];
+
+const toDate = (s: string) => new Date(`${s}T00:00:00`);
+const daysBetween = (a: Date, b: Date) =>
+  Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
 
 export function VacationsStatsPage() {
   const { isAdmin } = useAuth();
 
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["vacation-stats"],
+  const [year, setYear] = useState<string>(String(new Date().getFullYear()));
+  const [month, setMonth] = useState<string>("all");
+  const [group, setGroup] = useState<string>("all");
+  const [employee, setEmployee] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const resetFilters = () => {
+    setYear(String(new Date().getFullYear()));
+    setMonth("all");
+    setGroup("all");
+    setEmployee("all");
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const { data: raw, isLoading } = useQuery({
+    queryKey: ["vacation-stats-raw"],
     queryFn: async () => {
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name");
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, shift_group");
       const { data: vacations } = await supabase
         .from("vacations")
         .select("*")
         .eq("status", "approved");
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]));
-      
-      const employeeUsage: Record<string, number> = {};
-      (vacations || []).forEach(v => {
-        const start = new Date(v.start_date);
-        const end = new Date(v.end_date);
-        const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        employeeUsage[v.user_id] = (employeeUsage[v.user_id] || 0) + days;
-      });
-
-      const employeeData = (profiles || []).map(p => ({
-        name: p.full_name || "Без имени",
-        days: employeeUsage[p.id] || 0
-      })).sort((a, b) => b.days - a.days);
-
-      const monthlyLoad: Record<string, Set<string>> = {};
-      const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-      
-      (vacations || []).forEach(v => {
-        const start = new Date(v.start_date);
-        const end = new Date(v.end_date);
-        
-        let current = new Date(start);
-        while (current <= end) {
-          const monthKey = `${current.getFullYear()}-${current.getMonth()}`;
-          if (!monthlyLoad[monthKey]) monthlyLoad[monthKey] = new Set();
-          monthlyLoad[monthKey].add(v.user_id);
-          current.setDate(current.getDate() + 1);
-        }
-      });
-
-      const loadData = months.map((name, index) => {
-        const key = `2026-${index}`;
-        return {
-          name,
-          count: monthlyLoad[key]?.size || 0
-        };
-      });
-
-      return {
-        employeeData,
-        loadData,
-        totalVacations: vacations?.length || 0,
-        totalProfiles: profiles?.length || 0
-      };
+      return { profiles: profiles || [], vacations: vacations || [] };
     },
-    enabled: isAdmin
+    enabled: isAdmin,
   });
+
+  const stats = useMemo(() => {
+    if (!raw) return null;
+
+    // Границы периода: произвольная дата имеет приоритет над годом/месяцем
+    let periodStart: Date;
+    let periodEnd: Date;
+    const custom = Boolean(dateFrom || dateTo);
+    if (custom) {
+      periodStart = dateFrom ? toDate(dateFrom) : new Date(1970, 0, 1);
+      periodEnd = dateTo ? toDate(dateTo) : new Date(2100, 11, 31);
+    } else {
+      const y = Number(year);
+      if (month === "all") {
+        periodStart = new Date(y, 0, 1);
+        periodEnd = new Date(y, 11, 31);
+      } else {
+        const m = Number(month);
+        periodStart = new Date(y, m, 1);
+        periodEnd = new Date(y, m + 1, 0);
+      }
+    }
+
+    const profiles = raw.profiles.filter(
+      (p) =>
+        (group === "all" || String(p.shift_group) === group) &&
+        (employee === "all" || p.id === employee),
+    );
+    const allowed = new Set(profiles.map((p) => p.id));
+
+    const employeeUsage: Record<string, number> = {};
+    const monthlyLoad: Record<number, Set<string>> = {};
+    let periods = 0;
+
+    raw.vacations.forEach((v) => {
+      if (!allowed.has(v.user_id)) return;
+      const start = toDate(v.start_date);
+      const end = toDate(v.end_date);
+      const from = start > periodStart ? start : periodStart;
+      const to = end < periodEnd ? end : periodEnd;
+      if (from > to) return;
+
+      periods += 1;
+      employeeUsage[v.user_id] = (employeeUsage[v.user_id] || 0) + daysBetween(from, to);
+
+      const cur = new Date(from);
+      while (cur <= to) {
+        const m = cur.getMonth();
+        if (!monthlyLoad[m]) monthlyLoad[m] = new Set();
+        monthlyLoad[m].add(v.user_id);
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+
+    const employeeData = profiles
+      .map((p) => ({ name: p.full_name || "Без имени", days: employeeUsage[p.id] || 0 }))
+      .sort((a, b) => b.days - a.days);
+
+    const loadData = MONTHS.map((name, index) => ({
+      name,
+      count: monthlyLoad[index]?.size || 0,
+    })).filter((_, index) => custom || month === "all" || index === Number(month));
+
+    return {
+      employeeData,
+      loadData,
+      totalVacations: periods,
+      totalProfiles: profiles.length,
+      periodLabel: custom
+        ? `${dateFrom || "…"} — ${dateTo || "…"}`
+        : month === "all"
+          ? year
+          : `${MONTHS_FULL[Number(month)]} ${year}`,
+    };
+  }, [raw, year, month, group, employee, dateFrom, dateTo]);
 
   if (!isAdmin) {
     return (
@@ -100,6 +170,78 @@ export function VacationsStatsPage() {
         </p>
       </div>
 
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Filter className="size-4 text-muted-foreground" />
+            Фильтры
+            <HelpHint text="Произвольный диапазон дат имеет приоритет над выбором года и месяца." />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <div className="space-y-1.5">
+            <Label>Год</Label>
+            <Select value={year} onValueChange={setYear} disabled={Boolean(dateFrom || dateTo)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {YEARS.map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Месяц</Label>
+            <Select value={month} onValueChange={setMonth} disabled={Boolean(dateFrom || dateTo)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все месяцы</SelectItem>
+                {MONTHS_FULL.map((m, i) => (
+                  <SelectItem key={m} value={String(i)}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="date-from">Дата с</Label>
+            <Input id="date-from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="date-to">Дата по</Label>
+            <Input id="date-to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Группа</Label>
+            <Select value={group} onValueChange={setGroup}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все группы</SelectItem>
+                <SelectItem value="1">Группа 1</SelectItem>
+                <SelectItem value="2">Группа 2</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Сотрудник</Label>
+            <Select value={employee} onValueChange={setEmployee}>
+              <SelectTrigger><SelectValue placeholder="Все сотрудники" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все сотрудники</SelectItem>
+                {(raw?.profiles || []).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.full_name || "Без имени"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-3 xl:col-span-6">
+            <Button variant="outline" size="sm" onClick={resetFilters} className="gap-2">
+              <RotateCcw className="size-4" />
+              Сбросить фильтры
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -123,12 +265,12 @@ export function VacationsStatsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Год отчета</CardTitle>
+            <CardTitle className="text-sm font-medium">Период отчета</CardTitle>
             <Calendar className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2026</div>
-            <p className="text-xs text-muted-foreground">согласно ТЗ</p>
+            <div className="text-2xl font-bold">{stats?.periodLabel || "—"}</div>
+            <p className="text-xs text-muted-foreground">с учетом фильтров</p>
           </CardContent>
         </Card>
       </div>
