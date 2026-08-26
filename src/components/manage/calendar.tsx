@@ -732,7 +732,8 @@ export function CalendarPage() {
               </button>
             );
           })}
-          {Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
+          {view === "month" &&
+            Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
             <div
               key={`t${i}`}
               className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
