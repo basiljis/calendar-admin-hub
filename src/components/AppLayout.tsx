@@ -31,13 +31,15 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Hint } from "@/components/Hint";
 
 
 const nav = [
-  { to: "/dashboard", label: "Главная", icon: LayoutDashboard },
-  { to: "/calendar", label: "График", icon: CalendarDays },
-  { to: "/manage", label: "Управление", icon: Users, managerOnly: true },
-  { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
+  { to: "/dashboard", label: "Главная", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
+  { to: "/calendar", label: "График", icon: CalendarDays, hint: "Календарь смен 2/2, обеды и отпуска" },
+  { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки, аналитика и роли" },
+  { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
 ];
 
 
@@ -127,6 +129,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   };
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="flex min-h-screen bg-background text-foreground font-sans">
       {/* Sidebar - Matching reference image style */}
       <aside
@@ -150,15 +153,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {nav
               .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
               .map((n) => (
-                <Link
-                  key={n.to}
-                  to={n.to}
-                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-                >
-                  <n.icon className="size-5" />
-                  {!isSidebarCollapsed && <span>{n.label}</span>}
-                </Link>
+                <Hint key={n.to} label={n.label} description={n.hint} side="right">
+                  <Link
+                    to={n.to}
+                    aria-label={n.label}
+                    className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+                  >
+                    <n.icon className="size-5" />
+                    {!isSidebarCollapsed && <span>{n.label}</span>}
+                  </Link>
+                </Hint>
               ))}
           </nav>
         </ScrollArea>
@@ -178,9 +183,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
         )}
 
         <div className="p-3 border-t">
+          <Hint
+            label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
+            description="Больше места для рабочей области"
+            side="right"
+          >
           <Button
             variant="ghost"
             size="icon"
+            aria-label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="w-full justify-start gap-3 px-3"
           >
@@ -191,6 +202,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </>
             )}
           </Button>
+          </Hint>
         </div>
       </aside>
 
@@ -213,7 +225,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-6">
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full border">
+                <Button variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
                   <Bell className="size-5 text-muted-foreground" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0 right-0 flex size-5 items-center justify-center rounded-full border-2 border-background bg-orange-500 text-[10px] font-bold text-white">
@@ -288,9 +300,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   {profile?.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="ghost" size="icon" onClick={signOut} className="text-muted-foreground">
-                <LogOut className="size-4" />
-              </Button>
+              <Hint label="Выйти из системы" description="Завершить текущий сеанс" side="bottom">
+                <Button variant="ghost" size="icon" aria-label="Выйти из системы" onClick={signOut} className="text-muted-foreground">
+                  <LogOut className="size-4" />
+                </Button>
+              </Hint>
             </div>
           </div>
         </header>
