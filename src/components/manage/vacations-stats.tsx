@@ -13,8 +13,9 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plane, Users, Calendar, AlertCircle, Filter, RotateCcw } from "lucide-react";
-import { VACATION_DAYS_BASE } from "@/lib/schedule";
+import { Plane, Users, Calendar, AlertCircle, Filter, RotateCcw, ImageDown, FileSpreadsheet } from "lucide-react";
+import { VACATION_DAYS_BASE, HOURS_PER_VACATION_DAY, SHIFT_WORK_HOURS } from "@/lib/schedule";
+import { exportToExcel, downloadChartPng } from "@/lib/export";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
