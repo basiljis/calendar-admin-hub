@@ -368,6 +368,7 @@ function SettingsPage() {
                             </Button>
                           </div>
                         </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
