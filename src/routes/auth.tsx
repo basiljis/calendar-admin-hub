@@ -35,6 +35,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
@@ -42,10 +43,12 @@ function AuthPage() {
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
+    setAuthError(null);
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
+      setAuthError(error.message);
       toast.error(error.message);
       return;
     }
@@ -54,6 +57,7 @@ function AuthPage() {
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
+    setAuthError(null);
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -65,6 +69,7 @@ function AuthPage() {
     });
     setBusy(false);
     if (error) {
+      setAuthError(error.message);
       toast.error(error.message);
       return;
     }
@@ -75,6 +80,7 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
+  const errorId = authError ? "auth-error" : undefined;
 
   return (
     <div className="grid h-screen w-screen overflow-hidden bg-white lg:grid-cols-2">
@@ -97,116 +103,144 @@ function AuthPage() {
         </div>
 
         <div className="mt-10">
-            <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
-              {mode === "up" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="fio" className="text-xs text-slate-500">
-                      ФИО полностью
-                    </Label>
-                    <Input
-                      id="fio"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Иванова Мария Петровна"
-                      className="h-12 rounded-xl"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs text-slate-500">
-                      Телефон
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+7 900 000-00-00"
-                      className="h-12 rounded-xl"
-                    />
-                  </div>
-                </>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs text-slate-500">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@example.com"
-                  className="h-12 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs text-slate-500">
-                  Пароль
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={mode === "up" ? 6 : undefined}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={busy}
-                className="h-12 w-full rounded-full text-sm font-semibold tracking-wide uppercase"
-              >
-                {mode === "in" ? "Войти" : "Создать аккаунт"}
-                <ArrowRight className="size-4" />
-              </Button>
-            </form>
-
-            <p className="mt-8 text-center text-sm text-slate-600">
-              {mode === "in" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
-              <button
-                type="button"
-                onClick={() => setMode(mode === "in" ? "up" : "in")}
-                className="text-primary font-semibold hover:underline"
-              >
-                {mode === "in" ? "Зарегистрироваться" : "Войти"}
-              </button>
-            </p>
-            <p className="mt-4 text-center text-xs text-slate-400">
-              Первый зарегистрированный пользователь получает права администратора.
-            </p>
-          </div>
-        </div>
-
-        {/* Правая колонка — изображение */}
-        <div className="relative hidden h-full lg:block">
-          <img
-            src={officeImg}
-            alt="Современный офис ОКП"
-            width={1024}
-            height={1400}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <div className="absolute right-10 bottom-10 left-10 text-white">
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-lg font-semibold">Работать стало проще</p>
-              <div className="flex gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
+          {authError && (
+            <div
+              id="auth-error"
+              role="alert"
+              aria-live="assertive"
+              className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {authError}
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-white/80">
-              График смен, отпуска и учёт часов — всё в одном месте. Больше никаких таблиц в
-              блокнотах и потерянных заявок.
-            </p>
-            <p className="mt-4 text-xs font-medium text-white/70">
-              Команда психологов ОКП
-            </p>
+          )}
+
+          <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
+            {mode === "up" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fio" className="text-xs text-slate-600">
+                    ФИО полностью
+                  </Label>
+                  <Input
+                    id="fio"
+                    name="fio"
+                    required
+                    autoComplete="name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Иванова Мария Петровна"
+                    className="h-12 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                    aria-invalid={authError ? "true" : undefined}
+                    aria-describedby={errorId}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-xs text-slate-600">
+                    Телефон
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+7 900 000-00-00"
+                    className="h-12 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                    aria-invalid={authError ? "true" : undefined}
+                    aria-describedby={errorId}
+                  />
+                </div>
+              </>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs text-slate-600">
+                Email
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autoComplete={mode === "in" ? "email" : "username email"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="alex@example.com"
+                className="h-12 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                aria-invalid={authError ? "true" : undefined}
+                aria-describedby={errorId}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs text-slate-600">
+                Пароль
+              </Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                minLength={mode === "up" ? 6 : undefined}
+                autoComplete={mode === "in" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                aria-invalid={authError ? "true" : undefined}
+                aria-describedby={errorId}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={busy}
+              className="h-12 w-full rounded-full text-sm font-semibold tracking-wide uppercase focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+            >
+              {mode === "in" ? "Войти" : "Создать аккаунт"}
+              <ArrowRight className="size-4" />
+            </Button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-slate-600">
+            {mode === "in" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
+            <button
+              type="button"
+              onClick={() => {
+                setAuthError(null);
+                setMode(mode === "in" ? "up" : "in");
+              }}
+              className="text-primary font-semibold hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            >
+              {mode === "in" ? "Зарегистрироваться" : "Войти"}
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* Правая колонка — изображение */}
+      <div className="relative hidden h-full lg:block">
+        <img
+          src={officeImg}
+          alt="Современный офис ОКП"
+          width={1024}
+          height={1400}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <div className="absolute right-10 bottom-10 left-10 text-white">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-lg font-semibold">Работать стало проще</p>
+            <div className="flex gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-white/80">
+            График смен, отпуска и учёт часов — всё в одном месте. Больше никаких таблиц в
+            блокнотах и потерянных заявок.
+          </p>
+          <p className="mt-4 text-xs font-medium text-white/70">
+            Команда психологов ОКП
+          </p>
         </div>
       </div>
     </div>
