@@ -224,6 +224,7 @@ export function CalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ShiftVacationLegend />
           <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)}>
             <ChevronLeft className="size-4" />
           </Button>
@@ -238,8 +239,6 @@ export function CalendarPage() {
           )}
         </div>
       </div>
-
-      <ShiftVacationLegend />
 
       <Card>
         <CardContent className="p-2 sm:p-4">

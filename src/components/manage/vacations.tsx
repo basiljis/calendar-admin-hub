@@ -57,7 +57,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
-import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 
 
 
@@ -327,8 +326,6 @@ export function VacationsAdminPage() {
           </p>
         </div>
       </div>
-
-      <ShiftVacationLegend />
 
       <Card>
         <CardHeader className="pb-4">
