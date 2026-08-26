@@ -277,8 +277,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="md:hidden">
               <ChevronRight className="size-5" />
             </Button>
-            <div className="text-sm text-muted-foreground">
-              Обзор ключевых показателей системы
+            <div className="text-base font-semibold text-foreground">
+              {sectionTitle}
             </div>
           </div>
 
