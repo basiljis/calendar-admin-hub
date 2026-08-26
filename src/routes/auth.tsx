@@ -223,6 +223,7 @@ function AuthPage() {
               type="button"
               onClick={() => {
                 setAuthError(null);
+                setAuthSuccess(null);
                 setMode(mode === "in" ? "up" : "in");
               }}
               className="text-primary font-semibold hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
