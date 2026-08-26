@@ -2,7 +2,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   LayoutDashboard,
-  MessageSquare,
   Users,
   LogOut,
   Settings,
@@ -31,6 +30,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { ChatWidget } from "@/components/ChatWidget";
+
 
 const nav = [
   { to: "/dashboard", label: "Главная", icon: LayoutDashboard },
