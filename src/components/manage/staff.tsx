@@ -238,6 +238,7 @@ export function StaffPage() {
                 <TableHead>Сотрудник</TableHead>
                 <TableHead>Контакты</TableHead>
                 <TableHead>Группа</TableHead>
+                <TableHead>Статус</TableHead>
                 <TableHead className="text-center">Норма</TableHead>
                 <TableHead className="text-center">План</TableHead>
                 <TableHead className="text-center">Отпуск</TableHead>
