@@ -78,7 +78,8 @@ function LoadTooltip({ active, payload, label }: TipProps) {
 
 
 export function VacationsStatsPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
+  const canView = isAdmin || isManager;
 
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
   const [month, setMonth] = useState<string>("all");
@@ -112,7 +113,7 @@ export function VacationsStatsPage() {
         .eq("status", "approved");
       return { profiles: profiles || [], vacations: vacations || [] };
     },
-    enabled: isAdmin,
+    enabled: canView,
   });
 
   const stats = useMemo(() => {
@@ -223,14 +224,14 @@ export function VacationsStatsPage() {
     );
   };
 
-  if (!isAdmin) {
+  if (!canView) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
             <AlertCircle className="mx-auto size-12 text-destructive mb-2" />
             <CardTitle>Доступ ограничен</CardTitle>
-            <CardDescription>Статистика доступна только администраторам.</CardDescription>
+            <CardDescription>Статистика доступна администраторам и руководителям.</CardDescription>
           </CardHeader>
         </Card>
       </div>

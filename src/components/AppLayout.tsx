@@ -50,7 +50,7 @@ const nav = [
   { to: "/calendar", label: "График", icon: CalendarDays, hint: "Календарь смен 2/2, обеды и отпуска" },
   { to: "/dashboard", label: "Сводка", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
   { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки, аналитика и роли" },
-  { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
+  { to: "/settings", label: "Настройки", icon: Settings, managerOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
 ];
 
 const sectionTitles: Record<string, string> = {
