@@ -312,18 +312,51 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold sm:text-2xl tracking-tight">
-            {MONTH_NAMES[cursor.month - 1]} {cursor.year}
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {detailProfile
-              ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
-              : groupFilter === "all"
-                ? "Смены 2/2 · по отделению"
-                : `Смены 2/2 · группа ${groupFilter} · ${profiles.length} сотр.`}
-          </p>
+      <div className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 shadow-sm sm:p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="bg-muted/60 flex items-center gap-1 rounded-full border p-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-full"
+              onClick={() => shiftMonth(-1)}
+              aria-label="Предыдущий месяц"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full px-3 text-xs font-semibold"
+              onClick={() => {
+                const t = new Date();
+                setCursor({ year: t.getFullYear(), month: t.getMonth() + 1 });
+              }}
+            >
+              Сегодня
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-full"
+              onClick={() => shiftMonth(1)}
+              aria-label="Следующий месяц"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+              {MONTH_NAMES[cursor.month - 1]} {cursor.year}
+            </h1>
+            <p className="text-muted-foreground truncate text-xs sm:text-sm">
+              {detailProfile
+                ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
+                : groupFilter === "all"
+                  ? "Смены 2/2 · по отделению"
+                  : `Смены 2/2 · группа ${groupFilter} · ${profiles.length} сотр.`}
+            </p>
+          </div>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {isAdmin && (
