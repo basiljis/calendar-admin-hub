@@ -207,7 +207,6 @@ function AuthPage() {
             <p className="mt-4 text-xs font-medium text-white/70">
               Команда психологов ОКП
             </p>
-          </div>
         </div>
       </div>
     </div>
