@@ -140,7 +140,7 @@ export function OnboardingTour() {
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-slate-900/60" />
+        <div className="absolute inset-0 bg-foreground/40 dark:bg-background/70" />
       )}
 
       <div
