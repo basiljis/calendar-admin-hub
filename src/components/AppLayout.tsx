@@ -123,7 +123,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       case "warning":
         return <Info className="size-4 text-amber-500" />;
       case "chat":
-        return <MessageSquare className="size-4 text-blue-500" />;
+        return <Info className="size-4 text-blue-500" />;
       default:
         return <Info className="size-4 text-blue-500" />;
     }
