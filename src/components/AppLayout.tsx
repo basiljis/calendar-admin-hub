@@ -39,7 +39,7 @@ const nav = [
   { to: "/calendar", label: "График", icon: CalendarDays },
   { to: "/vacations", label: "Заявки", icon: Plane, adminOnly: true },
   { to: "/vacations-stats", label: "Отчеты", icon: LayoutDashboard, adminOnly: true },
-  { to: "/chat", label: "Чат", icon: MessageSquare },
+  
   { to: "/admin", label: "Администрирование", icon: ShieldCheck, adminOnly: true },
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true },
 ];
