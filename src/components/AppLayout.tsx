@@ -430,6 +430,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
+        {rolePreview && (
+          <div className="flex items-center justify-center gap-3 border-b bg-primary/10 px-4 py-2 text-sm text-primary">
+            <Eye className="size-4 shrink-0" />
+            <span>
+              Режим просмотра: <strong>{rolePreviewLabels[rolePreview]}</strong> — вы видите
+              систему так, как её видит эта роль.
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setRolePreview(null)}
+            >
+              <X className="mr-1 size-3" />
+              Вернуться к администратору
+            </Button>
+          </div>
+        )}
+
         <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
       <ChatWidget />
