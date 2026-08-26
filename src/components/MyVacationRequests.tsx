@@ -64,33 +64,64 @@ export function MyVacationRequests() {
               {v.note && <div className="text-xs text-muted-foreground">{v.note}</div>}
             </div>
             <div className="flex items-center gap-2">
-              <Badge
-                variant={
+              <Hint
+                side="top"
+                label={
                   v.status === "approved"
-                    ? "default"
+                    ? "Отпуск подтверждён"
                     : v.status === "rejected"
-                      ? "destructive"
-                      : "outline"
+                      ? "Заявка отклонена"
+                      : "Заявка на рассмотрении"
                 }
-                className={
-                  v.status === "pending" ? "border-amber-200 bg-amber-100 text-amber-800" : ""
+                description={
+                  v.status === "approved"
+                    ? "Изменить или отменить подтверждённый отпуск может только администратор или руководитель."
+                    : v.status === "rejected"
+                      ? "Вы можете подать новую заявку на другие даты."
+                      : "Пока заявка не подтверждена, вы можете её отозвать."
                 }
               >
-                {v.status === "approved"
-                  ? "Подтверждён"
-                  : v.status === "rejected"
-                    ? "Отклонён"
-                    : "Ожидает"}
-              </Badge>
-              {v.status === "pending" && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Отозвать заявку"
-                  onClick={() => cancel.mutate(v.id)}
+                <Badge
+                  variant={
+                    v.status === "approved"
+                      ? "default"
+                      : v.status === "rejected"
+                        ? "destructive"
+                        : "outline"
+                  }
+                  className={
+                    v.status === "pending"
+                      ? "cursor-help border-amber-200 bg-amber-100 text-amber-800"
+                      : "cursor-help"
+                  }
                 >
-                  <Trash2 className="size-4 text-muted-foreground" />
-                </Button>
+                  {v.status === "approved"
+                    ? "Подтверждён"
+                    : v.status === "rejected"
+                      ? "Отклонён"
+                      : "Ожидает"}
+                </Badge>
+              </Hint>
+              {v.status === "pending" ? (
+                <Hint
+                  side="top"
+                  label="Отозвать заявку"
+                  description="Доступно, пока заявка не подтверждена."
+                >
+                  <Button variant="ghost" size="icon" onClick={() => cancel.mutate(v.id)}>
+                    <Trash2 className="size-4 text-muted-foreground" />
+                  </Button>
+                </Hint>
+              ) : (
+                <Hint
+                  side="top"
+                  label="Изменение недоступно"
+                  description="Заявку уже рассмотрели. Обратитесь к администратору или руководителю."
+                >
+                  <span className="inline-flex size-9 cursor-help items-center justify-center text-muted-foreground">
+                    <Lock className="size-4" />
+                  </span>
+                </Hint>
               )}
             </div>
           </div>
