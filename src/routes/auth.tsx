@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ArrowRight, CalendarDays, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -94,11 +95,14 @@ function AuthPage() {
     <div className="grid h-screen w-screen overflow-hidden bg-background lg:grid-cols-2">
       {/* Левая колонка — форма */}
       <div className="flex h-full flex-col overflow-y-auto px-8 py-10 sm:px-14 sm:py-14">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
           <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
             <CalendarDays className="size-5" />
           </span>
           <span className="text-primary text-xl font-bold tracking-tight">График ОКП</span>
+          </div>
+          <ThemeToggle />
         </div>
 
         <div className="mt-14 sm:mt-20">

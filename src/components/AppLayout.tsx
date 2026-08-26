@@ -34,6 +34,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Hint } from "@/components/Hint";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 
 const nav = [
@@ -283,6 +284,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-6">
+            <ThemeToggle />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
                 <Button data-tour="notifications" variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
