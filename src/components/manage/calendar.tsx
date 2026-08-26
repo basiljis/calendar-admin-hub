@@ -320,6 +320,110 @@ type Profile = {
   roles: AppRole[];
 };
 
+// Годовой обзор: 12 мини-календарей с подсветкой смен, отпусков и праздников
+function YearGrid({
+  year,
+  shifts,
+  holidays,
+  today,
+  detailUserId,
+  onPickMonth,
+  onPickDay,
+}: {
+  year: number;
+  shifts: ShiftItem[];
+  holidays: Map<string, { name: string; is_working: boolean }>;
+  today: string;
+  detailUserId: string;
+  onPickMonth: (month: number) => void;
+  onPickDay: (date: string) => void;
+}) {
+  const byDate = new Map<string, ShiftItem[]>();
+  for (const s of shifts) {
+    if (detailUserId && s.user_id !== detailUserId) continue;
+    const arr = byDate.get(s.work_date) ?? [];
+    arr.push(s);
+    byDate.set(s.work_date, arr);
+  }
+
+  return (
+    <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3 xl:grid-cols-4">
+      {MONTH_NAMES.map((name, mi) => {
+        const month = mi + 1;
+        const monthList = monthDays(year, month);
+        const blanks = (parseISO(monthList[0]!).getDay() + 6) % 7;
+        const workCount = monthList.filter((d) =>
+          (byDate.get(d) ?? []).some((s) => s.type === "work"),
+        ).length;
+
+        return (
+          <div key={name} className="bg-card rounded-xl border p-3 shadow-sm">
+            <button
+              type="button"
+              onClick={() => onPickMonth(month)}
+              className="hover:text-primary mb-2 flex w-full items-baseline justify-between text-left"
+            >
+              <span className="text-sm font-semibold">{name}</span>
+              <span className="text-muted-foreground text-[11px]">{workCount} раб. дн.</span>
+            </button>
+            <div className="text-muted-foreground/70 grid grid-cols-7 gap-0.5 text-center text-[9px] font-semibold uppercase">
+              {WEEKDAYS.map((w) => (
+                <span key={w}>{w.slice(0, 2)}</span>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-0.5">
+              {Array.from({ length: blanks }).map((_, i) => (
+                <span key={`b${i}`} />
+              ))}
+              {monthList.map((d) => {
+                const list = byDate.get(d) ?? [];
+                const hasVacation = list.some((s) => s.type === "vacation");
+                const hasWork = list.some((s) => s.type === "work");
+                const holiday = holidays.get(d);
+                const isToday = d === today;
+                const tone = hasVacation
+                  ? "bg-amber-100 text-amber-900 dark:bg-amber-400/25 dark:text-amber-100"
+                  : hasWork
+                    ? "bg-primary/15 text-foreground font-medium"
+                    : holiday && !holiday.is_working
+                      ? "bg-holiday/50 text-holiday-foreground"
+                      : "text-muted-foreground hover:bg-muted";
+                return (
+                  <Tooltip key={d}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onPickDay(d)}
+                        className={`flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors ${tone} ${
+                          isToday ? "ring-primary ring-2" : ""
+                        }`}
+                      >
+                        {Number(d.slice(-2))}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p className="font-medium">{d.split("-").reverse().join(".")}</p>
+                      {holiday && <p className="opacity-80">{holiday.name}</p>}
+                      <p className="opacity-80">
+                        {hasVacation
+                          ? "Отпуск"
+                          : hasWork
+                            ? `Смен: ${list.filter((s) => s.type === "work").length}`
+                            : "Смен нет"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
   const employeeCanCreateShifts = useEmployeeCanCreateShifts();
@@ -336,7 +440,7 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day" | "year">("month");
   const [anchor, setAnchor] = useState<string>(() => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
@@ -370,9 +474,18 @@ export function CalendarPage() {
       return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
     });
   })();
-  const visibleDays = view === "month" ? days : view === "week" ? weekDays : [anchor];
-  const rangeFrom = visibleDays[0]! < first ? visibleDays[0]! : first;
-  const rangeTo = visibleDays[visibleDays.length - 1]! > last ? visibleDays[visibleDays.length - 1]! : last;
+  const visibleDays =
+    view === "month" || view === "year" ? days : view === "week" ? weekDays : [anchor];
+  const yearFrom = `${cursor.year}-01-01`;
+  const yearTo = `${cursor.year}-12-31`;
+  const rangeFrom =
+    view === "year" ? yearFrom : visibleDays[0]! < first ? visibleDays[0]! : first;
+  const rangeTo =
+    view === "year"
+      ? yearTo
+      : visibleDays[visibleDays.length - 1]! > last
+        ? visibleDays[visibleDays.length - 1]!
+        : last;
 
   function shiftAnchor(deltaDays: number) {
     const d = parseISO(anchor);
@@ -591,19 +704,24 @@ export function CalendarPage() {
 
   const ruDate = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
   const headerTitle =
-    view === "month"
+    view === "year"
+      ? `${cursor.year} год`
+      : view === "month"
       ? `${MONTH_NAMES[cursor.month - 1]} ${cursor.year}`
       : view === "week"
         ? `${ruDate.format(parseISO(weekDays[0]!))} — ${ruDate.format(parseISO(weekDays[6]!))} ${parseISO(weekDays[6]!).getFullYear()}`
         : `${ruDate.format(parseISO(anchor))} ${parseISO(anchor).getFullYear()}`;
-  const navLabel = view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
+  const navLabel =
+    view === "year" ? "год" : view === "month" ? "месяц" : view === "week" ? "неделю" : "день";
 
   function goPrev() {
-    if (view === "month") shiftMonth(-1);
+    if (view === "year") setCursor({ year: cursor.year - 1, month: cursor.month });
+    else if (view === "month") shiftMonth(-1);
     else shiftAnchor(view === "week" ? -7 : -1);
   }
   function goNext() {
-    if (view === "month") shiftMonth(1);
+    if (view === "year") setCursor({ year: cursor.year + 1, month: cursor.month });
+    else if (view === "month") shiftMonth(1);
     else shiftAnchor(view === "week" ? 7 : 1);
   }
   function goToday() {
@@ -786,6 +904,7 @@ export function CalendarPage() {
               { key: "month", label: "Месяц" },
               { key: "week", label: "Неделя" },
               { key: "day", label: "День" },
+              { key: "year", label: "Год" },
             ] as const).map((o) => (
               <button
                 key={o.key}
@@ -803,6 +922,25 @@ export function CalendarPage() {
             ))}
           </div>
         </div>
+        {view === "year" ? (
+          <YearGrid
+            year={cursor.year}
+            shifts={shifts as ShiftItem[]}
+            holidays={data?.holidays ?? new Map()}
+            today={todayStr}
+            detailUserId={detailUserId}
+            onPickMonth={(m) => {
+              setCursor({ year: cursor.year, month: m });
+              setView("month");
+            }}
+            onPickDay={(d) => {
+              setCursor({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
+              setAnchor(d);
+              setView("day");
+            }}
+          />
+        ) : (
+          <>
         <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
           {(view === "day"
             ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
@@ -997,7 +1135,7 @@ export function CalendarPage() {
                     shifts={list}
                     profiles={profiles}
                     now={now}
-                    view={view}
+                    view={view === "week" ? "week" : "day"}
                   />
                 )}
               </button>
@@ -1013,7 +1151,10 @@ export function CalendarPage() {
             </div>
           ))}
         </div>
+          </>
+        )}
       </div>
+
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
