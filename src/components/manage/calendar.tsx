@@ -15,6 +15,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
