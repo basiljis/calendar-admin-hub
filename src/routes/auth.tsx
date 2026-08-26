@@ -61,6 +61,7 @@ function AuthPage() {
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
+    setAuthSuccess(null);
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -76,10 +77,12 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    if (!data.session) {
-      toast.success("Проверьте почту — мы отправили ссылку для подтверждения.");
-      return;
-    }
+    const successMessage = data.session
+      ? "Регистрация завершена. Переходим в систему…"
+      : "Проверьте почту — мы отправили ссылку для подтверждения.";
+    setAuthSuccess(successMessage);
+    toast.success(successMessage);
+    if (!data.session) return;
     navigate({ to: "/dashboard", replace: true });
   }
 
