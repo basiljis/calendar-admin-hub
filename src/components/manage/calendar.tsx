@@ -211,9 +211,34 @@ export function CalendarPage() {
     });
   }
 
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
   const monthHours = shifts
     .filter((s) => s.type === "work")
     .reduce((a, s) => a + Number(s.hours), 0);
+
+  // Часы, «потерянные» из-за отпусков: дни отпуска, которые по графику были бы рабочими
+  const vacationHours = shifts
+    .filter((s) => s.type === "vacation")
+    .reduce((a, s) => {
+      const p = profiles.find((x) => x.id === s.user_id);
+      if (!p) return a;
+      return isWorkingDay(s.work_date, p.shift_group) ? a + SHIFT_WORK_HOURS : a;
+    }, 0);
+
+  const plannedHours = monthHours + vacationHours;
+
+  // Уже отработано: завершённые смены (дни до сегодня; сегодня — после 20:00)
+  const passedHours = shifts
+    .filter(
+      (s) =>
+        s.type === "work" &&
+        (s.work_date < todayStr ||
+          (s.work_date === todayStr && getShiftProgress(s.work_date, now).status === "done")),
+    )
+    .reduce((a, s) => a + Number(s.hours), 0);
+
+  const passedPercent = monthHours > 0 ? Math.round((passedHours / monthHours) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -223,7 +248,7 @@ export function CalendarPage() {
             {MONTH_NAMES[cursor.month - 1]} {cursor.year}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Смены 2/2 · всего {monthHours} рабочих часов по отделению
+            Смены 2/2 · по отделению
           </p>
         </div>
         <div className="flex items-center gap-2">
