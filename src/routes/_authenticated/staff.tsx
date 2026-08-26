@@ -474,19 +474,6 @@ function StaffPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Системное сообщение</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground whitespace-pre-line">
-            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-            
-            
-            Добавь журнал (аудит) для заявок на отпуск с указанием кто подтвердил или отклонил и когда это произошло.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
