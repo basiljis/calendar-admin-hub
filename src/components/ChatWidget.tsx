@@ -632,12 +632,15 @@ export function ChatWidget() {
                     <Paperclip className="size-4" />
                   </Button>
                   <Input
+                    ref={messageInputRef}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Сообщение…"
                     disabled={isUploading}
                     className="min-w-0"
                   />
+                  <EmojiPicker disabled={isUploading} onSelect={insertEmoji} />
+
                   <Button
                     type="submit"
                     size="icon"
