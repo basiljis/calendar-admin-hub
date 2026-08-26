@@ -91,14 +91,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "График ОКП — сменные графики психологов" },
+      {
+        name: "description",
+        content:
+          "Система формирования ежемесячных графиков работы психологов ОКП: смены 2/2, суммированный учёт рабочего времени, отпуска и праздничные дни.",
+      },
+      { property: "og:title", content: "График ОКП — сменные графики психологов" },
+      {
+        property: "og:description",
+        content:
+          "Смены 2/2, учёт часов за период, отпуска, праздники и внутренний чат.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
