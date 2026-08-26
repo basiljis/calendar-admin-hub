@@ -190,7 +190,7 @@ function Dashboard() {
 
       <Card className="border-none shadow-sm bg-card/50 backdrop-blur">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Праздничные смены (доплата)</CardTitle>
+          <CardTitle className="text-base font-semibold">Праздничные смены</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {holidayShifts.length === 0 && (
