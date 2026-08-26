@@ -277,7 +277,13 @@ function AdminPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        {u.full_name}
+                        <Link
+                          to="/admin/users/$userId"
+                          params={{ userId: u.id }}
+                          className="text-primary hover:underline"
+                        >
+                          {u.full_name}
+                        </Link>
                         {u.id === user?.id && (
                           <Badge variant="secondary" className="ml-2">
                             это вы
