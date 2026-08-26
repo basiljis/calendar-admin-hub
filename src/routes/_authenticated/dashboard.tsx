@@ -87,15 +87,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Добро пожаловать, {profile?.full_name?.split(' ')[0] || "Сотрудник"}!
-          </h1>
-          <p className="text-muted-foreground/80">
-            Обзор показателей · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
-          </p>
-        </div>
+      <div className="flex justify-end">
         <VacationRequestDialog />
       </div>
 
