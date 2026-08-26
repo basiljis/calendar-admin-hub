@@ -223,7 +223,7 @@ function SettingsPage() {
       </div>
 
       <Tabs defaultValue="norms" className="space-y-6">
-        <TabsList className="flex w-fit flex-wrap">
+        <TabsList aria-label="Разделы настроек" className="flex w-fit flex-wrap">
           <TabsTrigger value="norms" className="gap-2">
             <Clock className="size-4 shrink-0" />
             <span className="whitespace-nowrap">Нормы рабочего времени</span>
