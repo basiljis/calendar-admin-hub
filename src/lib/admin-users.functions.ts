@@ -244,6 +244,59 @@ export const getUserDetailAdmin = createServerFn({ method: "GET" })
     };
   });
 
+export const createUserAdmin = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({
+      email: z.string().email(),
+      password: z.string().min(8).max(72),
+      full_name: z.string().min(1).max(120),
+      role: z.enum(["admin", "manager", "employee"]),
+      phone: z.string().max(40).nullable(),
+      position: z.string().max(120).nullable(),
+      shift_group: z.number().int().min(1).max(2),
+    }).parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    const { data: isManager } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "manager",
+    });
+    if (!isAdmin && !isManager) throw new Error("Недостаточно прав для добавления пользователя");
+    if (!isAdmin && data.role !== "employee") {
+      throw new Error("Руководитель может добавлять только сотрудников");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (authError || !created.user) throw new Error(authError?.message ?? "Не удалось создать пользователя");
+
+    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+      id: created.user.id, email: data.email, full_name: data.full_name,
+      phone: data.phone, position: data.position, shift_group: data.shift_group,
+    });
+    if (profileError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(profileError.message);
+    }
+    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
+      user_id: created.user.id, role: data.role,
+    });
+    if (roleError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(roleError.message);
+    }
+    return { ok: true, userId: created.user.id };
+  });
+
 export const deleteUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ userId: z.string().uuid() }).parse(data))
   .middleware([requireSupabaseAuth])

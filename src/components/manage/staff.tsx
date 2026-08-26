@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plane, Trash2, History, Mail, Phone } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -31,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
+import { createUserAdmin } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 
 
@@ -40,9 +43,14 @@ const roleLabels: Record<AppRole, string> = {
   employee: "Сотрудник",
 };
 
+const allRoles: AppRole[] = ["admin", "manager", "employee"];
+
 export function StaffPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isManager, user } = useAuth();
   const qc = useQueryClient();
+  const createUser = useServerFn(createUserAdmin);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" });
   const [vacUser, setVacUser] = useState("");
   const [vacFrom, setVacFrom] = useState("");
   const [vacTo, setVacTo] = useState("");
@@ -199,12 +207,28 @@ export function StaffPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Сотрудники</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Состав групп, контакты и индивидуальная норма за период {PERIOD.label}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Сотрудники</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Состав групп, контакты и индивидуальная норма за период {PERIOD.label}</p>
+        </div>
+        {(isAdmin || isManager) && <Button onClick={() => setAddOpen(true)}><UserPlus className="mr-2 size-4" />Добавить пользователя</Button>}
       </div>
+
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Новый пользователь</DialogTitle></DialogHeader>
+          <div className="grid gap-3">
+            <Label>ФИО<Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} /></Label>
+            <Label>Электронная почта<Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></Label>
+            <Label>Временный пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /></Label>
+            <Label>Роль<Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
+            <Label>Телефон<Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></Label>
+            <Label>Должность<Input value={newUser.position} onChange={(e) => setNewUser({ ...newUser, position: e.target.value })} /></Label>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Отмена</Button><Button onClick={() => createUser({ data: { ...newUser, phone: newUser.phone || null, position: newUser.position || null, shift_group: Number(newUser.shift_group) } }).then(() => { toast.success("Пользователь добавлен"); setAddOpen(false); qc.invalidateQueries({ queryKey: ["staff"] }); }).catch((e: Error) => toast.error(e.message))}>Создать</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardContent className="p-0">
