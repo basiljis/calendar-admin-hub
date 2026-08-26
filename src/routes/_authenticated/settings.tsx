@@ -75,6 +75,8 @@ const EMPTY_FORM: HolidayForm = { date: "", name: "", status: "off" };
 function SettingsPage() {
   const { isAdmin, isManager } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { tab } = Route.useSearch();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -229,7 +231,13 @@ function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="norms" className="space-y-6">
+      <Tabs
+        value={tab}
+        onValueChange={(value) =>
+          navigate({ to: "/settings", search: (prev) => ({ ...prev, tab: value as typeof tab }) })
+        }
+        className="space-y-6"
+      >
         <TabsList aria-label="Разделы настроек" className="flex w-fit flex-wrap">
           <TabsTrigger value="norms" className="gap-2">
             <Clock className="size-4 shrink-0" />

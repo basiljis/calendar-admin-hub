@@ -75,7 +75,7 @@ function ManagePage() {
       <Tabs
         value={tab}
         onValueChange={(value) =>
-          navigate({ to: "/manage", search: { tab: value as typeof tab } })
+          navigate({ to: "/manage", search: (prev) => ({ ...prev, tab: value as typeof tab }) })
         }
         className="space-y-6"
       >
