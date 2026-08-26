@@ -596,9 +596,20 @@ export function CalendarPage() {
                         )}
                         <Switch
                           checked={on}
-                          onCheckedChange={(v) =>
-                            openDay && toggle.mutate({ userId: p.id, date: openDay, on: v })
-                          }
+                          onCheckedChange={(v) => {
+                            if (!openDay) return;
+                            if (v) {
+                              setDayBreaks((prev) => ({ ...prev, [p.id]: "13:00" }));
+                              toggle.mutate({ userId: p.id, date: openDay, on: true, breakTime: "13:00" });
+                            } else {
+                              setDayBreaks((prev) => {
+                                const next = { ...prev };
+                                delete next[p.id];
+                                return next;
+                              });
+                              toggle.mutate({ userId: p.id, date: openDay, on: false });
+                            }
+                          }}
                         />
                       </div>
                     )}
