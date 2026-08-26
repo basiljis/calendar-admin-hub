@@ -190,6 +190,39 @@ export function VacationsStatsPage() {
     };
   }, [raw, year, month, group, employee, dateFrom, dateTo]);
 
+  const exportEmployeesExcel = () => {
+    exportToExcel(
+      [
+        {
+          name: "По сотрудникам",
+          rows: (stats?.employeeData || []).map((r) => ({
+            Сотрудник: r.name,
+            "Дней отпуска": r.days,
+            "Снято часов нормы": Number((r.days * HOURS_PER_VACATION_DAY).toFixed(1)),
+            "Остаток дней": Math.max(0, VACATION_DAYS_BASE - r.days),
+          })),
+        },
+      ],
+      `Отпуска_по_сотрудникам_${stats?.periodLabel || ""}.xlsx`,
+    );
+  };
+
+  const exportLoadExcel = () => {
+    exportToExcel(
+      [
+        {
+          name: "Загрузка по месяцам",
+          rows: (stats?.loadData || []).map((r) => ({
+            Месяц: r.name,
+            "Сотрудников в отпуске": r.count,
+            "Часов смен вне графика": Number((r.count * SHIFT_WORK_HOURS).toFixed(1)),
+          })),
+        },
+      ],
+      `Загрузка_команды_${stats?.periodLabel || ""}.xlsx`,
+    );
+  };
+
   if (!isAdmin) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
