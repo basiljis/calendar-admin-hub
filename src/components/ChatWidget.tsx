@@ -55,7 +55,26 @@ export function ChatWidget() {
   const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  const insertEmoji = (emoji: string) => {
+    const el = messageInputRef.current;
+    if (!el) {
+      setText((prev) => prev + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + emoji + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + emoji.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
