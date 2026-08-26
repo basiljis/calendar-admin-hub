@@ -37,6 +37,7 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
