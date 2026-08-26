@@ -58,8 +58,11 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      setAuthError(error.message);
-      toast.error(error.message);
+      const msg = /banned|disabled/i.test(error.message)
+        ? "Учётная запись отключена. Обратитесь к администратору."
+        : error.message;
+      setAuthError(msg);
+      toast.error(msg);
       emailRef.current?.focus();
       return;
     }
