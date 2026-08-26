@@ -122,8 +122,33 @@ export function CalendarPage() {
   const days = monthDays(cursor.year, cursor.month);
   const last = days[days.length - 1]!;
 
+  // Видимый период зависит от режима отображения: месяц / неделя / день
+  const weekDays = (() => {
+    const d = parseISO(anchor);
+    const offset = (d.getDay() + 6) % 7;
+    const start = new Date(d);
+    start.setDate(d.getDate() - offset);
+    return Array.from({ length: 7 }, (_, i) => {
+      const x = new Date(start);
+      x.setDate(start.getDate() + i);
+      return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+    });
+  })();
+  const visibleDays = view === "month" ? days : view === "week" ? weekDays : [anchor];
+  const rangeFrom = visibleDays[0]! < first ? visibleDays[0]! : first;
+  const rangeTo = visibleDays[visibleDays.length - 1]! > last ? visibleDays[visibleDays.length - 1]! : last;
+
+  function shiftAnchor(deltaDays: number) {
+    const d = parseISO(anchor);
+    d.setDate(d.getDate() + deltaDays);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    setAnchor(iso);
+    setCursor({ year: d.getFullYear(), month: d.getMonth() + 1 });
+  }
+
   const { data } = useQuery({
-    queryKey: ["calendar", first],
+    queryKey: ["calendar", rangeFrom, rangeTo],
+
     queryFn: async () => {
       const [profiles, shifts, holidays, vacations] = await Promise.all([
         supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
