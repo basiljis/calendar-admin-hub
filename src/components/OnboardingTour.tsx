@@ -52,8 +52,12 @@ export function OnboardingTour() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Автозапуск — только при самом первом входе. Дальше тур доступен по кнопке «Пройти тур».
     if (!localStorage.getItem(STORAGE_KEY)) {
-      const t = setTimeout(() => setIsActive(true), 800);
+      const t = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+        setIsActive(true);
+      }, 800);
       return () => clearTimeout(t);
     }
     return;
