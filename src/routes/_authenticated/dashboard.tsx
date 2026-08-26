@@ -93,7 +93,7 @@ function Dashboard() {
         <VacationRequestDialog />
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Clock}
           label="Норма за период"
@@ -313,23 +313,23 @@ function StatCard({
     : "bg-blue-50 text-blue-600 dark:bg-blue-950/20";
 
   return (
-    <Card className="border-none shadow-sm bg-card/50 backdrop-blur">
+    <Card className="min-w-0 border-none shadow-sm bg-card/50 backdrop-blur">
       <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 space-y-1">
             <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-              {label}
+              <span className="truncate">{label}</span>
               {help && <HelpHint text={help} side="top" />}
             </p>
-            <p className="text-3xl font-bold">{value}</p>
+            <p className="truncate whitespace-nowrap text-2xl font-bold sm:text-3xl">{value}</p>
           </div>
-          <div className={`flex size-12 items-center justify-center rounded-2xl ${colorClasses}`}>
+          <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${colorClasses}`}>
             <Icon className="size-6" />
           </div>
         </div>
         <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className={color === "orange" ? "text-orange-600" : "text-blue-600"}>↑</span>
-          {hint}
+          <span className="truncate">{hint}</span>
         </div>
       </CardContent>
     </Card>
