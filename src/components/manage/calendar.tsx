@@ -537,17 +537,17 @@ export function CalendarPage() {
                               aria-hidden
                             />
                           )}
-                          <span className="relative flex items-center gap-0.5">
-                            {progress.status === "done" && <CheckCircle2 className="size-2.5" />}
-                            {p.full_name.split(" ")[0]}
+                          <span className="relative flex min-w-0 items-center gap-0.5">
+                            {progress.status === "done" && <CheckCircle2 className="size-2.5 shrink-0" />}
+                            <span className="truncate">{p.full_name.split(" ")[0]}</span>
                           </span>
-                          <span className="relative flex items-center gap-1">
+                          <span className="relative flex shrink-0 items-center gap-1">
                             {progress.status === "active" && (
                               <span className="scale-90 opacity-90">
                                 {Math.round(progress.percent)}%
                               </span>
                             )}
-                            {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
+                            {s.break_time && <span className="hidden opacity-80 scale-90 sm:inline">{s.break_time}</span>}
                           </span>
                         </div>
                       );
