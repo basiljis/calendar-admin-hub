@@ -477,149 +477,180 @@ export function CalendarPage() {
       </Dialog>
 
 
-      <Card>
-        <CardContent className="p-2 sm:p-4">
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
-            {WEEKDAYS.map((w) => (
-              <div key={w} className="text-muted-foreground pb-1 text-center text-xs font-medium">
-                {w}
+      <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
+        <div className="grid grid-cols-7 border-b">
+          {WEEKDAYS.map((w) => (
+            <div
+              key={w}
+              className="text-muted-foreground px-2 py-2.5 text-center text-[11px] font-semibold tracking-wider uppercase"
+            >
+              {w}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {Array.from({ length: leadingBlanks }).map((_, i) => {
+            const prevLast = new Date(cursor.year, cursor.month - 1, 0).getDate();
+            return (
+              <div
+                key={`b${i}`}
+                className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
+              >
+                {prevLast - leadingBlanks + 1 + i}
               </div>
-            ))}
-            {Array.from({ length: leadingBlanks }).map((_, i) => (
-              <div key={`b${i}`} />
-            ))}
-            {days.map((d) => {
-              const holiday = data?.holidays.get(d);
-              const list = shiftsOn(d);
-              const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-              const isToday = d === todayStr;
-              const isPastDay = d < todayStr;
-              return (
-                <button
-                  key={d}
-                  onClick={() => setOpenDay(d)}
-                  className={`min-h-20 min-w-0 rounded-lg border p-1 sm:min-h-24 sm:p-1.5 text-left align-top transition-colors ${
-                    holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
-                  } ${isPastDay ? "opacity-80" : ""} ${isToday ? "ring-2 ring-primary border-primary" : ""} ${list.some(s => s.type === 'vacation') ? 'ring-1 ring-inset ring-amber-200 bg-amber-50/30' : ''} ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="text-sm font-medium">{Number(d.slice(-2))}</span>
-                    {holiday && (
-                      <span className="text-holiday-foreground max-w-16 truncate text-[10px]">
-                        {holiday.name}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 space-y-0.5">
-                    {detailUserId ? (() => {
-                      const s = list.find((x) => x.user_id === detailUserId);
-                      if (!s) {
-                        return (
-                          <div className="text-muted-foreground text-[10px]">Выходной</div>
-                        );
-                      }
-                      if (s.type === "vacation") {
-                        return (
-                          <div className="flex items-center gap-1 rounded border border-amber-200 bg-amber-100 px-1 py-0.5 text-[10px] text-amber-800">
-                            <Plane className="size-2.5" /> Отпуск
-                          </div>
-                        );
-                      }
-                      const pr = getShiftProgress(d, now);
+            );
+          })}
+          {days.map((d) => {
+            const holiday = data?.holidays.get(d);
+            const list = shiftsOn(d);
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+            const isToday = d === todayStr;
+            const isPastDay = d < todayStr;
+            const hasVacation = list.some((s) => s.type === "vacation");
+            return (
+              <button
+                key={d}
+                onClick={() => setOpenDay(d)}
+                className={`group relative min-h-20 min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:min-h-28 sm:p-2 ${
+                  holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
+                } ${isPastDay && !isToday ? "opacity-90" : ""} ${
+                  hasVacation && !holiday ? "bg-amber-50/50" : ""
+                } ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <span
+                    className={`flex size-6 items-center justify-center rounded-full text-sm ${
+                      isToday
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : "font-medium"
+                    }`}
+                  >
+                    {Number(d.slice(-2))}
+                  </span>
+                  {holiday && (
+                    <span className="text-holiday-foreground max-w-16 truncate pt-0.5 text-[10px]">
+                      {holiday.name}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 space-y-1">
+                  {detailUserId ? (() => {
+                    const s = list.find((x) => x.user_id === detailUserId);
+                    if (!s) {
+                      return <div className="text-muted-foreground/70 text-[10px]">Выходной</div>;
+                    }
+                    if (s.type === "vacation") {
                       return (
-                        <div
-                          className={`space-y-0.5 rounded border px-1 py-1 text-[10px] leading-tight ${
-                            pr.status === "done"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                              : pr.status === "active"
-                                ? "border-primary bg-primary/10 text-foreground"
-                                : "border-border bg-secondary/50 text-foreground"
-                          }`}
-                        >
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Начало</span>
-                            <span className="font-medium">{START_LABEL}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Обед</span>
-                            <span className="font-medium">
-                              {s.break_time
-                                ? `${s.break_time}–${addHour(s.break_time)}`
-                                : "не выбран"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Конец</span>
-                            <span className="font-medium">{END_LABEL}</span>
-                          </div>
-                          {pr.status === "active" && (
-                            <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
-                              <div
-                                className="h-full bg-emerald-600"
-                                style={{ width: `${pr.percent}%` }}
-                              />
-                            </div>
-                          )}
+                        <div className="flex items-center gap-1 rounded-md bg-amber-100/70 px-1.5 py-1 text-[10px] font-medium text-amber-800">
+                          <Plane className="size-2.5" /> Отпуск
                         </div>
                       );
-                    })() : list.map((s) => {
-                      const p = profiles.find((x) => x.id === s.user_id);
-                      if (!p) return null;
-                      if (s.type === "vacation") {
-                        return (
-                          <div
-                            key={s.id}
-                            className="truncate rounded px-1 py-0.5 text-[10px] bg-amber-100 text-amber-800 flex justify-between items-center border border-amber-200"
-                          >
-                            <span className="flex items-center gap-0.5">
-                              <Plane className="size-2" />
-                              {p.full_name.split(" ")[0]}
-                            </span>
+                    }
+                    const pr = getShiftProgress(d, now);
+                    return (
+                      <div
+                        className={`space-y-0.5 rounded-md px-1.5 py-1 text-[10px] leading-tight ${
+                          pr.status === "done"
+                            ? "bg-emerald-50 text-emerald-800"
+                            : pr.status === "active"
+                              ? "bg-primary/10 text-foreground"
+                              : "bg-muted/70 text-foreground"
+                        }`}
+                      >
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Начало</span>
+                          <span className="font-medium">{START_LABEL}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Обед</span>
+                          <span className="font-medium">
+                            {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Конец</span>
+                          <span className="font-medium">{END_LABEL}</span>
+                        </div>
+                        {pr.status === "active" && (
+                          <div className="bg-background/60 h-1 w-full overflow-hidden rounded-full">
+                            <div className="h-full bg-emerald-600" style={{ width: `${pr.percent}%` }} />
                           </div>
-                        );
-                      }
-                      const progress = getShiftProgress(d, now);
-                      const base =
-                        progress.status === "done"
-                          ? "bg-emerald-600"
-                          : p.shift_group === 1
-                            ? "bg-shift-a"
-                            : "bg-shift-b";
+                        )}
+                      </div>
+                    );
+                  })() : list.map((s) => {
+                    const p = profiles.find((x) => x.id === s.user_id);
+                    if (!p) return null;
+                    if (s.type === "vacation") {
                       return (
                         <div
                           key={s.id}
-                          title={progress.remainingLabel}
-                          className={`relative overflow-hidden truncate rounded px-1 py-0.5 text-[10px] text-white flex justify-between items-center ${base}`}
+                          className="flex items-center gap-1 truncate rounded-md bg-amber-100/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
                         >
-                          {progress.status === "active" && (
-                            <span
-                              className="absolute inset-y-0 left-0 bg-emerald-600 transition-all duration-1000"
-                              style={{ width: `${progress.percent}%` }}
-                              aria-hidden
-                            />
-                          )}
-                          <span className="relative flex min-w-0 items-center gap-0.5">
-                            {progress.status === "done" && <CheckCircle2 className="size-2.5 shrink-0" />}
-                            <span className="truncate">{p.full_name.split(" ")[0]}</span>
-                          </span>
-                          <span className="relative flex shrink-0 items-center gap-1">
-                            {progress.status === "active" && (
-                              <span className="scale-90 opacity-90">
-                                {Math.round(progress.percent)}%
-                              </span>
-                            )}
-                            {s.break_time && <span className="hidden opacity-80 scale-90 sm:inline">{s.break_time}</span>}
-                          </span>
+                          <Plane className="size-2 shrink-0" />
+                          <span className="truncate">{p.full_name.split(" ")[0]}</span>
                         </div>
                       );
-                    })}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                    }
+                    const progress = getShiftProgress(d, now);
+                    const done = progress.status === "done";
+                    const chipBg = done
+                      ? "bg-emerald-50 text-emerald-800"
+                      : p.shift_group === 1
+                        ? "bg-shift-a/12 text-foreground"
+                        : "bg-shift-b/12 text-foreground";
+                    const dot = done
+                      ? "bg-emerald-600"
+                      : p.shift_group === 1
+                        ? "bg-shift-a"
+                        : "bg-shift-b";
+                    return (
+                      <div
+                        key={s.id}
+                        title={progress.remainingLabel}
+                        className={`relative overflow-hidden rounded-md px-1.5 py-0.5 text-[10px] ${chipBg}`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="flex min-w-0 items-center gap-1">
+                            {done ? (
+                              <CheckCircle2 className="size-2.5 shrink-0" />
+                            ) : (
+                              <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
+                            )}
+                            <span className="truncate font-medium">{p.full_name.split(" ")[0]}</span>
+                          </span>
+                          <span className="shrink-0 opacity-70">
+                            {progress.status === "active"
+                              ? `${Math.round(progress.percent)}%`
+                              : s.break_time
+                                ? <span className="hidden sm:inline">{s.break_time}</span>
+                                : null}
+                          </span>
+                        </div>
+                        {progress.status === "active" && (
+                          <span
+                            className="absolute inset-x-0 bottom-0 h-0.5 bg-emerald-600 transition-all duration-1000"
+                            style={{ width: `${progress.percent}%` }}
+                            aria-hidden
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </button>
+            );
+          })}
+          {Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
+            <div
+              key={`t${i}`}
+              className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
+            >
+              {i + 1}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
