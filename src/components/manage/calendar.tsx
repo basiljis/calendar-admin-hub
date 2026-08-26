@@ -269,25 +269,25 @@ export function CalendarPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-l-4 border-l-chart-1 shadow-sm">
+        <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/80 text-sm font-medium">Предполагается в месяце</p>
+                <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-1">{plannedHours} ч</p>
               </div>
-              <div className="bg-chart-1/10 flex size-10 items-center justify-center rounded-xl">
+              <div className="bg-chart-1/15 flex size-10 items-center justify-center rounded-xl">
                 <CalendarDays className="size-5 text-chart-1" />
               </div>
             </div>
             <p className="text-muted-foreground mt-3 text-xs font-medium">По графику 2/2 без учёта отпусков</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-chart-2 shadow-sm">
+        <Card className="border-l-4 border-l-chart-2 shadow-sm transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/80 text-sm font-medium">Выходит с учётом отпуска</p>
+                <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
               </div>
               <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
@@ -299,14 +299,14 @@ export function CalendarPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-chart-3 shadow-sm">
+        <Card className="border-l-4 border-l-chart-3 shadow-sm transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/80 text-sm font-medium">Уже прошло</p>
+                <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
               </div>
-              <div className="bg-chart-3/10 flex size-10 items-center justify-center rounded-xl">
+              <div className="bg-chart-3/15 flex size-10 items-center justify-center rounded-xl">
                 <TrendingUp className="size-5 text-chart-3" />
               </div>
             </div>
