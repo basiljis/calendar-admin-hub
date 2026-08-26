@@ -834,7 +834,10 @@ export function ChatWidget() {
                   <Input
                     ref={messageInputRef}
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                      setText(e.target.value);
+                      notifyTyping();
+                    }}
                     placeholder="Сообщение…"
                     disabled={isUploading}
                     className="min-w-0"
