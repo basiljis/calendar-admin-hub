@@ -57,11 +57,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
+import { Hint } from "@/components/Hint";
 
 
 
 export function VacationsAdminPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isManager, user } = useAuth();
+  const canManage = isAdmin || isManager;
   const qc = useQueryClient();
   
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -123,7 +125,7 @@ export function VacationsAdminPage() {
 
       return filteredData;
     },
-    enabled: isAdmin,
+    enabled: canManage,
   });
 
   const { data: auditLogs = [] } = useQuery({
@@ -149,7 +151,7 @@ export function VacationsAdminPage() {
         action_by_profile: profileMap.get(log.action_by)
       }));
     },
-    enabled: isAdmin,
+    enabled: canManage,
   });
 
 
@@ -303,13 +305,13 @@ export function VacationsAdminPage() {
     );
   };
 
-  if (!isAdmin) {
+  if (!canManage) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Доступ ограничен</CardTitle>
-            <CardDescription>Эта страница доступна только администраторам.</CardDescription>
+            <CardDescription>Раздел доступен администраторам и руководителям.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -584,20 +586,22 @@ export function VacationsAdminPage() {
                         </DialogContent>
                       </Dialog>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Скорректировать заявку"
-                        onClick={() => openEdit(v)}
+                      <Hint
+                        side="top"
+                        label={v.status === "approved" ? "Изменить подтверждённый отпуск" : "Скорректировать заявку"}
+                        description="Доступно администраторам и руководителям: даты, комментарий и статус."
                       >
-                        <Pencil className="size-4" />
-                      </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(v)}>
+                          <Pencil className="size-4" />
+                        </Button>
+                      </Hint>
 
                       {v.status === "pending" && (
                         <>
                           <Button
                             variant="ghost"
                             size="icon"
+                            title="Подтвердить отпуск"
                             className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                             onClick={() => updateStatus.mutate({
                               ids: [v.id],
@@ -609,6 +613,7 @@ export function VacationsAdminPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            title="Отклонить заявку"
                             className="text-destructive hover:bg-destructive/5"
                             onClick={() => updateStatus.mutate({
                               ids: [v.id],
