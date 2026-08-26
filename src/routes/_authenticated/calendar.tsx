@@ -222,7 +222,7 @@ function CalendarPage() {
       <div className="flex flex-wrap gap-3 text-xs">
         <Legend color="bg-shift-a" label="Группа 1" />
         <Legend color="bg-shift-b" label="Группа 2" />
-        <Legend color="bg-holiday" label="Праздничный день (доплата)" />
+        <Legend color="bg-holiday" label="Праздничный день" />
         <Legend color="bg-amber-100 border border-amber-200" label="Отпуск" />
         <p className="ml-auto text-xs text-muted-foreground">
           Дни отпуска учитываются в подсчёте нормы часов.
