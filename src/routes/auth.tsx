@@ -45,6 +45,7 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
+    setAuthSuccess(null);
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
@@ -53,6 +54,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
+    setAuthSuccess("Вход выполнен. Переходим в систему…");
     navigate({ to: "/dashboard", replace: true });
   }
 
