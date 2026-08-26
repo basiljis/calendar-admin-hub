@@ -162,6 +162,17 @@ function AdminPage() {
     rolesMutation.mutate({ userId, roles: next });
   }
 
+  function toggleSelect(userId: string, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+  }
+
+  const allSelected = users.length > 0 && users.every((u) => selected.has(u.id));
+
   if (loading) {
     return <p className="p-6 text-muted-foreground">Загрузка…</p>;
   }
