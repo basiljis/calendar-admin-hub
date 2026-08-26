@@ -13,6 +13,10 @@ import {
   Search,
   Calendar,
   SmilePlus,
+  Maximize2,
+  Minimize2,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -52,6 +56,28 @@ export function ChatWidget() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+
+  // Восстанавливаем состояние окна чата (закреплён / развёрнут) после перезагрузки
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pinned = window.localStorage.getItem("chat-pinned") === "1";
+    const full = window.localStorage.getItem("chat-fullscreen") === "1";
+    setIsPinned(pinned);
+    setIsFullscreen(full);
+    if (pinned) setIsOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("chat-pinned", isPinned ? "1" : "0");
+  }, [isPinned]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("chat-fullscreen", isFullscreen ? "1" : "0");
+  }, [isFullscreen]);
   const [text, setText] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -474,14 +500,34 @@ export function ChatWidget() {
   };
 
   const toggleOpen = () => {
-    setIsOpen((prev) => !prev);
+    setIsOpen((prev) => {
+      const next = !prev;
+      if (!next) setIsPinned(false);
+      return next;
+    });
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div
+      className={
+        isOpen && isFullscreen
+          ? "fixed inset-0 z-50 flex flex-col items-stretch gap-3 p-4"
+          : "fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+      }
+    >
       {isOpen && (
-        <div className="flex max-h-[80vh] w-[95vw] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:w-[480px]">
-          <div className="grid h-full grid-cols-[160px_1fr] overflow-hidden">
+        <div
+          className={
+            isFullscreen
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl"
+              : "flex max-h-[80vh] w-[95vw] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:w-[480px]"
+          }
+        >
+          <div
+            className={`grid h-full overflow-hidden ${
+              isFullscreen ? "grid-cols-[260px_1fr]" : "grid-cols-[160px_1fr]"
+            }`}
+          >
             <div className="border-r bg-card p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Чаты</h2>
@@ -593,17 +639,61 @@ export function ChatWidget() {
                     )}
                   </h3>
                   <div className="flex items-center gap-1">
+                    {unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="mr-1 rounded-full px-2 py-0 text-[10px]"
+                        title={`Непрочитанных сообщений: ${unreadCount}`}
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
                       className={`size-8 ${isSearchOpen ? "bg-accent" : ""}`}
                       onClick={() => setIsSearchOpen(!isSearchOpen)}
+                      aria-label="Поиск по сообщениям"
+                      title="Поиск по сообщениям"
                     >
                       <Search className="size-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setIsOpen(false)}>
-                      <X className="size-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`size-8 ${isPinned ? "bg-accent" : ""}`}
+                      onClick={() => setIsPinned((v) => !v)}
+                      aria-label={isPinned ? "Открепить чат" : "Закрепить чат"}
+                      title={
+                        isPinned
+                          ? "Чат закреплён: остаётся открытым при переходах и перезагрузке"
+                          : "Закрепить чат, чтобы он не закрывался"
+                      }
+                    >
+                      {isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => setIsFullscreen((v) => !v)}
+                      aria-label={isFullscreen ? "Свернуть чат" : "Развернуть на весь экран"}
+                      title={isFullscreen ? "Свернуть окно чата" : "Развернуть чат на весь экран"}
+                    >
+                      {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+                    </Button>
+                    {!isPinned && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        onClick={() => setIsOpen(false)}
+                        aria-label="Закрыть чат"
+                        title="Закрыть чат"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 {isSearchOpen && (
@@ -871,6 +961,7 @@ export function ChatWidget() {
         </div>
       )}
 
+      {!(isOpen && isFullscreen) && (
       <Button
         onClick={toggleOpen}
         size="icon"
@@ -879,12 +970,13 @@ export function ChatWidget() {
         title={isOpen ? "Закрыть чат" : "Открыть чат команды"}
       >
         {isOpen ? <X className="size-6" /> : <MessageSquare className="size-6" />}
-        {!isOpen && unreadCount > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-background bg-destructive text-[10px] font-bold text-destructive-foreground">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </Button>
+      )}
     </div>
   );
 }
