@@ -153,11 +153,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider delayDuration={200}>
     <div className="flex min-h-screen bg-background text-foreground font-sans">
+      {/* Мобильный оверлей */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden
+        />
+      )}
       {/* Sidebar - Matching reference image style */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-sidebar transition-all duration-300 ${
-          isSidebarCollapsed ? "w-20" : "w-64"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-sidebar transition-transform duration-300 md:z-30 md:translate-x-0 md:transition-all ${
+          mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+        } ${isSidebarCollapsed ? "md:w-20" : "md:w-64"}`}
       >
         <div className="flex h-16 items-center px-6">
           <Link to="/calendar" className="flex items-center gap-2">
