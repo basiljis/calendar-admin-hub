@@ -118,6 +118,30 @@ function AdminPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: (vars: { userIds: string[]; role: AppRole; action: "assign" | "revoke" }) =>
+      applyBulkRole({ data: vars }),
+    onSuccess: (res) => {
+      if (res.failed === 0) {
+        toast.success(`Готово: изменено ${res.succeeded} пользователей`);
+      } else {
+        toast.warning(
+          `Изменено: ${res.succeeded}, с ошибками: ${res.failed}. Проверьте список ниже.`,
+        );
+        res.results
+          .filter((r) => !r.ok)
+          .forEach((r) => {
+            const u = users.find((x) => x.id === r.userId);
+            toast.error(`${u?.full_name ?? r.userId}: ${r.error}`);
+          });
+      }
+      setSelected(new Set());
+      setBulkConfirm(null);
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (userId: string) => removeUser({ data: { userId } }),
     onSuccess: () => {
