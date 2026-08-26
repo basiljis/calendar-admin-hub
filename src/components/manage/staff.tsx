@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plane, Trash2, History } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -206,96 +206,194 @@ export function StaffPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {profiles.map((p) => {
-          const roles = (data?.roles ?? [])
-            .filter((r) => r.user_id === p.id)
-            .map((r) => r.role as AppRole);
-          const vacs = (data?.vacations ?? []).filter((v) => v.user_id === p.id);
-          const vacDays = vacationDatesInRange(vacs, PERIOD.start, PERIOD.end).size;
-          const norm = personalNorm(vacDays);
-          const planned = (data?.shifts ?? [])
-            .filter((s) => s.user_id === p.id && s.type === "work")
-            .reduce((a, s) => a + Number(s.hours), 0);
-          return (
-            <Card key={p.id}>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between gap-2 text-base">
-                  <span>{p.full_name || "Без имени"}</span>
-                  <span className="flex gap-1">
-                    {roles.map((r) => (
-                      <Badge key={r} variant={r === "admin" ? "default" : "secondary"}>
-                        {roleLabels[r]}
-                      </Badge>
-                    ))}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="text-muted-foreground grid grid-cols-2 gap-2">
-                  <span>{p.email ?? "—"}</span>
-                  <span>{p.phone ?? "телефон не указан"}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <Metric label="Норма" value={`${formatHours(norm)} ч`} />
-                  <Metric label="План" value={`${formatHours(planned)} ч`} />
-                  <Metric label="Отпуск" value={`${vacDays} дн.`} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-muted-foreground text-xs">Группа</Label>
-                  <Select
-                    disabled={!isAdmin}
-                    value={String(p.shift_group)}
-                    onValueChange={(v) =>
-                      updateProfile.mutate({ id: p.id, patch: { shift_group: Number(v) } })
-                    }
-                  >
-                    <SelectTrigger className="h-8 w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Группа 1</SelectItem>
-                      <SelectItem value="2">Группа 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {vacs.length > 0 && (
-                  <div className="space-y-1">
-                    {vacs.map((v) => (
-                      <div
-                        key={v.id}
-                        className={`flex items-center justify-between rounded-md px-2 py-1 text-xs ${
-                          v.status === "approved"
-                            ? "bg-secondary/60"
-                            : v.status === "rejected"
-                              ? "bg-destructive/10 text-destructive"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Сотрудник</TableHead>
+                <TableHead>Контакты</TableHead>
+                <TableHead>Группа</TableHead>
+                <TableHead className="text-center">Норма</TableHead>
+                <TableHead className="text-center">План</TableHead>
+                <TableHead className="text-center">Отпуск</TableHead>
+                <TableHead>Отпуска</TableHead>
+                {isAdmin && <TableHead className="text-right">Действия</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {profiles.map((p) => {
+                const roles = (data?.roles ?? [])
+                  .filter((r) => r.user_id === p.id)
+                  .map((r) => r.role as AppRole);
+                const vacs = (data?.vacations ?? []).filter((v) => v.user_id === p.id);
+                const vacDays = vacationDatesInRange(vacs, PERIOD.start, PERIOD.end).size;
+                const norm = personalNorm(vacDays);
+                const planned = (data?.shifts ?? [])
+                  .filter((s) => s.user_id === p.id && s.type === "work")
+                  .reduce((a, s) => a + Number(s.hours), 0);
+                const pendingCount = vacs.filter((v) => v.status === "pending").length;
+                return (
+                  <TableRow key={p.id} className="align-top">
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{p.full_name || "Без имени"}</span>
+                        <span className="flex flex-wrap gap-1">
+                          {roles.map((r) => (
+                            <Badge key={r} variant={r === "admin" ? "default" : "secondary"}>
+                              {roleLabels[r]}
+                            </Badge>
+                          ))}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Mail className="size-3 shrink-0" />
+                          {p.email ?? "—"}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Phone className="size-3 shrink-0" />
+                          {p.phone ?? "не указан"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        disabled={!isAdmin}
+                        value={String(p.shift_group)}
+                        onValueChange={(v) =>
+                          updateProfile.mutate({ id: p.id, patch: { shift_group: Number(v) } })
+                        }
                       >
-                        <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5">
-                            <Plane className="size-3" />
-                            {v.start_date.split("-").reverse().join(".")} —{" "}
-                            {v.end_date.split("-").reverse().join(".")}
-                          </span>
-                          <span className="text-[9px] uppercase font-bold opacity-70">
-                            {v.status === "approved"
-                              ? "Подтвержден"
-                              : v.status === "rejected"
-                                ? "Отклонен"
-                                : "Ожидает"}
-                          </span>
+                        <SelectTrigger className="h-8 w-28" aria-label={`Группа сотрудника ${p.full_name}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Группа 1</SelectItem>
+                          <SelectItem value="2">Группа 2</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-center font-medium">{formatHours(norm)} ч</TableCell>
+                    <TableCell className="text-center font-medium">{formatHours(planned)} ч</TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center gap-1 font-medium">
+                        <Plane className="size-3.5 text-muted-foreground" />
+                        {vacDays} дн.
+                      </span>
+                      {pendingCount > 0 && (
+                        <Badge className="ml-1 bg-amber-100 text-amber-800 border-0 text-[10px]">
+                          +{pendingCount} ждёт
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {vacs.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <div className="space-y-1">
+                          {vacs.map((v) => (
+                            <div
+                              key={v.id}
+                              className={`flex items-center justify-between gap-2 rounded-md px-2 py-1 text-xs ${
+                                v.status === "approved"
+                                  ? "bg-secondary/60"
+                                  : v.status === "rejected"
+                                    ? "bg-destructive/10 text-destructive"
+                                    : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                                <Plane className="size-3" />
+                                {v.start_date.split("-").reverse().join(".")} —{" "}
+                                {v.end_date.split("-").reverse().join(".")}
+                                <span className="text-[9px] uppercase font-bold opacity-70">
+                                  {v.status === "approved"
+                                    ? "Подтверждён"
+                                    : v.status === "rejected"
+                                      ? "Отклонён"
+                                      : "Ожидает"}
+                                </span>
+                              </span>
+                              <span className="flex items-center gap-1">
+                                {isAdmin && v.status === "pending" && (
+                                  <>
+                                    <button
+                                      onClick={() =>
+                                        updateVacationStatus.mutate({
+                                          id: v.id,
+                                          status: "approved",
+                                          userId: p.id,
+                                          startDate: v.start_date,
+                                          endDate: v.end_date,
+                                        })
+                                      }
+                                      className="text-green-600 hover:text-green-700"
+                                      title="Подтвердить"
+                                      aria-label="Подтвердить отпуск"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        updateVacationStatus.mutate({
+                                          id: v.id,
+                                          status: "rejected",
+                                          userId: p.id,
+                                          startDate: v.start_date,
+                                          endDate: v.end_date,
+                                        })
+                                      }
+                                      className="text-red-600 hover:text-red-700"
+                                      title="Отклонить"
+                                      aria-label="Отклонить отпуск"
+                                    >
+                                      ✕
+                                    </button>
+                                  </>
+                                )}
+                                {(isAdmin || (user?.id === p.id && v.status === "pending")) && (
+                                  <button
+                                    onClick={() => removeVacation.mutate(v.id)}
+                                    aria-label="Удалить отпуск"
+                                    className="opacity-50 hover:opacity-100"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                )}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex gap-2 items-center">
+                      )}
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Назначить отпуск"
+                            aria-label={`Назначить отпуск: ${p.full_name}`}
+                            onClick={() => {
+                              setVacUser(p.id);
+                              document.getElementById("add-vacation-card")?.scrollIntoView({ behavior: "smooth" });
+                              toast.info(`Выбран сотрудник: ${p.full_name}. Укажите даты отпуска ниже.`);
+                            }}
+                          >
+                            <Plane className="size-4" />
+                          </Button>
                           <Dialog>
                             <DialogTrigger asChild>
-                              <button className="opacity-50 hover:opacity-100" title="Журнал изменений">
-                                <History className="size-3.5" />
-                              </button>
+                              <Button variant="ghost" size="icon" title="Журнал заявок" aria-label={`Журнал заявок: ${p.full_name}`}>
+                                <History className="size-4" />
+                              </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md">
                               <DialogHeader>
-                                <DialogTitle className="text-sm">Журнал заявки: {v.start_date.split("-").reverse().join(".")} — {v.end_date.split("-").reverse().join(".")}</DialogTitle>
+                                <DialogTitle className="text-sm">Журнал заявок: {p.full_name}</DialogTitle>
                               </DialogHeader>
                               <div className="mt-4">
                                 <Table>
@@ -308,7 +406,7 @@ export function StaffPage() {
                                   </TableHeader>
                                   <TableBody>
                                     {(data?.auditLogs ?? [])
-                                      .filter((log: any) => log.vacation_id === v.id)
+                                      .filter((log: any) => vacs.some((v) => v.id === log.vacation_id))
                                       .map((log: any) => (
                                         <TableRow key={log.id}>
                                           <TableCell className="text-xs py-2">
@@ -316,9 +414,15 @@ export function StaffPage() {
                                           </TableCell>
                                           <TableCell className="text-xs py-2">
                                             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
-                                              {log.action_type === "requested" ? "Подана" : 
-                                               log.action_type === "approved" ? "Подтверждена" : 
-                                               log.action_type === "rejected" ? "Отклонена" : log.action_type}
+                                              {log.action_type === "requested"
+                                                ? "Подана"
+                                                : log.action_type === "approved"
+                                                  ? "Подтверждена"
+                                                  : log.action_type === "rejected"
+                                                    ? "Отклонена"
+                                                    : log.action_type === "adjusted"
+                                                      ? "Скорректирована"
+                                                      : log.action_type}
                                             </Badge>
                                           </TableCell>
                                           <TableCell className="text-xs py-2 text-right text-muted-foreground">
@@ -326,12 +430,14 @@ export function StaffPage() {
                                               day: "2-digit",
                                               month: "2-digit",
                                               hour: "2-digit",
-                                              minute: "2-digit"
+                                              minute: "2-digit",
                                             })}
                                           </TableCell>
                                         </TableRow>
                                       ))}
-                                    {(data?.auditLogs ?? []).filter((log: any) => log.vacation_id === v.id).length === 0 && (
+                                    {(data?.auditLogs ?? []).filter((log: any) =>
+                                      vacs.some((v) => v.id === log.vacation_id)
+                                    ).length === 0 && (
                                       <TableRow>
                                         <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">
                                           Записей не найдено
@@ -343,55 +449,16 @@ export function StaffPage() {
                               </div>
                             </DialogContent>
                           </Dialog>
-                          {isAdmin && v.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => updateVacationStatus.mutate({ 
-                                  id: v.id, 
-                                  status: "approved", 
-                                  userId: p.id, 
-                                  startDate: v.start_date, 
-                                  endDate: v.end_date 
-                                })}
-                                className="text-green-600 hover:text-green-700"
-                                title="Подтвердить"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                onClick={() => updateVacationStatus.mutate({ 
-                                  id: v.id, 
-                                  status: "rejected", 
-                                  userId: p.id, 
-                                  startDate: v.start_date, 
-                                  endDate: v.end_date 
-                                })}
-                                className="text-red-600 hover:text-red-700"
-                                title="Отклонить"
-                              >
-                                ✕
-                              </button>
-                            </>
-                          )}
-                          {(isAdmin || (user?.id === p.id && v.status === "pending")) && (
-                            <button
-                              onClick={() => removeVacation.mutate(v.id)}
-                              aria-label="Удалить отпуск"
-                              className="opacity-50 hover:opacity-100"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
