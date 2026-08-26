@@ -98,21 +98,6 @@ function AuthPage() {
           </div>
 
           <div className="mt-10">
-            <Button
-              variant="outline"
-              className="h-12 w-full rounded-xl text-sm font-medium"
-              onClick={google}
-            >
-              Войти через Google
-              <span className="text-primary ml-1 font-bold">G</span>
-            </Button>
-
-            <div className="my-6 flex items-center gap-4">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs text-slate-400">или</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-
             <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
               {mode === "up" && (
                 <>
