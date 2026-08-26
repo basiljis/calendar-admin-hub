@@ -277,21 +277,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarCollapsed ? "pl-20" : "pl-64"
+        className={`min-w-0 flex-1 transition-all duration-300 ${
+          isSidebarCollapsed ? "md:pl-20" : "md:pl-64"
         }`}
       >
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-8 backdrop-blur">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <ChevronRight className="size-5" />
+        <header className="sticky top-0 z-20 grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b bg-background/80 px-4 backdrop-blur sm:px-6 md:px-8">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 md:hidden"
+              aria-label="Открыть меню"
+              onClick={() => setMobileNavOpen(true)}
+            >
+              <Menu className="size-5" />
             </Button>
-            <div className="text-base font-semibold text-foreground">
+            <div className="truncate text-sm font-semibold text-foreground sm:text-base">
               {sectionTitle}
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
             <ThemeToggle />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
