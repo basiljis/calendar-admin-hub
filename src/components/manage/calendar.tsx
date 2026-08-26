@@ -67,7 +67,10 @@ type Profile = {
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
-  const [cursor, setCursor] = useState({ year: 2026, month: 9 });
+  const [cursor, setCursor] = useState(() => {
+    const t = new Date();
+    return { year: t.getFullYear(), month: t.getMonth() + 1 };
+  });
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
@@ -254,13 +257,16 @@ export function CalendarPage() {
             {days.map((d) => {
               const holiday = data?.holidays.get(d);
               const list = shiftsOn(d);
+              const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+              const isToday = d === todayStr;
+              const isPastDay = d < todayStr;
               return (
                 <button
                   key={d}
                   onClick={() => setOpenDay(d)}
                   className={`min-h-24 rounded-lg border p-1.5 text-left align-top transition-colors ${
                     holiday ? "bg-holiday/50 border-holiday" : "bg-card hover:bg-secondary/60"
-                  } ${list.some(s => s.type === 'vacation') ? 'ring-1 ring-inset ring-amber-200 bg-amber-50/30' : ''} ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
+                  } ${isPastDay ? "opacity-80" : ""} ${isToday ? "ring-2 ring-primary border-primary" : ""} ${list.some(s => s.type === 'vacation') ? 'ring-1 ring-inset ring-amber-200 bg-amber-50/30' : ''} ${isAdmin ? "cursor-pointer" : "cursor-default"}`}
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-sm font-medium">{Number(d.slice(-2))}</span>
