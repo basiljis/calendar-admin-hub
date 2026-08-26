@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
@@ -82,6 +82,7 @@ type Profile = {
   id: string;
   full_name: string;
   shift_group: number;
+  roles: AppRole[];
 };
 
 export function CalendarPage() {
@@ -150,7 +151,7 @@ export function CalendarPage() {
     queryKey: ["calendar", rangeFrom, rangeTo],
 
     queryFn: async () => {
-      const [profiles, shifts, holidays, vacations] = await Promise.all([
+      const [profilesResp, shifts, holidays, vacations, userRoles] = await Promise.all([
         supabase.from("profiles").select("id, full_name, shift_group").order("full_name"),
         supabase.from("shifts").select("*").gte("work_date", rangeFrom).lte("work_date", rangeTo),
         supabase
@@ -159,9 +160,19 @@ export function CalendarPage() {
           .gte("holiday_date", rangeFrom)
           .lte("holiday_date", rangeTo),
         supabase.from("vacations").select("*"),
+        supabase.from("user_roles").select("user_id, role"),
       ]);
+      const rolesByUser = new Map<string, AppRole[]>();
+      for (const r of (userRoles.data ?? []) as { user_id: string; role: AppRole }[]) {
+        const arr = rolesByUser.get(r.user_id) ?? [];
+        arr.push(r.role);
+        rolesByUser.set(r.user_id, arr);
+      }
       return {
-        profiles: (profiles.data ?? []) as Profile[],
+        profiles: ((profilesResp.data ?? []) as Omit<Profile, "roles">[]).map((p) => ({
+          ...p,
+          roles: rolesByUser.get(p.id) ?? [],
+        })) as Profile[],
         shifts: shifts.data ?? [],
         holidays: new Map(
           (holidays.data ?? []).map((h) => [h.holiday_date, { name: h.name, is_working: h.is_working }]),
@@ -670,6 +681,9 @@ export function CalendarPage() {
                           <div className="text-sm opacity-80">
                             Обед: {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
                           </div>
+                          {p.roles.includes("employee") && (
+                            <div className="text-sm opacity-80">Группа {p.shift_group}</div>
+                          )}
                           {pr.status === "active" && (
                             <>
                               <div className="bg-background/60 mt-2 h-1.5 w-full overflow-hidden rounded-full">
@@ -917,7 +931,9 @@ export function CalendarPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
-                      <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                      {p.roles.includes("employee") && (
+                        <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
+                      )}
                     </div>
                     {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">

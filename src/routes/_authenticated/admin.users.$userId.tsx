@@ -153,7 +153,7 @@ function AdminUserDetailPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Раздел администрирования доступен только администраторам системы.
+          Раздел администрирования доступен только администраторам.
         </CardContent>
       </Card>
     );
