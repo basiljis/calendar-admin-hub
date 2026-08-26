@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, RefreshCw, Info, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +16,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
@@ -32,11 +47,29 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+type Holiday = {
+  holiday_date: string;
+  name: string;
+  is_working: boolean;
+};
+
+type HolidayForm = {
+  date: string;
+  name: string;
+  status: "working" | "off";
+};
+
+const EMPTY_FORM: HolidayForm = { date: "", name: "", status: "off" };
+
 function SettingsPage() {
   const { isAdmin } = useAuth();
   const qc = useQueryClient();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const [form, setForm] = useState<HolidayForm>(EMPTY_FORM);
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: ["admin-holidays"],
@@ -46,27 +79,29 @@ function SettingsPage() {
         .select("*")
         .order("holiday_date", { ascending: true });
       if (error) throw error;
-      return data;
+      return data as Holiday[];
     },
   });
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+    qc.invalidateQueries({ queryKey: ["holidays"] });
+    qc.invalidateQueries({ queryKey: ["shifts"] });
+    qc.invalidateQueries({ queryKey: ["profiles"] });
+  };
+
   const reimportHolidays = useMutation({
     mutationFn: async () => {
-      // В реальном приложении здесь был бы вызов API или сложная логика парсинга
-      // Для текущей реализации мы имитируем "обновление", сбрасывая статус рабочего дня для всех
-      // или добавляя новые, если бы они были в API.
-      // Здесь мы просто логируем действие и уведомляем.
       const { error } = await supabase
         .from("holidays")
         .update({ is_working: false })
-        .eq("is_working", false); // Placeholder update to trigger something
-      
+        .eq("is_working", false);
       if (error) throw error;
       return true;
     },
     onSuccess: () => {
       toast.success("Данные о праздниках обновлены");
-      qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -76,24 +111,93 @@ function SettingsPage() {
       if (!dateFrom || !dateTo) {
         throw new Error("Выберите диапазон дат");
       }
-
       const { error } = await supabase
         .from("holidays")
         .update({ is_working: isWorking })
         .gte("holiday_date", dateFrom)
         .lte("holiday_date", dateTo);
-
       if (error) throw error;
       return true;
     },
     onSuccess: () => {
       toast.success("Статус праздников в выбранном периоде обновлен");
-      qc.invalidateQueries({ queryKey: ["admin-holidays"] });
-      qc.invalidateQueries({ queryKey: ["shifts"] });
-      qc.invalidateQueries({ queryKey: ["profiles"] });
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const saveHoliday = useMutation({
+    mutationFn: async () => {
+      if (!form.date || !form.name.trim()) {
+        throw new Error("Укажите дату и название праздника");
+      }
+      const payload = {
+        holiday_date: form.date,
+        name: form.name.trim(),
+        is_working: form.status === "working",
+      };
+      if (editingDate) {
+        // Обновление существующего: если дата изменилась — удаляем старую запись и создаём новую
+        if (editingDate !== form.date) {
+          const { error: delError } = await supabase
+            .from("holidays")
+            .delete()
+            .eq("holiday_date", editingDate);
+          if (delError) throw delError;
+          const { error: insError } = await supabase.from("holidays").insert(payload);
+          if (insError) throw insError;
+        } else {
+          const { error } = await supabase
+            .from("holidays")
+            .update({ name: payload.name, is_working: payload.is_working })
+            .eq("holiday_date", editingDate);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase.from("holidays").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editingDate ? "Праздник обновлён" : "Праздник добавлен");
+      setDialogOpen(false);
+      setEditingDate(null);
+      setForm(EMPTY_FORM);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteHoliday = useMutation({
+    mutationFn: async (date: string) => {
+      const { error } = await supabase
+        .from("holidays")
+        .delete()
+        .eq("holiday_date", date);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Праздник удалён");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openAddDialog = () => {
+    setEditingDate(null);
+    setForm(EMPTY_FORM);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (h: Holiday) => {
+    setEditingDate(h.holiday_date);
+    setForm({
+      date: h.holiday_date,
+      name: h.name,
+      status: h.is_working ? "working" : "off",
+    });
+    setDialogOpen(true);
+  };
 
   if (!isAdmin) {
     return (
@@ -167,23 +271,29 @@ function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
             <div>
               <CardTitle>Государственные праздники</CardTitle>
               <CardDescription>
                 Список праздников, влияющих на расчет нормы рабочих часов
               </CardDescription>
             </div>
-            <Button 
-              onClick={() => reimportHolidays.mutate()} 
-              disabled={reimportHolidays.isPending}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
-              Обновить данные
-            </Button>
+            <div className="flex shrink-0 gap-2">
+              <Button onClick={openAddDialog} size="sm" className="gap-2">
+                <Plus className="size-4" />
+                Добавить праздник
+              </Button>
+              <Button
+                onClick={() => reimportHolidays.mutate()}
+                disabled={reimportHolidays.isPending}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RefreshCw className={`size-4 ${reimportHolidays.isPending ? "animate-spin" : ""}`} />
+                Обновить данные
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -193,19 +303,20 @@ function SettingsPage() {
                     <TableHead>Дата</TableHead>
                     <TableHead>Название</TableHead>
                     <TableHead>Статус</TableHead>
-                    <TableHead className="text-right">Источник</TableHead>
+                    <TableHead>Источник</TableHead>
+                    <TableHead className="text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         Загрузка...
                       </TableCell>
                     </TableRow>
                   ) : holidays?.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         Праздники не найдены
                       </TableCell>
                     </TableRow>
@@ -223,8 +334,32 @@ function SettingsPage() {
                             <Badge className="bg-holiday text-holiday-foreground border-0">Выходной</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground text-xs">
+                        <TableCell className="text-muted-foreground text-xs">
                           Производственный календарь 2026
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(h)}
+                              aria-label={`Редактировать ${h.name}`}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                if (window.confirm(`Удалить праздник «${h.name}» (${new Date(h.holiday_date).toLocaleDateString("ru-RU")})?`)) {
+                                  deleteHoliday.mutate(h.holiday_date);
+                                }
+                              }}
+                              aria-label={`Удалить ${h.name}`}
+                            >
+                              <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -235,6 +370,63 @@ function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingDate ? "Редактировать праздник" : "Добавить праздник"}</DialogTitle>
+            <DialogDescription>
+              Укажите дату, название и статус дня. Статус влияет на расчёт нормы рабочих часов.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="holiday-date">Дата</Label>
+              <Input
+                id="holiday-date"
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="holiday-name">Название</Label>
+              <Input
+                id="holiday-name"
+                placeholder="Например: День народного единства"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="holiday-status">Статус дня</Label>
+              <Select
+                value={form.status}
+                onValueChange={(v) => setForm((f) => ({ ...f, status: v as HolidayForm["status"] }))}
+              >
+                <SelectTrigger id="holiday-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="off">Выходной</SelectItem>
+                  <SelectItem value="working">Рабочий</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button
+              onClick={() => saveHoliday.mutate()}
+              disabled={saveHoliday.isPending || !form.date || !form.name.trim()}
+            >
+              {saveHoliday.isPending ? "Сохранение..." : "Сохранить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
