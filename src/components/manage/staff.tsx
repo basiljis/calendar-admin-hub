@@ -232,7 +232,7 @@ export function StaffPage() {
           <div className="grid gap-3">
             <Label>ФИО<Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} /></Label>
             <Label>Электронная почта<Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></Label>
-            <Label>Временный пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /></Label>
+            <Label>Пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /></Label>
             <Label>Роль<Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
             <Label>Телефон<Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></Label>
             <Label>Должность<Input value={newUser.position} onChange={(e) => setNewUser({ ...newUser, position: e.target.value })} /></Label>
