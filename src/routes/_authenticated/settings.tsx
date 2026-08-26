@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save, ShieldCheck } from "lucide-react";
@@ -38,7 +40,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
+const searchSchema = z.object({
+  tab: fallback(z.enum(["norms", "holidays", "system"]), "norms").default("norms"),
+});
+
 export const Route = createFileRoute("/_authenticated/settings")({
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: "Настройки — График ОКП" },
@@ -68,6 +75,8 @@ const EMPTY_FORM: HolidayForm = { date: "", name: "", status: "off" };
 function SettingsPage() {
   const { isAdmin, isManager } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { tab } = Route.useSearch();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -222,7 +231,13 @@ function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="norms" className="space-y-6">
+      <Tabs
+        value={tab}
+        onValueChange={(value) =>
+          navigate({ to: "/settings", search: (prev) => ({ ...prev, tab: value as typeof tab }) })
+        }
+        className="space-y-6"
+      >
         <TabsList aria-label="Разделы настроек" className="flex w-fit flex-wrap">
           <TabsTrigger value="norms" className="gap-2">
             <Clock className="size-4 shrink-0" />

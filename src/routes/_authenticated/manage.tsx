@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Users, Plane, CalendarDays, BarChart3, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,15 +11,15 @@ import { CalendarPage } from "@/components/manage/calendar";
 import { VacationsStatsPage } from "@/components/manage/vacations-stats";
 import { AdminPage } from "@/components/manage/admin";
 
-const tabSchema = z.object({
-  tab: z
-    .enum(["staff", "requests", "shifts", "stats", "users"])
-    .catch("staff")
-    .optional(),
+const searchSchema = z.object({
+  tab: fallback(
+    z.enum(["staff", "requests", "shifts", "stats", "users"]),
+    "staff"
+  ).default("staff"),
 });
 
 export const Route = createFileRoute("/_authenticated/manage")({
-  validateSearch: tabSchema,
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: "Управление персоналом — График ОКП" },
@@ -74,7 +75,7 @@ function ManagePage() {
       <Tabs
         value={tab}
         onValueChange={(value) =>
-          navigate({ to: "/manage", search: { tab: value as typeof tab } })
+          navigate({ to: "/manage", search: (prev) => ({ ...prev, tab: value as typeof tab }) })
         }
         className="space-y-6"
       >
