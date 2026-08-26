@@ -601,7 +601,7 @@ export function CalendarPage() {
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
                       ? "min-h-40 sm:min-h-64"
-                      : "min-h-64"
+                      : "min-h-[28rem] p-3 sm:p-4"
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
@@ -624,6 +624,68 @@ export function CalendarPage() {
                     </span>
                   )}
                 </div>
+                {view === "day" ? (
+                  <div className="mt-3 space-y-2.5">
+                    {list.length === 0 && (
+                      <div className="text-muted-foreground/70 rounded-xl border border-dashed p-6 text-center text-sm">
+                        На этот день смен нет
+                      </div>
+                    )}
+                    {list.map((s) => {
+                      const p = profiles.find((x) => x.id === s.user_id);
+                      if (!p) return null;
+                      if (s.type === "vacation") {
+                        return (
+                          <div
+                            key={s.id}
+                            className="rounded-lg border-t-4 border-amber-400 bg-amber-100/70 p-3 text-amber-900"
+                          >
+                            <div className="flex items-center gap-2 text-base font-bold">
+                              <Plane className="size-4 shrink-0" />
+                              <span className="truncate">{p.full_name}</span>
+                            </div>
+                            <div className="mt-1 text-sm opacity-80">Отпуск</div>
+                          </div>
+                        );
+                      }
+                      const pr = getShiftProgress(d, now);
+                      const accent =
+                        pr.status === "done"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                          : p.shift_group === 1
+                            ? "border-shift-a bg-shift-a/12 text-foreground"
+                            : "border-shift-b bg-shift-b/12 text-foreground";
+                      return (
+                        <div
+                          key={s.id}
+                          className={`relative overflow-hidden rounded-lg border-t-4 p-3 ${accent}`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-base font-bold">{p.full_name}</span>
+                            {pr.status === "done" && <CheckCircle2 className="size-4 shrink-0" />}
+                          </div>
+                          <div className="mt-1 text-sm opacity-80">
+                            {START_LABEL} – {END_LABEL}
+                          </div>
+                          <div className="text-sm opacity-80">
+                            Обед: {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
+                          </div>
+                          {pr.status === "active" && (
+                            <>
+                              <div className="bg-background/60 mt-2 h-1.5 w-full overflow-hidden rounded-full">
+                                <div
+                                  className="h-full bg-emerald-600 transition-all duration-1000"
+                                  style={{ width: `${pr.percent}%` }}
+                                />
+                              </div>
+                              <div className="mt-1 text-xs opacity-70">{pr.remainingLabel}</div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
                 <div className="mt-1 space-y-1">
                   {detailUserId ? (() => {
                     const s = list.find((x) => x.user_id === detailUserId);
@@ -729,6 +791,7 @@ export function CalendarPage() {
                     );
                   })}
                 </div>
+                )}
               </button>
             );
           })}
