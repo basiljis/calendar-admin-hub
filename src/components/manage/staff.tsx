@@ -43,6 +43,8 @@ const roleLabels: Record<AppRole, string> = {
   employee: "Сотрудник",
 };
 
+const allRoles: AppRole[] = ["admin", "manager", "employee"];
+
 export function StaffPage() {
   const { isAdmin, isManager, user } = useAuth();
   const qc = useQueryClient();
