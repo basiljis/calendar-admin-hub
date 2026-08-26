@@ -143,7 +143,10 @@ export function CalendarPage() {
   const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
   const generate = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (range?: { from: string; to: string }) => {
+      const from = range?.from ?? first;
+      const to = range?.to ?? last;
+      const targetDays = days.filter((d) => d >= from && d <= to);
       const rows: {
         user_id: string;
         work_date: string;
@@ -152,9 +155,9 @@ export function CalendarPage() {
         break_time?: string;
       }[] = [];
       for (const p of profiles) {
-        const vac = vacationDatesInRange(data?.vacations ?? [], first, last);
-        
-        for (const d of days) {
+        const vac = vacationDatesInRange(data?.vacations ?? [], from, to);
+
+        for (const d of targetDays) {
           if (vac.has(d)) {
             rows.push({ user_id: p.id, work_date: d, hours: 0, type: "vacation" });
           } else if (isWorkingDay(d, p.shift_group)) {
@@ -170,10 +173,12 @@ export function CalendarPage() {
     },
     onSuccess: (n) => {
       toast.success(`График сформирован: ${n} записей`);
+      setGenOpen(false);
       qc.invalidateQueries({ queryKey: ["calendar", first] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const toggle = useMutation({
     mutationFn: async ({
