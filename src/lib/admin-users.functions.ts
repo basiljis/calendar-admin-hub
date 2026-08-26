@@ -282,6 +282,7 @@ export const createUserAdmin = createServerFn({ method: "POST" })
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: created.user.id, email: data.email, full_name: data.full_name,
       phone: data.phone, position: data.position, shift_group: data.shift_group,
+      is_approved: true,
     });
     if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);

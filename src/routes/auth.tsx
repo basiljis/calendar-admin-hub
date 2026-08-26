@@ -48,6 +48,11 @@ function AuthPage() {
     if (typeof window !== "undefined" && window.location.search.includes("disabled=1")) {
       setAuthError("Учётная запись отключена. Обратитесь к администратору.");
     }
+    if (typeof window !== "undefined" && window.location.search.includes("pending=1")) {
+      setAuthError(
+        "Регистрация отправлена на подтверждение. Доступ откроется после проверки администратором или руководителем.",
+      );
+    }
   }, []);
 
   async function signIn(e: React.FormEvent) {
