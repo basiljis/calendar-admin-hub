@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Hint } from "@/components/Hint";
 
@@ -149,13 +150,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
 
         <ScrollArea className="flex-1 px-3 py-4">
-          <nav className="space-y-1">
+          <nav data-tour="sidebar-nav" className="space-y-1">
             {nav
               .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
               .map((n) => (
                 <Hint key={n.to} label={n.label} description={n.hint} side="right">
                   <Link
                     to={n.to}
+                    data-tour={`nav-${n.to}`}
                     aria-label={n.label}
                     className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
@@ -178,6 +180,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <p className="mb-3 text-xs text-muted-foreground">Мы на связи в рабочее время</p>
             <Button size="sm" variant="outline" className="w-full bg-white dark:bg-card">
               Связаться с нами
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="mt-2 w-full text-xs"
+              onClick={() => window.dispatchEvent(new Event("start-onboarding-tour"))}
+            >
+              Пройти тур по интерфейсу
             </Button>
           </div>
         )}
@@ -225,7 +235,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-6">
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
+                <Button data-tour="notifications" variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
                   <Bell className="size-5 text-muted-foreground" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0 right-0 flex size-5 items-center justify-center rounded-full border-2 border-background bg-orange-500 text-[10px] font-bold text-white">
@@ -285,7 +295,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </PopoverContent>
             </Popover>
 
-            <div className="flex items-center gap-3 border-l pl-6">
+            <div data-tour="profile" className="flex items-center gap-3 border-l pl-6">
               <div className="text-right">
                 <div className="text-sm font-semibold text-foreground leading-none">
                   {profile?.full_name || "Пользователь"}
@@ -312,6 +322,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <main className="mx-auto max-w-7xl p-8">{children}</main>
       </div>
       <ChatWidget />
+      <OnboardingTour />
     </div>
     </TooltipProvider>
   );
