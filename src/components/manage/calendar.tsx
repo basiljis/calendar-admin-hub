@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -268,39 +268,6 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-xs">Предполагается в месяце</p>
-            <p className="mt-1 text-2xl font-semibold">{plannedHours} ч</p>
-            <p className="text-muted-foreground mt-1 text-xs">По графику 2/2 без учёта отпусков</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-xs">Выходит с учётом отпуска</p>
-            <p className="mt-1 text-2xl font-semibold text-amber-600">{monthHours} ч</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {vacationHours > 0 ? `Минус ${vacationHours} ч отпусков` : "Отпусков в месяце нет"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-xs">Уже прошло</p>
-            <p className="mt-1 text-2xl font-semibold text-emerald-600">{passedHours} ч</p>
-            <div className="bg-muted mt-2 h-1.5 w-full overflow-hidden rounded-full">
-              <div className="h-full bg-emerald-600" style={{ width: `${passedPercent}%` }} />
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {passedPercent}% · осталось {Math.max(0, monthHours - passedHours)} ч
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-
-
       <Card>
         <CardContent className="p-2 sm:p-4">
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
@@ -393,6 +360,58 @@ export function CalendarPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-1">{plannedHours} ч</p>
+              </div>
+              <div className="bg-chart-1/15 flex size-10 items-center justify-center rounded-xl">
+                <CalendarDays className="size-5 text-chart-1" />
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-3 text-xs font-medium">По графику 2/2 без учёта отпусков</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-chart-2 shadow-sm transition-shadow hover:shadow-md">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
+              </div>
+              <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
+                <Plane className="size-5 text-chart-2" />
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-3 text-xs font-medium">
+              {vacationHours > 0 ? `Минус ${vacationHours} ч отпусков` : "Отпусков в месяце нет"}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-chart-3 shadow-sm transition-shadow hover:shadow-md">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
+              </div>
+              <div className="bg-chart-3/15 flex size-10 items-center justify-center rounded-xl">
+                <TrendingUp className="size-5 text-chart-3" />
+              </div>
+            </div>
+            <div className="bg-muted mt-4 h-2.5 w-full overflow-hidden rounded-full">
+              <div className="h-full bg-chart-3" style={{ width: `${passedPercent}%` }} />
+            </div>
+            <p className="text-muted-foreground mt-2 text-xs font-medium">
+              {passedPercent}% · осталось {Math.max(0, monthHours - passedHours)} ч
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       <Dialog open={!!openDay} onOpenChange={(o) => !o && setOpenDay(null)}>
         <DialogContent>
