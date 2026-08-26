@@ -337,13 +337,83 @@ export function CalendarPage() {
             <ChevronRight className="size-4" />
           </Button>
           {isAdmin && (
-            <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+            <Button
+              onClick={() => {
+                const t = new Date();
+                const isCurrentMonth =
+                  t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
+                if (isCurrentMonth && t.getDate() > 1) {
+                  const td = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+                  setGenMode("fromToday");
+                  setGenUntil(last);
+                  setGenOpen(true);
+                  void td;
+                } else {
+                  generate.mutate({ from: first, to: last });
+                }
+              }}
+              disabled={generate.isPending}
+            >
               <Wand2 className="size-4" />
               Сформировать месяц
             </Button>
           )}
         </div>
       </div>
+
+      <Dialog open={genOpen} onOpenChange={setGenOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Формирование расписания</DialogTitle>
+            <DialogDescription>
+              Месяц уже начался. Выберите, за какой период сформировать график.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {[
+              { key: "month", label: "Сформировать на весь месяц" },
+              { key: "fromToday", label: "Сформировать с текущей даты до конца месяца" },
+              { key: "until", label: "Сформировать до выбранной даты" },
+            ].map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => setGenMode(o.key as typeof genMode)}
+                className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
+                  genMode === o.key ? "border-primary bg-primary/10" : "hover:bg-muted"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+            {genMode === "until" && (
+              <input
+                type="date"
+                value={genUntil}
+                min={first}
+                max={last}
+                onChange={(e) => setGenUntil(e.target.value)}
+                className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
+                aria-label="Дата окончания формирования"
+              />
+            )}
+            <Button
+              className="w-full"
+              disabled={generate.isPending || (genMode === "until" && !genUntil)}
+              onClick={() => {
+                const t = new Date();
+                const todayIso = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+                if (genMode === "month") generate.mutate({ from: first, to: last });
+                else if (genMode === "fromToday") generate.mutate({ from: todayIso, to: last });
+                else generate.mutate({ from: todayIso, to: genUntil });
+              }}
+            >
+              Сформировать
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Card>
         <CardContent className="p-2 sm:p-4">
