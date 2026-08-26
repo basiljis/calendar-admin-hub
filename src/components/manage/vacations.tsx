@@ -11,7 +11,8 @@ import {
   Calendar as CalendarIcon,
   Download,
   CheckSquare,
-  Square
+  Square,
+  Pencil
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,10 +29,13 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -64,6 +68,11 @@ export function VacationsAdminPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editStatus, setEditStatus] = useState<string>("pending");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-vacations", statusFilter, searchQuery, dateFrom, dateTo],
@@ -193,6 +202,62 @@ export function VacationsAdminPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const adjustRequest = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      if (!editStart || !editEnd) throw new Error("Укажите даты");
+      if (editEnd < editStart) throw new Error("Дата окончания раньше даты начала");
+
+      const { error } = await supabase
+        .from("vacations")
+        .update({
+          start_date: editStart,
+          end_date: editEnd,
+          note: editNote || null,
+          status: editStatus,
+        })
+        .eq("id", editing.id);
+      if (error) throw error;
+
+      await supabase.from("vacation_audit_logs").insert({
+        vacation_id: editing.id,
+        action_by: user!.id,
+        action_type: editStatus === editing.status ? "adjusted" : editStatus,
+        previous_status: editing.status,
+        new_status: editStatus,
+      });
+
+      await supabase.from("notifications").insert({
+        user_id: editing.user_id,
+        title: "Заявка на отпуск скорректирована",
+        message: `Администратор изменил вашу заявку: период ${editStart
+          .split("-")
+          .reverse()
+          .join(".")} — ${editEnd.split("-").reverse().join(".")}, статус: ${
+          editStatus === "approved" ? "подтверждена" : editStatus === "rejected" ? "отклонена" : "ожидает"
+        }.`,
+        type: "info",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Заявка обновлена");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["admin-vacations"] });
+      qc.invalidateQueries({ queryKey: ["vacation-audit-logs-global"] });
+      qc.invalidateQueries({ queryKey: ["my-vacations"] });
+      qc.invalidateQueries({ queryKey: ["calendar"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openEdit = (v: any) => {
+    setEditing(v);
+    setEditStart(v.start_date);
+    setEditEnd(v.end_date);
+    setEditNote(v.note || "");
+    setEditStatus(v.status);
+  };
 
   const handleExport = () => {
     if (!data || data.length === 0) {
@@ -503,7 +568,8 @@ export function VacationsAdminPage() {
                                         <Badge variant="outline" className="text-[10px]">
                                           {log.action_type === "requested" ? "Подана" : 
                                            log.action_type === "approved" ? "Подтверждена" : 
-                                           log.action_type === "rejected" ? "Отклонена" : log.action_type}
+                                           log.action_type === "rejected" ? "Отклонена" :
+                                           log.action_type === "adjusted" ? "Скорректирована" : log.action_type}
                                         </Badge>
                                       </TableCell>
                                       <TableCell className="text-right text-xs text-muted-foreground">
@@ -516,6 +582,15 @@ export function VacationsAdminPage() {
                           </div>
                         </DialogContent>
                       </Dialog>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Скорректировать заявку"
+                        onClick={() => openEdit(v)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
 
                       {v.status === "pending" && (
                         <>
@@ -551,6 +626,54 @@ export function VacationsAdminPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Корректировка заявки</DialogTitle>
+            <DialogDescription>
+              {editing?.profile?.full_name} · сотрудник получит уведомление об изменениях.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Дата начала</label>
+                <Input type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Дата окончания</label>
+                <Input type="date" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Статус</label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Ожидает</SelectItem>
+                  <SelectItem value="approved">Подтверждён</SelectItem>
+                  <SelectItem value="rejected">Отклонён</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Комментарий</label>
+              <Textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Отмена
+            </Button>
+            <Button onClick={() => adjustRequest.mutate()} disabled={adjustRequest.isPending}>
+              Сохранить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

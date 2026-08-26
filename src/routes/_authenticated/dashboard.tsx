@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { VacationRequestDialog } from "@/components/VacationRequestDialog";
+import { MyVacationRequests } from "@/components/MyVacationRequests";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import {
@@ -85,13 +87,16 @@ function Dashboard() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Добро пожаловать, {profile?.full_name?.split(' ')[0] || "Сотрудник"}!
-        </h1>
-        <p className="text-muted-foreground/80">
-          Обзор показателей · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Добро пожаловать, {profile?.full_name?.split(' ')[0] || "Сотрудник"}!
+          </h1>
+          <p className="text-muted-foreground/80">
+            Обзор показателей · Группа {profile?.shift_group ?? 1} · Период {PERIOD.label}
+          </p>
+        </div>
+        <VacationRequestDialog />
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -124,6 +129,8 @@ function Dashboard() {
           color="orange"
         />
       </div>
+
+      <MyVacationRequests />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 border-none shadow-sm bg-card/50 backdrop-blur">
