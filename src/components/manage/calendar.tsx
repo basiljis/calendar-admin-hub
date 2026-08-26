@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Wand2, Plane } from "lucide-react";
+import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +27,36 @@ import {
 } from "@/lib/schedule";
 
 
+// Смена длится 12 часов: 08:00 — 20:00 (1 час — перерыв на обед)
+const SHIFT_START_HOUR = 8;
+const SHIFT_END_HOUR = 20;
+
+type ShiftProgress = {
+  status: "future" | "active" | "done";
+  percent: number;
+  remainingLabel: string;
+};
+
+function getShiftProgress(date: string, now: Date): ShiftProgress {
+  const start = new Date(`${date}T00:00:00`);
+  start.setHours(SHIFT_START_HOUR, 0, 0, 0);
+  const end = new Date(`${date}T00:00:00`);
+  end.setHours(SHIFT_END_HOUR, 0, 0, 0);
+
+  if (now >= end) return { status: "done", percent: 100, remainingLabel: "Смена завершена" };
+  if (now <= start) return { status: "future", percent: 0, remainingLabel: "Смена ещё не началась" };
+
+  const percent = ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100;
+  const leftMin = Math.max(0, Math.round((end.getTime() - now.getTime()) / 60000));
+  const h = Math.floor(leftMin / 60);
+  const m = leftMin % 60;
+  return {
+    status: "active",
+    percent,
+    remainingLabel: `До конца смены ${h > 0 ? `${h} ч ` : ""}${m} мин`,
+  };
+}
+
 type Profile = {
   id: string;
   full_name: string;
@@ -38,6 +68,13 @@ export function CalendarPage() {
   const qc = useQueryClient();
   const [cursor, setCursor] = useState({ year: 2026, month: 9 });
   const [openDay, setOpenDay] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
+
+  // Обновляем прогресс смены в реальном времени
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const first = `${cursor.year}-${String(cursor.month).padStart(2, "0")}-01`;
   const days = monthDays(cursor.year, cursor.month);
@@ -204,6 +241,8 @@ export function CalendarPage() {
       <div className="flex flex-wrap gap-3 text-xs">
         <Legend color="bg-shift-a" label="Группа 1" />
         <Legend color="bg-shift-b" label="Группа 2" />
+        <Legend color="bg-emerald-600" label="Смена завершена" />
+        <Legend color="bg-gradient-to-r from-emerald-600 to-shift-a" label="Смена идёт (заливка = прошедшее время)" />
         <Legend color="bg-holiday" label="Праздничный день" />
         <Legend color="bg-amber-100 border border-amber-200" label="Отпуск" />
         <p className="ml-auto text-xs text-muted-foreground">
@@ -258,15 +297,38 @@ export function CalendarPage() {
                           </div>
                         );
                       }
+                      const progress = getShiftProgress(d, now);
+                      const base =
+                        progress.status === "done"
+                          ? "bg-emerald-600"
+                          : p.shift_group === 1
+                            ? "bg-shift-a"
+                            : "bg-shift-b";
                       return (
                         <div
                           key={s.id}
-                          className={`truncate rounded px-1 py-0.5 text-[10px] text-white flex justify-between items-center ${
-                            p.shift_group === 1 ? "bg-shift-a" : "bg-shift-b"
-                          }`}
+                          title={progress.remainingLabel}
+                          className={`relative overflow-hidden truncate rounded px-1 py-0.5 text-[10px] text-white flex justify-between items-center ${base}`}
                         >
-                          <span>{p.full_name.split(" ")[0]}</span>
-                          {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
+                          {progress.status === "active" && (
+                            <span
+                              className="absolute inset-y-0 left-0 bg-emerald-600 transition-all duration-1000"
+                              style={{ width: `${progress.percent}%` }}
+                              aria-hidden
+                            />
+                          )}
+                          <span className="relative flex items-center gap-0.5">
+                            {progress.status === "done" && <CheckCircle2 className="size-2.5" />}
+                            {p.full_name.split(" ")[0]}
+                          </span>
+                          <span className="relative flex items-center gap-1">
+                            {progress.status === "active" && (
+                              <span className="scale-90 opacity-90">
+                                {Math.round(progress.percent)}%
+                              </span>
+                            )}
+                            {s.break_time && <span className="opacity-80 scale-90">{s.break_time}</span>}
+                          </span>
                         </div>
                       );
                     })}
@@ -345,6 +407,32 @@ export function CalendarPage() {
                       </div>
                     )}
                   </div>
+
+                  {on && openDay && (
+                    <div className="text-xs">
+                      {(() => {
+                        const pr = getShiftProgress(openDay, now);
+                        return (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className={pr.status === "done" ? "text-emerald-600 font-medium" : "text-muted-foreground"}>
+                                {pr.remainingLabel}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {SHIFT_START_HOUR}:00 — {SHIFT_END_HOUR}:00
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                              <div
+                                className="h-full rounded-full bg-emerald-600 transition-all duration-1000"
+                                style={{ width: `${pr.percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
 
                   {on && (
                     <div className="flex items-center gap-3">
