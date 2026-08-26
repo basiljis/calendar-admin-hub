@@ -46,7 +46,7 @@ type TipProps = { active?: boolean; payload?: { payload: Record<string, number |
 /** Подсказка: дни отпуска и снятые часы нормы по сотруднику */
 function EmployeeTooltip({ active, payload }: TipProps) {
   if (!active || !payload?.length) return null;
-  const row = payload[0].payload as { name: string; days: number };
+  const row = payload[0]!.payload as { name: string; days: number };
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
       <div className="font-semibold text-popover-foreground mb-1">{row.name}</div>
@@ -64,7 +64,7 @@ function EmployeeTooltip({ active, payload }: TipProps) {
 /** Подсказка: сколько людей в отпуске и сколько часов смен недоступно */
 function LoadTooltip({ active, payload, label }: TipProps) {
   if (!active || !payload?.length) return null;
-  const row = payload[0].payload as { count: number };
+  const row = payload[0]!.payload as { count: number };
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
       <div className="font-semibold text-popover-foreground mb-1">{label}</div>
