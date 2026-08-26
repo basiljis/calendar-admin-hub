@@ -74,7 +74,7 @@ function getSectionTitle(pathname: string) {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { profile, user, isManager, isAdmin } = useAuth();
+  const { profile, user, isManager, isAdmin, realIsAdmin, rolePreview } = useAuth();
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -307,6 +307,36 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+            {realIsAdmin && (
+              <Hint
+                label="Режим просмотра роли"
+                description="Посмотреть систему глазами руководителя или сотрудника"
+                side="bottom"
+              >
+                <div className="flex items-center gap-1">
+                  <Eye className="size-4 text-muted-foreground" />
+                  <Select
+                    value={rolePreview ?? "admin"}
+                    onValueChange={(v) =>
+                      setRolePreview(v === "admin" ? null : (v as Exclude<RolePreview, null>))
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label="Режим просмотра роли"
+                      className="h-9 w-[190px] rounded-full text-xs"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Администратор</SelectItem>
+                      <SelectItem value="manager">{rolePreviewLabels.manager}</SelectItem>
+                      <SelectItem value="employee1">{rolePreviewLabels.employee1}</SelectItem>
+                      <SelectItem value="employee2">{rolePreviewLabels.employee2}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Hint>
+            )}
             <ThemeToggle />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
