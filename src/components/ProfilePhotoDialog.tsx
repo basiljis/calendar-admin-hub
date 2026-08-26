@@ -18,9 +18,9 @@ interface ProfilePhotoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
-  fullName?: string | null;
-  avatarPath?: string | null;
-  onSaved?: () => void;
+  fullName?: string | null | undefined;
+  avatarPath?: string | null | undefined;
+  onSaved?: (() => void) | undefined;
 }
 
 export function ProfilePhotoDialog({
