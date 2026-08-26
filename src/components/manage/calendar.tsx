@@ -396,14 +396,9 @@ export function CalendarPage() {
             </Select>
           )}
           <ShiftVacationLegend />
-          <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)}>
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => shiftMonth(1)}>
-            <ChevronRight className="size-4" />
-          </Button>
           {isAdmin && (
             <Button
+              className="rounded-full"
               onClick={() => {
                 const t = new Date();
                 const isCurrentMonth =
