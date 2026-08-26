@@ -458,11 +458,3 @@ export function CalendarPage() {
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`size-3 rounded ${color}`} />
-      {label}
-    </span>
-  );
-}
