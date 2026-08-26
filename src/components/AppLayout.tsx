@@ -37,7 +37,8 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
+import { ProfilePhotoDialog } from "@/components/ProfilePhotoDialog";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -75,6 +76,7 @@ function getSectionTitle(pathname: string) {
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { profile, user, isManager, isAdmin, realIsAdmin, rolePreview } = useAuth();
+  const [photoOpen, setPhotoOpen] = useState(false);
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -415,12 +417,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         : "Группа не назначена"}
                 </div>
               </div>
-              <Avatar className="h-10 w-10 border-2 border-primary/10">
-                <AvatarImage src="" />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {profile?.full_name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <Hint label="Фото профиля" description="Загрузить или изменить своё фото" side="bottom">
+                <button
+                  type="button"
+                  onClick={() => setPhotoOpen(true)}
+                  aria-label="Настройки фото профиля"
+                  className="rounded-full ring-offset-background transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <UserAvatar
+                    name={profile?.full_name}
+                    avatarPath={(profile as any)?.avatar_url}
+                    className="h-10 w-10 border-2 border-primary/10"
+                    fallbackClassName="text-sm"
+                  />
+                </button>
+              </Hint>
               <Hint label="Выйти из системы" description="Завершить текущий сеанс" side="bottom">
                 <Button variant="ghost" size="icon" aria-label="Выйти из системы" onClick={signOut} className="text-muted-foreground">
                   <LogOut className="size-4" />
