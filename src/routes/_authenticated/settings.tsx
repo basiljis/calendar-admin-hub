@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2 } from "lucide-react";
+import { Calendar, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save } from "lucide-react";
+import { MONTH_NAMES } from "@/lib/schedule";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -310,7 +312,7 @@ function SettingsPage() {
                     <TableHead>Название</TableHead>
                     <TableHead>Статус</TableHead>
                     <TableHead>Источник</TableHead>
-                    <TableHead className="text-right">Действия</TableHead>
+                    {isAdmin && <TableHead className="text-right">Действия</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
