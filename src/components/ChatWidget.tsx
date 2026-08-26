@@ -119,6 +119,52 @@ export function ChatWidget() {
     enabled: !!profiles,
   });
 
+  const messageIds = (chatData?.messages ?? []).map((m: any) => m.id);
+
+  const { data: reactions } = useQuery({
+    queryKey: ["chat-reactions", selectedRoom, messageIds.length, messageIds[messageIds.length - 1]],
+    queryFn: async () => {
+      if (messageIds.length === 0) return [] as any[];
+      const { data } = await supabase
+        .from("chat_message_reactions")
+        .select("*")
+        .in("message_id", messageIds);
+      return data ?? [];
+    },
+    enabled: messageIds.length > 0,
+  });
+
+  const reactionsByMessage = new Map<string, { emoji: string; count: number; mine: boolean }[]>();
+  for (const r of (reactions ?? []) as any[]) {
+    const list = reactionsByMessage.get(r.message_id) ?? [];
+    const found = list.find((x) => x.emoji === r.emoji);
+    if (found) {
+      found.count += 1;
+      if (r.user_id === user?.id) found.mine = true;
+    } else {
+      list.push({ emoji: r.emoji, count: 1, mine: r.user_id === user?.id });
+    }
+    reactionsByMessage.set(r.message_id, list);
+  }
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const existing = ((reactions ?? []) as any[]).find(
+      (r) => r.message_id === messageId && r.user_id === user.id && r.emoji === emoji
+    );
+    if (existing) {
+      const { error } = await supabase.from("chat_message_reactions").delete().eq("id", existing.id);
+      if (error) toast.error("Не удалось убрать реакцию");
+    } else {
+      const { error } = await supabase
+        .from("chat_message_reactions")
+        .insert({ message_id: messageId, user_id: user.id, emoji });
+      if (error) toast.error("Не удалось поставить реакцию");
+    }
+    void qc.invalidateQueries({ queryKey: ["chat-reactions"] });
+  };
+
+
   const { data: readStatuses } = useQuery({
     queryKey: ["chat-read-status", user?.id],
     queryFn: async () => {
