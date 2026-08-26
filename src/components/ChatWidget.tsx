@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Search,
   Calendar,
+  SmilePlus,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -44,6 +45,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
 
 export function ChatWidget() {
   const { user, isAdmin } = useAuth();
@@ -119,6 +122,52 @@ export function ChatWidget() {
     enabled: !!profiles,
   });
 
+  const messageIds = (chatData?.messages ?? []).map((m: any) => m.id);
+
+  const { data: reactions } = useQuery({
+    queryKey: ["chat-reactions", selectedRoom, messageIds.length, messageIds[messageIds.length - 1]],
+    queryFn: async () => {
+      if (messageIds.length === 0) return [] as any[];
+      const { data } = await supabase
+        .from("chat_message_reactions")
+        .select("*")
+        .in("message_id", messageIds);
+      return data ?? [];
+    },
+    enabled: messageIds.length > 0,
+  });
+
+  const reactionsByMessage = new Map<string, { emoji: string; count: number; mine: boolean }[]>();
+  for (const r of (reactions ?? []) as any[]) {
+    const list = reactionsByMessage.get(r.message_id) ?? [];
+    const found = list.find((x) => x.emoji === r.emoji);
+    if (found) {
+      found.count += 1;
+      if (r.user_id === user?.id) found.mine = true;
+    } else {
+      list.push({ emoji: r.emoji, count: 1, mine: r.user_id === user?.id });
+    }
+    reactionsByMessage.set(r.message_id, list);
+  }
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    const existing = ((reactions ?? []) as any[]).find(
+      (r) => r.message_id === messageId && r.user_id === user.id && r.emoji === emoji
+    );
+    if (existing) {
+      const { error } = await supabase.from("chat_message_reactions").delete().eq("id", existing.id);
+      if (error) toast.error("Не удалось убрать реакцию");
+    } else {
+      const { error } = await supabase
+        .from("chat_message_reactions")
+        .insert({ message_id: messageId, user_id: user.id, emoji });
+      if (error) toast.error("Не удалось поставить реакцию");
+    }
+    void qc.invalidateQueries({ queryKey: ["chat-reactions"] });
+  };
+
+
   const { data: readStatuses } = useQuery({
     queryKey: ["chat-read-status", user?.id],
     queryFn: async () => {
@@ -167,6 +216,11 @@ export function ChatWidget() {
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_rooms" },
         () => void qc.invalidateQueries({ queryKey: ["chat-rooms"] })
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_message_reactions" },
+        () => void qc.invalidateQueries({ queryKey: ["chat-reactions"] })
       )
       .subscribe();
     return () => {
@@ -589,6 +643,44 @@ export function ChatWidget() {
                             ))}
                           </div>
                         )}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          {(reactionsByMessage.get(m.id) ?? []).map((r) => (
+                            <button
+                              key={r.emoji}
+                              onClick={() => void toggleReaction(m.id, r.emoji)}
+                              title="Реакция"
+                              className={`rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition ${
+                                r.mine ? "border-current bg-background/30" : "border-transparent bg-background/15"
+                              }`}
+                            >
+                              {r.emoji} {r.count}
+                            </button>
+                          ))}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                className="rounded-full px-1 py-0.5 opacity-0 transition group-hover:opacity-70 hover:opacity-100"
+                                aria-label="Добавить реакцию"
+                                title="Добавить реакцию"
+                              >
+                                <SmilePlus className="size-3.5" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-1.5" align={mine ? "end" : "start"}>
+                              <div className="flex gap-1">
+                                {QUICK_REACTIONS.map((e) => (
+                                  <button
+                                    key={e}
+                                    onClick={() => void toggleReaction(m.id, e)}
+                                    className="rounded p-1 text-lg hover:bg-accent"
+                                  >
+                                    {e}
+                                  </button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-70">
                           {new Date(m.created_at).toLocaleString("ru-RU", {
                             day: "2-digit",
