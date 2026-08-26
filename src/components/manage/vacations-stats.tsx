@@ -87,6 +87,10 @@ export function VacationsStatsPage() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
 
+  const employeeChartRef = useRef<HTMLDivElement>(null);
+  const loadChartRef = useRef<HTMLDivElement>(null);
+
+
   const resetFilters = () => {
     setYear(String(new Date().getFullYear()));
     setMonth("all");
