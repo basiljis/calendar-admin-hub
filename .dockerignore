@@ -1,0 +1,10 @@
+node_modules
+.git
+.output
+.nitro
+dist
+.vite
+.lovable
+.workspace
+*.log
+/tmp
