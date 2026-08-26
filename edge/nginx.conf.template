@@ -1,4 +1,4 @@
-> # -- Edge nginx: единственный контейнер, который публикуется наружу.
+# -- Edge nginx: единственный контейнер, который публикуется наружу.
 # -- 1) Проксирует основной домен на SSR-приложение (app:8080) с авто-заглушкой.
 # -- 2) Проксирует api.<домен> на Supabase (обход блокировок: браузер ходит только на РФ-домен).
 
@@ -119,11 +119,9 @@ server {
 
     location @maintenance {
         root /usr/share/nginx/html;
-        try_files /maintenance.html =503;
         add_header Retry-After 900 always;
         add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        error_page 503 /maintenance.html;
         return 503;
     }
-
-    error_page 503 = @maintenance;
 }
