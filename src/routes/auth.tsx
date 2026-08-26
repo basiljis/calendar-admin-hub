@@ -53,6 +53,7 @@ function AuthPage() {
     if (error) {
       setAuthError(error.message);
       toast.error(error.message);
+      emailRef.current?.focus();
       return;
     }
     setAuthSuccess("Вход выполнен. Переходим в систему…");
