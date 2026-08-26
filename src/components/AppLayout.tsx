@@ -171,7 +171,37 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </ScrollArea>
 
         {/* Bottom Help/Support Widget from reference image */}
-        {!isSidebarCollapsed && (
+        {isSidebarCollapsed ? (
+          <div className="mx-4 mb-6 flex justify-center">
+            <Popover>
+              <Hint label="Нужна помощь?" description="Мы на связи в рабочее время" side="right">
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon"
+                    className="size-11 rounded-full bg-blue-50 shadow-sm hover:bg-blue-100 dark:bg-blue-900/10"
+                    aria-label="Нужна помощь?"
+                  >
+                    <Heart className="size-6 text-blue-500" />
+                  </Button>
+                </PopoverTrigger>
+              </Hint>
+              <PopoverContent side="right" align="start" className="w-56 p-3">
+                <p className="mb-2 text-sm font-semibold">Нужна помощь?</p>
+                <Button size="sm" variant="outline" className="w-full bg-white dark:bg-card">
+                  Связаться с нами
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2 w-full text-xs"
+                  onClick={() => window.dispatchEvent(new Event("start-onboarding-tour"))}
+                >
+                  Пройти тур по интерфейсу
+                </Button>
+              </PopoverContent>
+            </Popover>
+          </div>
+        ) : (
           <div className="mx-4 mb-6 rounded-2xl bg-blue-50 p-4 text-center dark:bg-blue-900/10">
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-card">
               <Heart className="size-6 text-blue-500" />
