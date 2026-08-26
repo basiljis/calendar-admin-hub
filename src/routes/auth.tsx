@@ -1,15 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays } from "lucide-react";
+import { ArrowRight, CalendarDays, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import officeImg from "@/assets/auth-office.jpg";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,6 +30,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [mode, setMode] = useState<"in" | "up">("in");
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,120 +89,154 @@ function AuthPage() {
   }
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-6 flex items-center gap-3">
-          <span className="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-xl">
-            <CalendarDays className="size-5" />
-          </span>
-          <div>
-            <div className="font-semibold">График ОКП</div>
-            <div className="text-muted-foreground text-xs">Смены психологов, учёт часов</div>
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-3 sm:p-5">
+      <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-xl lg:grid-cols-2">
+        {/* Левая колонка — форма */}
+        <div className="flex flex-col px-6 py-10 sm:px-12 sm:py-14">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
+              <CalendarDays className="size-5" />
+            </span>
+            <span className="text-primary text-xl font-bold tracking-tight">График ОКП</span>
           </div>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Доступ в систему</CardTitle>
-            <CardDescription>Войдите или создайте учётную запись сотрудника.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="in">
-              <TabsList className="w-full">
-                <TabsTrigger value="in" className="flex-1">
-                  Вход
-                </TabsTrigger>
-                <TabsTrigger value="up" className="flex-1">
-                  Регистрация
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="in">
-                <form onSubmit={signIn} className="mt-4 space-y-4">
+
+          <div className="mt-14 sm:mt-20">
+            <h1 className="text-primary text-4xl font-bold tracking-tight sm:text-5xl">
+              {mode === "in" ? "Здравствуйте!" : "Регистрация"}
+            </h1>
+            <p className="mt-3 text-sm text-slate-500">
+              Добро пожаловать в систему графиков психологов ОКП
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <Button
+              variant="outline"
+              className="h-12 w-full rounded-xl text-sm font-medium"
+              onClick={google}
+            >
+              Войти через Google
+              <span className="text-primary ml-1 font-bold">G</span>
+            </Button>
+
+            <div className="my-6 flex items-center gap-4">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs text-slate-400">или</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <form onSubmit={mode === "in" ? signIn : signUp} className="space-y-5">
+              {mode === "up" && (
+                <>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Пароль</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
-                    Войти
-                  </Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="up">
-                <form onSubmit={signUp} className="mt-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fio">ФИО полностью</Label>
+                    <Label htmlFor="fio" className="text-xs text-slate-500">
+                      ФИО полностью
+                    </Label>
                     <Input
                       id="fio"
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Иванова Мария Петровна"
+                      className="h-12 rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Телефон</Label>
+                    <Label htmlFor="phone" className="text-xs text-slate-500">
+                      Телефон
+                    </Label>
                     <Input
                       id="phone"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+7 900 000-00-00"
+                      className="h-12 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email2">Email</Label>
-                    <Input
-                      id="email2"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password2">Пароль</Label>
-                    <Input
-                      id="password2"
-                      type="password"
-                      required
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
-                    Зарегистрироваться
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-            <div className="my-4 flex items-center gap-3">
-              <span className="bg-border h-px flex-1" />
-              <span className="text-muted-foreground text-xs">или</span>
-              <span className="bg-border h-px flex-1" />
+                </>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs text-slate-500">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="alex@example.com"
+                  className="h-12 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs text-slate-500">
+                  Пароль
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={mode === "up" ? 6 : undefined}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 rounded-xl"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={busy}
+                className="h-12 w-full rounded-full text-sm font-semibold tracking-wide uppercase"
+              >
+                {mode === "in" ? "Войти" : "Создать аккаунт"}
+                <ArrowRight className="size-4" />
+              </Button>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-slate-600">
+              {mode === "in" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "in" ? "up" : "in")}
+                className="text-primary font-semibold hover:underline"
+              >
+                {mode === "in" ? "Зарегистрироваться" : "Войти"}
+              </button>
+            </p>
+            <p className="mt-4 text-center text-xs text-slate-400">
+              Первый зарегистрированный пользователь получает права администратора.
+            </p>
+          </div>
+        </div>
+
+        {/* Правая колонка — изображение */}
+        <div className="relative hidden min-h-[600px] lg:block">
+          <img
+            src={officeImg}
+            alt="Современный офис ОКП"
+            width={1024}
+            height={1400}
+            className="absolute inset-0 h-full w-full rounded-r-[2rem] object-cover"
+          />
+          <div className="absolute inset-0 rounded-r-[2rem] bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="absolute right-10 bottom-10 left-10 text-white">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-lg font-semibold">Работать стало проще</p>
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={google}>
-              Войти через Google
-            </Button>
-          </CardContent>
-        </Card>
-        <p className="text-muted-foreground mt-4 text-center text-xs">
-          Первый зарегистрированный пользователь получает права администратора.
-        </p>
+            <p className="mt-3 text-sm leading-relaxed text-white/80">
+              График смен, отпуска и учёт часов — всё в одном месте. Больше никаких таблиц в
+              блокнотах и потерянных заявок.
+            </p>
+            <p className="mt-4 text-xs font-medium text-white/70">
+              Команда психологов ОКП
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
