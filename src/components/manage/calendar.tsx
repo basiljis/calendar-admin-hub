@@ -672,6 +672,76 @@ export function CalendarPage() {
 
 
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-3 sm:p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="bg-muted/60 flex items-center gap-1 rounded-full border p-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 rounded-full"
+                onClick={goPrev}
+                aria-label={`Предыдущий ${navLabel}`}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs font-semibold"
+                onClick={goToday}
+              >
+                Сегодня
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 rounded-full"
+                onClick={goNext}
+                aria-label={`Следующий ${navLabel}`}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                {headerTitle}
+              </h1>
+              <p className="text-muted-foreground truncate text-xs sm:text-sm">
+                {detailProfile
+                  ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
+                  : groupFilter === "all"
+                    ? "Смены 2/2 · по отделению"
+                    : `Смены 2/2 · группа ${groupFilter} · ${profiles.length} сотр.`}
+              </p>
+            </div>
+          </div>
+
+          <div
+            role="group"
+            aria-label="Режим отображения календаря"
+            className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
+          >
+            {([
+              { key: "month", label: "Месяц" },
+              { key: "week", label: "Неделя" },
+              { key: "day", label: "День" },
+            ] as const).map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                aria-pressed={view === o.key}
+                onClick={() => setView(o.key)}
+                className={`focus-visible:ring-ring h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                  view === o.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
           {(view === "day"
             ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
