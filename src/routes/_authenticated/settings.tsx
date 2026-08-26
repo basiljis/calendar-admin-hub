@@ -62,7 +62,7 @@ type HolidayForm = {
 const EMPTY_FORM: HolidayForm = { date: "", name: "", status: "off" };
 
 function SettingsPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const qc = useQueryClient();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -199,7 +199,7 @@ function SettingsPage() {
     setDialogOpen(true);
   };
 
-  if (!isAdmin) {
+  if (!isManager) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
         <Info className="size-12 text-muted-foreground" />
