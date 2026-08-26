@@ -182,15 +182,15 @@ function AuthPage() {
         </div>
 
         {/* Правая колонка — изображение */}
-        <div className="relative hidden min-h-[600px] lg:block">
+        <div className="relative hidden h-full lg:block">
           <img
             src={officeImg}
             alt="Современный офис ОКП"
             width={1024}
             height={1400}
-            className="absolute inset-0 h-full w-full rounded-r-[2rem] object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 rounded-r-[2rem] bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           <div className="absolute right-10 bottom-10 left-10 text-white">
             <div className="flex items-center justify-between gap-4">
               <p className="text-lg font-semibold">Работать стало проще</p>
