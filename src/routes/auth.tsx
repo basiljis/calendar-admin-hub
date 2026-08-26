@@ -44,6 +44,12 @@ function AuthPage() {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
   }, [loading, user, navigate]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("disabled=1")) {
+      setAuthError("Учётная запись отключена. Обратитесь к администратору.");
+    }
+  }, []);
+
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
@@ -52,8 +58,11 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      setAuthError(error.message);
-      toast.error(error.message);
+      const msg = /banned|disabled/i.test(error.message)
+        ? "Учётная запись отключена. Обратитесь к администратору."
+        : error.message;
+      setAuthError(msg);
+      toast.error(msg);
       emailRef.current?.focus();
       return;
     }

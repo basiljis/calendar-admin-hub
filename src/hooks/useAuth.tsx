@@ -11,6 +11,7 @@ export interface Profile {
   phone: string | null;
   position: string | null;
   shift_group: number;
+  is_active?: boolean;
 }
 
 export function useAuth() {
@@ -46,8 +47,16 @@ export function useAuth() {
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       ]);
       if (cancelled) return;
+      const prof = (p as Profile | null) ?? null;
+      if (prof && prof.is_active === false) {
+        await supabase.auth.signOut();
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth?disabled=1";
+        }
+        return;
+      }
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
-      setProfile((p as Profile | null) ?? null);
+      setProfile(prof);
       setLoading(false);
     })();
     return () => {

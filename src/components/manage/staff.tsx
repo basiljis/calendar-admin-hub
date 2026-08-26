@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plane, Trash2, History, Mail, Phone, UserPlus } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
-import { createUserAdmin } from "@/lib/admin-users.functions";
+import { createUserAdmin, setUserActive } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 
 
@@ -86,6 +86,17 @@ export function StaffPage() {
   });
 
   const profiles = data?.profiles ?? [];
+
+  const setActiveFn = useServerFn(setUserActive);
+  const toggleActive = useMutation({
+    mutationFn: async (vars: { userId: string; active: boolean }) =>
+      await setActiveFn({ data: vars }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.active ? "Учётная запись активирована" : "Учётная запись деактивирована");
+      qc.invalidateQueries({ queryKey: ["staff"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const updateProfile = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: { shift_group?: number } }) => {
@@ -238,6 +249,7 @@ export function StaffPage() {
                 <TableHead>Сотрудник</TableHead>
                 <TableHead>Контакты</TableHead>
                 <TableHead>Группа</TableHead>
+                <TableHead>Статус</TableHead>
                 <TableHead className="text-center">Норма</TableHead>
                 <TableHead className="text-center">План</TableHead>
                 <TableHead className="text-center">Отпуск</TableHead>
@@ -299,6 +311,45 @@ export function StaffPage() {
                           <SelectItem value="2">Группа 2</SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={`border-0 text-[10px] ${
+                            (p as any).is_active === false
+                              ? "bg-destructive/15 text-destructive"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
+                        >
+                          {(p as any).is_active === false ? "Отключён" : "Активен"}
+                        </Badge>
+                        {(isAdmin || isManager) && p.id !== user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7"
+                            disabled={toggleActive.isPending}
+                            title={
+                              (p as any).is_active === false
+                                ? "Активировать учётную запись"
+                                : "Деактивировать учётную запись (без удаления)"
+                            }
+                            aria-label={`Изменить статус учётной записи: ${p.full_name}`}
+                            onClick={() =>
+                              toggleActive.mutate({
+                                userId: p.id,
+                                active: (p as any).is_active === false,
+                              })
+                            }
+                          >
+                            {(p as any).is_active === false ? (
+                              <Power className="size-4 text-emerald-600" />
+                            ) : (
+                              <PowerOff className="size-4 text-destructive" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center font-medium">{formatHours(norm)} ч</TableCell>
                     <TableCell className="text-center font-medium">{formatHours(planned)} ч</TableCell>
