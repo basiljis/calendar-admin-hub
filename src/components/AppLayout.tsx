@@ -43,6 +43,24 @@ const nav = [
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
 ];
 
+const sectionTitles: Record<string, string> = {
+  "/dashboard": "Мой график",
+  "/calendar": "Календарь смен",
+  "/manage": "Управление персоналом",
+  "/settings": "Настройки",
+  "/vacations": "Заявки на отпуск",
+  "/staff": "Сотрудники",
+  "/vacations-stats": "Статистика отпусков",
+  "/admin": "Администрирование",
+};
+
+function getSectionTitle(pathname: string) {
+  if (sectionTitles[pathname]) return sectionTitles[pathname];
+  if (pathname.startsWith("/admin/users/")) return "Профиль пользователя";
+  if (pathname.startsWith("/admin/")) return sectionTitles["/admin"];
+  return "График ОКП";
+}
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
