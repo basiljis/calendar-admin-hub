@@ -178,6 +178,7 @@ function AuthPage() {
                 Email
               </Label>
               <Input
+                ref={emailRef}
                 id="email"
                 name="email"
                 type="email"
