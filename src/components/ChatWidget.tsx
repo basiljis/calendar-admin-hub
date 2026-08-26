@@ -201,15 +201,41 @@ export function ChatWidget() {
     enabled: !!user && !!readStatuses,
   });
 
+  const stateRef = useRef({ isOpen, selectedRoom });
+  stateRef.current = { isOpen, selectedRoom };
+  const namesRef = useRef(new Map<string, string>());
+  namesRef.current = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+
   useEffect(() => {
     const channel = supabase
       .channel("chat-widget-updates")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_messages" },
-        () => {
+        (payload: any) => {
           void qc.invalidateQueries({ queryKey: ["chat"] });
           void qc.invalidateQueries({ queryKey: ["chat-unread", user?.id] });
+          const row = payload?.new;
+          if (
+            payload?.eventType === "INSERT" &&
+            row &&
+            row.user_id !== user?.id &&
+            (!stateRef.current.isOpen ||
+              (row.room_id ?? null) !== (stateRef.current.selectedRoom ?? null))
+          ) {
+            const author = namesRef.current.get(row.user_id) || "Сотрудник";
+            const preview: string = (row.content || "Вложение").toString().slice(0, 80);
+            toast.message(`Новое сообщение от ${author}`, {
+              description: preview,
+              action: {
+                label: "Открыть",
+                onClick: () => {
+                  setSelectedRoom(row.room_id ?? null);
+                  setIsOpen(true);
+                },
+              },
+            });
+          }
         }
       )
       .on(
