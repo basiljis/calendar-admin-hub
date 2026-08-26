@@ -33,8 +33,8 @@ function IndexRedirect() {
   }, [loading, user, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100">
-      <span className="text-sm text-slate-400">Загрузка…</span>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <span className="text-sm text-muted-foreground">Загрузка…</span>
     </div>
   );
 }
