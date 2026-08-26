@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save } from "lucide-react";
+import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save, ShieldCheck } from "lucide-react";
+import { SystemSettings } from "@/components/settings/SystemSettings";
 import { MONTH_NAMES } from "@/lib/schedule";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,7 +223,7 @@ function SettingsPage() {
       </div>
 
       <Tabs defaultValue="norms" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="norms" className="gap-2">
             <Clock className="size-4" />
             Нормы рабочего времени
@@ -231,11 +232,26 @@ function SettingsPage() {
             <Calendar className="size-4" />
             Праздничные дни
           </TabsTrigger>
+          <TabsTrigger value="system" className="gap-2">
+            <ShieldCheck className="size-4" />
+            Система
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="norms" className="mt-0">
           <MonthlyNormsCard canEdit={isManager} />
         </TabsContent>
+
+        <TabsContent value="system" className="mt-0">
+          {isManager ? (
+            <SystemSettings />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Раздел доступен администратору и руководителю.
+            </p>
+          )}
+        </TabsContent>
+
 
         <TabsContent value="holidays" className="mt-0 space-y-6">
           {isAdmin && (

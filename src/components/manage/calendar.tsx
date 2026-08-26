@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
 import {
   Select,
@@ -85,6 +86,7 @@ type Profile = {
 
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
+  const employeeCanCreateShifts = useEmployeeCanCreateShifts();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState(() => {
     const t = new Date();
@@ -670,7 +672,7 @@ export function CalendarPage() {
                       <div className="text-sm font-medium">{p.full_name || "Без имени"}</div>
                       <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
                     </div>
-                    {isAdmin && (
+                    {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">
                         {isVacation && (
                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0">
