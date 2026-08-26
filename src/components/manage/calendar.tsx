@@ -85,6 +85,7 @@ type Profile = {
 
 export function CalendarPage() {
   const { user, isAdmin } = useAuth();
+  const employeeCanCreateShifts = useEmployeeCanCreateShifts();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState(() => {
     const t = new Date();
