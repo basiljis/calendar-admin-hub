@@ -36,6 +36,7 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
