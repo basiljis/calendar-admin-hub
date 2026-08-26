@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 import {
   MONTH_NAMES,
   PERIOD,
