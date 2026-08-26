@@ -229,6 +229,9 @@ export function CalendarPage() {
       date: string;
       breakTime: string;
     }) => {
+      if (!breakTime) {
+        throw new Error("Укажите время обеда");
+      }
       const { error } = await supabase
         .from("shifts")
         .update({ break_time: breakTime })
