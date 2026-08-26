@@ -94,13 +94,12 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    const successMessage = data.session
-      ? "Регистрация завершена. Переходим в систему…"
-      : "Проверьте почту — мы отправили ссылку для подтверждения.";
+    const successMessage =
+      "Заявка на регистрацию отправлена. Доступ откроется после подтверждения администратором или руководителем.";
+    if (data.session) await supabase.auth.signOut();
     setAuthSuccess(successMessage);
     toast.success(successMessage);
-    if (!data.session) return;
-    navigate({ to: "/dashboard", replace: true });
+    setMode("in");
   }
 
   const errorId = authError ? "auth-error" : undefined;
