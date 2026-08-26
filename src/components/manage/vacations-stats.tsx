@@ -39,6 +39,44 @@ const toDate = (s: string) => new Date(`${s}T00:00:00`);
 const daysBetween = (a: Date, b: Date) =>
   Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
 
+const fmt = (n: number) => n.toFixed(1).replace(".0", "");
+
+type TipProps = { active?: boolean; payload?: { payload: Record<string, number | string> }[]; label?: string };
+
+/** Подсказка: дни отпуска и снятые часы нормы по сотруднику */
+function EmployeeTooltip({ active, payload }: TipProps) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as { name: string; days: number };
+  return (
+    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="font-semibold text-popover-foreground mb-1">{row.name}</div>
+      <div className="text-muted-foreground">Дней отпуска: <span className="font-medium text-foreground">{row.days}</span></div>
+      <div className="text-muted-foreground">
+        Снято часов нормы: <span className="font-medium text-foreground">{fmt(row.days * HOURS_PER_VACATION_DAY)} ч</span>
+      </div>
+      <div className="text-muted-foreground">
+        Остаток дней: <span className="font-medium text-foreground">{Math.max(0, VACATION_DAYS_BASE - row.days)}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Подсказка: сколько людей в отпуске и сколько часов смен недоступно */
+function LoadTooltip({ active, payload, label }: TipProps) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as { count: number };
+  return (
+    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-md">
+      <div className="font-semibold text-popover-foreground mb-1">{label}</div>
+      <div className="text-muted-foreground">В отпуске: <span className="font-medium text-foreground">{row.count} чел.</span></div>
+      <div className="text-muted-foreground">
+        Часов смен вне графика: <span className="font-medium text-foreground">≈ {fmt(row.count * SHIFT_WORK_HOURS)} ч/смена</span>
+      </div>
+    </div>
+  );
+}
+
+
 export function VacationsStatsPage() {
   const { isAdmin } = useAuth();
 
