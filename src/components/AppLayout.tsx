@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   CalendarDays,
   LayoutDashboard,
@@ -43,6 +43,24 @@ const nav = [
   { to: "/settings", label: "Настройки", icon: Settings, adminOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
 ];
 
+const sectionTitles: Record<string, string> = {
+  "/dashboard": "Мой график",
+  "/calendar": "Календарь смен",
+  "/manage": "Управление персоналом",
+  "/settings": "Настройки",
+  "/vacations": "Заявки на отпуск",
+  "/staff": "Сотрудники",
+  "/vacations-stats": "Статистика отпусков",
+  "/admin": "Администрирование",
+};
+
+function getSectionTitle(pathname: string) {
+  if (sectionTitles[pathname]) return sectionTitles[pathname];
+  if (pathname.startsWith("/admin/users/")) return "Профиль пользователя";
+  if (pathname.startsWith("/admin/")) return sectionTitles["/admin"];
+  return "График ОКП";
+}
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -50,6 +68,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const sectionTitle = getSectionTitle(pathname);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
@@ -257,8 +277,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="md:hidden">
               <ChevronRight className="size-5" />
             </Button>
-            <div className="text-sm text-muted-foreground">
-              Обзор ключевых показателей системы
+            <div className="text-base font-semibold text-foreground">
+              {sectionTitle}
             </div>
           </div>
 
