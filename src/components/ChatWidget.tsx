@@ -214,6 +214,11 @@ export function ChatWidget() {
         { event: "*", schema: "public", table: "chat_rooms" },
         () => void qc.invalidateQueries({ queryKey: ["chat-rooms"] })
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_message_reactions" },
+        () => void qc.invalidateQueries({ queryKey: ["chat-reactions"] })
+      )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
