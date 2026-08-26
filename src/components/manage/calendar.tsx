@@ -596,7 +596,13 @@ export function CalendarPage() {
               <button
                 key={d}
                 onClick={() => setOpenDay(d)}
-                className={`group relative min-h-20 min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:min-h-28 sm:p-2 ${
+                className={`group relative min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:p-2 ${
+                  view === "month"
+                    ? "min-h-20 sm:min-h-28"
+                    : view === "week"
+                      ? "min-h-40 sm:min-h-64"
+                      : "min-h-64"
+                } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
