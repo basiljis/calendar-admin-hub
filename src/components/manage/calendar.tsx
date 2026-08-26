@@ -99,6 +99,7 @@ export function CalendarPage() {
   const [genOpen, setGenOpen] = useState(false);
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
 
 
   // Обновляем прогресс смены в реальном времени
@@ -140,8 +141,15 @@ export function CalendarPage() {
     },
   });
 
-  const profiles = data?.profiles ?? [];
-  const shifts = data?.shifts ?? [];
+  const allProfiles = data?.profiles ?? [];
+  // Фильтр по группе: показываем и массово меняем расписание только выбранной группы
+  const profiles =
+    groupFilter === "all"
+      ? allProfiles
+      : allProfiles.filter((p) => String(p.shift_group) === groupFilter);
+  const visibleIds = new Set(profiles.map((p) => p.id));
+  const shifts = (data?.shifts ?? []).filter((s) => visibleIds.has(s.user_id));
+  const groups = Array.from(new Set(allProfiles.map((p) => p.shift_group))).sort((a, b) => a - b);
 
   // Сотрудник всегда видит подробный график по себе.
   // Администратор/руководитель выбирает сотрудника из списка.
@@ -312,10 +320,33 @@ export function CalendarPage() {
           <p className="text-muted-foreground mt-1 text-sm">
             {detailProfile
               ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
-              : "Смены 2/2 · по отделению"}
+              : groupFilter === "all"
+                ? "Смены 2/2 · по отделению"
+                : `Смены 2/2 · группа ${groupFilter} · ${profiles.length} сотр.`}
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          {isAdmin && (
+            <Select
+              value={groupFilter}
+              onValueChange={(v) => {
+                setGroupFilter(v);
+                setDetailUser("");
+              }}
+            >
+              <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Фильтр по группе">
+                <SelectValue placeholder="Группа" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все группы</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g} value={String(g)}>
+                    Группа {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {isAdmin && (
             <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
               <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
@@ -356,7 +387,7 @@ export function CalendarPage() {
               disabled={generate.isPending}
             >
               <Wand2 className="size-4" />
-              Сформировать месяц
+              {groupFilter === "all" ? "Сформировать месяц" : `Сформировать месяц · группа ${groupFilter}`}
             </Button>
           )}
         </div>
@@ -367,7 +398,9 @@ export function CalendarPage() {
           <DialogHeader>
             <DialogTitle>Формирование расписания</DialogTitle>
             <DialogDescription>
-              Месяц уже начался. Выберите, за какой период сформировать график.
+              {groupFilter === "all"
+                ? "Месяц уже начался. Выберите, за какой период сформировать график."
+                : `Расписание будет сформировано только для группы ${groupFilter} (${profiles.length} сотр.). Выберите период.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
