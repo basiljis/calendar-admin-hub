@@ -229,12 +229,12 @@ export function StaffPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Сотрудники</h1>
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Сотрудники</h1>
           <p className="text-muted-foreground mt-1 text-sm">Состав групп, контакты и индивидуальная норма за период {PERIOD.label}</p>
         </div>
-        {(isAdmin || isManager) && <Button onClick={() => setAddOpen(true)}><UserPlus className="mr-2 size-4" />Добавить пользователя</Button>}
+        {(isAdmin || isManager) && <Button className="w-full sm:w-auto" onClick={() => setAddOpen(true)}><UserPlus className="mr-2 size-4" />Добавить пользователя</Button>}
       </div>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
