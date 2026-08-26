@@ -201,15 +201,41 @@ export function ChatWidget() {
     enabled: !!user && !!readStatuses,
   });
 
+  const stateRef = useRef({ isOpen, selectedRoom });
+  stateRef.current = { isOpen, selectedRoom };
+  const namesRef = useRef(new Map<string, string>());
+  namesRef.current = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+
   useEffect(() => {
     const channel = supabase
       .channel("chat-widget-updates")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_messages" },
-        () => {
+        (payload: any) => {
           void qc.invalidateQueries({ queryKey: ["chat"] });
           void qc.invalidateQueries({ queryKey: ["chat-unread", user?.id] });
+          const row = payload?.new;
+          if (
+            payload?.eventType === "INSERT" &&
+            row &&
+            row.user_id !== user?.id &&
+            (!stateRef.current.isOpen ||
+              (row.room_id ?? null) !== (stateRef.current.selectedRoom ?? null))
+          ) {
+            const author = namesRef.current.get(row.user_id) || "Сотрудник";
+            const preview: string = (row.content || "Вложение").toString().slice(0, 80);
+            toast.message(`Новое сообщение от ${author}`, {
+              description: preview,
+              action: {
+                label: "Открыть",
+                onClick: () => {
+                  setSelectedRoom(row.room_id ?? null);
+                  setIsOpen(true);
+                },
+              },
+            });
+          }
         }
       )
       .on(
@@ -227,6 +253,65 @@ export function ChatWidget() {
       void supabase.removeChannel(channel);
     };
   }, [qc, user?.id]);
+
+  // Индикатор печати
+  const typingChannelRef = useRef<any>(null);
+  const typingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const lastTypingSentRef = useRef(0);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    setTypingUsers([]);
+    const channel = supabase
+      .channel(`chat-typing-${selectedRoom ?? "general"}`, {
+        config: { broadcast: { self: false } },
+      })
+      .on("broadcast", { event: "typing" }, ({ payload }: any) => {
+        const id = payload?.userId as string | undefined;
+        if (!id || id === user.id) return;
+        setTypingUsers((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        const timers = typingTimersRef.current;
+        const existing = timers.get(id);
+        if (existing) clearTimeout(existing);
+        timers.set(
+          id,
+          setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((u) => u !== id));
+            timers.delete(id);
+          }, 3500)
+        );
+      })
+      .subscribe();
+    typingChannelRef.current = channel;
+    return () => {
+      typingChannelRef.current = null;
+      typingTimersRef.current.forEach((t) => clearTimeout(t));
+      typingTimersRef.current.clear();
+      void supabase.removeChannel(channel);
+    };
+  }, [selectedRoom, user?.id]);
+
+  const notifyTyping = () => {
+    if (!user || !typingChannelRef.current) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1200) return;
+    lastTypingSentRef.current = now;
+    void typingChannelRef.current.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { userId: user.id },
+    });
+  };
+
+  const typingLabel = (() => {
+    if (typingUsers.length === 0) return null;
+    const names = typingUsers.map((id) => namesRef.current.get(id) || "Сотрудник");
+    if (names.length === 1) return `${names[0]} печатает…`;
+    if (names.length === 2) return `${names[0]} и ${names[1]} печатают…`;
+    return `${names.length} участников печатают…`;
+  })();
+
 
   useEffect(() => {
     if (isOpen) {
@@ -702,6 +787,16 @@ export function ChatWidget() {
               </ScrollArea>
 
               <div className="border-t p-3 space-y-2">
+                {typingLabel && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="flex gap-0.5">
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current" />
+                    </span>
+                    {typingLabel}
+                  </div>
+                )}
                 {attachments.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {attachments.map((a) => (
@@ -749,7 +844,10 @@ export function ChatWidget() {
                   <Input
                     ref={messageInputRef}
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => {
+                      setText(e.target.value);
+                      notifyTyping();
+                    }}
                     placeholder="Сообщение…"
                     disabled={isUploading}
                     className="min-w-0"
