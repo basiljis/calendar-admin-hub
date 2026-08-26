@@ -110,8 +110,34 @@ export function useAuth() {
     };
   }, [user]);
 
-  const isAdmin = roles.includes("admin");
-  const isManager = roles.includes("manager") || isAdmin;
+  const preview = useSyncExternalStore(subscribePreview, getPreviewSnapshot, () => null);
 
-  return { session, user, roles, profile, isAdmin, isManager, loading, setProfile };
+  const realIsAdmin = roles.includes("admin");
+  const activePreview: RolePreview = realIsAdmin ? preview : null;
+
+  const effectiveRoles: AppRole[] = activePreview
+    ? activePreview === "manager"
+      ? ["manager"]
+      : ["employee"]
+    : roles;
+  const effectiveProfile: Profile | null =
+    profile && activePreview && activePreview !== "manager"
+      ? { ...profile, shift_group: activePreview === "employee1" ? 1 : 2 }
+      : profile;
+
+  const isAdmin = effectiveRoles.includes("admin");
+  const isManager = effectiveRoles.includes("manager") || isAdmin;
+
+  return {
+    session,
+    user,
+    roles: effectiveRoles,
+    profile: effectiveProfile,
+    isAdmin,
+    isManager,
+    loading,
+    setProfile,
+    realIsAdmin,
+    rolePreview: activePreview,
+  };
 }
