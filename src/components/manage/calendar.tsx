@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { HelpHint } from "@/components/Hint";
 import {
   MONTH_NAMES,
   PERIOD,
