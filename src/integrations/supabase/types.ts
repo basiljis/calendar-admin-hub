@@ -181,6 +181,36 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_norms: {
+        Row: {
+          created_at: string
+          id: string
+          month: number
+          norm_hours: number
+          note: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: number
+          norm_hours?: number
+          note?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: number
+          norm_hours?: number
+          note?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
