@@ -109,9 +109,7 @@ function VacationsStatsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Аналитика отпусков</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-          
-          Добавь страницу статистики по отпускам (использовано по сотрудникам, загрузка команды по месяцам) для администратора.
+          Использование отпусков по сотрудникам и загрузка команды по месяцам.
         </p>
       </div>
 

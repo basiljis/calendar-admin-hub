@@ -224,14 +224,9 @@ function CalendarPage() {
         <Legend color="bg-shift-b" label="Группа 2" />
         <Legend color="bg-holiday" label="Праздничный день (доплата)" />
         <Legend color="bg-amber-100 border border-amber-200" label="Отпуск" />
-        <div className="flex items-center gap-1.5 ml-auto">
-          <p className="text-muted-foreground whitespace-pre-line text-[8px] opacity-40">
-            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-            
-            
-            Улучшить календарь так, чтобы дни отпуска визуально отображались и учитывались в подсветке и подсчёте нормы часов.
-          </p>
-        </div>
+        <p className="ml-auto text-xs text-muted-foreground">
+          Дни отпуска учитываются в подсчёте нормы часов.
+        </p>
       </div>
 
       <Card>

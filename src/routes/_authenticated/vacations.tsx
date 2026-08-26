@@ -270,12 +270,8 @@ function VacationsAdminPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Заявки на отпуск</h1>
-          <p className="text-muted-foreground text-[10px] leading-tight opacity-70 whitespace-pre-line">
-            '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-            {"\n"}
-            {"\n"}
-            Реализуй массовое подтверждение или отклонение заявок на отпуск для администратора с подтверждением действия.
-            Добавь возможность экспорта списка заявок на отпуск (с фильтрами) в Excel или CSV для администратора.
+          <p className="text-muted-foreground text-sm mt-1">
+            Подтверждение, отклонение и экспорт заявок сотрудников.
           </p>
         </div>
       </div>

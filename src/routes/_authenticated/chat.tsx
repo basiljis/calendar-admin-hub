@@ -410,12 +410,7 @@ function ChatPage() {
           >
             <div className="flex items-center gap-3">
               <Users className="size-4" />
-              <span className="whitespace-pre-line text-left text-[8px] leading-[1.1]">
-                '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-                {"\n"}
-                {"\n"}
-                расширь функции чата с возможность выбрать кому писать. Администратора может выбрать писать всем. Администратор может создать групповой чат
-              </span>
+              <span className="font-medium">Общий чат</span>
             </div>
             {getUnreadCount(null) > 0 && (
               <Badge variant="destructive" className="ml-auto rounded-full px-2 py-0.5 text-[10px]">
