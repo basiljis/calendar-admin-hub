@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { HelpHint } from "@/components/Hint";
 import {
   MONTH_NAMES,
   PERIOD,
@@ -366,7 +367,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                  <HelpHint text="Плановое количество часов по графику смен за выбранный месяц, до вычета отпусков и праздников." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-1">{plannedHours} ч</p>
               </div>
               <div className="bg-chart-1/15 flex size-10 items-center justify-center rounded-xl">
@@ -380,7 +384,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                  <HelpHint text="Расчётная норма часов после вычета подтверждённых отпусков и нерабочих праздничных дней." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
               </div>
               <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
@@ -396,7 +403,10 @@ export function CalendarPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                  <HelpHint text="Количество часов, которые уже прошли в текущем месяце по календарю, включая завершённые и текущие смены." />
+                </div>
                 <p className="mt-2 text-3xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
               </div>
               <div className="bg-chart-3/15 flex size-10 items-center justify-center rounded-xl">
