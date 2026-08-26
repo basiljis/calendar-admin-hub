@@ -251,7 +251,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <div className="p-3 border-t">
+        <div className="hidden p-3 border-t md:block">
           <Hint
             label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             description="Больше места для рабочей области"
