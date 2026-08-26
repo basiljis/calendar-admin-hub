@@ -310,3 +310,55 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const setUserActive = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid(),
+        active: z.boolean(),
+      })
+      .parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    const [{ data: isAdmin }, { data: isManager }] = await Promise.all([
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "manager" }),
+    ]);
+    if (!isAdmin && !isManager) {
+      throw new Error("Недостаточно прав для изменения статуса учётной записи");
+    }
+    if (data.userId === context.userId && !data.active) {
+      throw new Error("Нельзя деактивировать собственную учётную запись");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (!isAdmin) {
+      const { data: targetRoles, error: rErr } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.userId);
+      if (rErr) throw new Error(rErr.message);
+      const isTargetPrivileged = (targetRoles ?? []).some(
+        (r: any) => r.role === "admin" || r.role === "manager",
+      );
+      if (isTargetPrivileged) {
+        throw new Error("Руководитель может менять статус только сотрудников");
+      }
+    }
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ is_active: data.active })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    // Блокируем/разблокируем вход в систему, не удаляя учётную запись
+    await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      ban_duration: data.active ? "none" : "876000h",
+    } as any);
+
+    return { ok: true, active: data.active };
+  });
