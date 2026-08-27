@@ -357,20 +357,21 @@ export function StaffPage() {
       </Dialog>
 
 
-      <Card>
+      <Card className="overflow-hidden rounded-3xl border shadow-sm">
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Сотрудник</TableHead>
-                <TableHead>Контакты</TableHead>
-                <TableHead>Группа</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-center">Норма</TableHead>
-                <TableHead className="text-center">План</TableHead>
-                <TableHead className="text-center">Отпуск</TableHead>
-                <TableHead>Отпуска</TableHead>
-                {isAdmin && <TableHead className="text-right">Действия</TableHead>}
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Сотрудник</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Контакты</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Группа</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Статус</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Норма</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">План</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Отпуск</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Отпуска</TableHead>
+                {isAdmin && <TableHead className="py-4 pr-5 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Действия</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
