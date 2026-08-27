@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "@/lib/notify";
-import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff, ShieldCheck, ShieldQuestion } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff, ShieldCheck, ShieldQuestion, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { createUserAdmin, setUserActive, setUserApproved } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 import { usePositions, useShiftGroups } from "@/components/settings/Directories";
+import { exportToExcel } from "@/lib/export";
 
 
 const roleLabels: Record<AppRole, string> = {
@@ -243,10 +244,52 @@ export function StaffPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handleExport = () => {
+    const staffRows = profiles.map((p) => {
+      const roles = (data?.roles ?? [])
+        .filter((r) => r.user_id === p.id)
+        .map((r) => roleLabels[r.role as AppRole] ?? r.role)
+        .join(", ");
+      const vacs = (data?.vacations ?? []).filter((v) => v.user_id === p.id);
+      const vacDays = vacationDatesInRange(vacs, PERIOD.start, PERIOD.end).size;
+      const planned = (data?.shifts ?? [])
+        .filter((s) => s.user_id === p.id && s.type === "work")
+        .reduce((a, s) => a + Number(s.hours), 0);
+      return {
+        "ФИО": p.full_name ?? "",
+        "Почта": p.email ?? "",
+        "Телефон": p.phone ?? "",
+        "Должность": p.position ?? "",
+        "Группа": p.shift_group ?? "",
+        "Роли": roles,
+        "Статус": (p as any).is_active === false ? "Отключён" : "Активен",
+        "Подтверждён": (p as any).is_approved === false ? "Нет" : "Да",
+        "Норма, ч": Number(formatHours(personalNorm(vacDays)).replace(",", ".")),
+        "План, ч": Number(planned.toFixed(1)),
+        "Отпуск, дн": vacDays,
+      };
+    });
+    const vacationRows = (data?.vacations ?? []).map((v) => ({
+      "Сотрудник": profiles.find((p) => p.id === v.user_id)?.full_name ?? "",
+      "С": v.start_date.split("-").reverse().join("."),
+      "По": v.end_date.split("-").reverse().join("."),
+      "Статус": v.status === "approved" ? "Подтверждён" : v.status === "rejected" ? "Отклонён" : "Ожидает",
+    }));
+    exportToExcel(
+      [
+        { name: "Сотрудники", rows: staffRows },
+        { name: "Отпуска", rows: vacationRows },
+      ],
+      `Сотрудники_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+    toast.success("Файл Excel сформирован");
+  };
+
   return (
     <div className="space-y-8">
       {(isAdmin || isManager) && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport}><FileSpreadsheet className="mr-2 size-4" />Выгрузить в Excel</Button>
           <Button className="w-full sm:w-auto" onClick={() => setAddOpen(true)}><UserPlus className="mr-2 size-4" />Добавить пользователя</Button>
         </div>
       )}
@@ -314,20 +357,21 @@ export function StaffPage() {
       </Dialog>
 
 
-      <Card>
+      <Card className="overflow-hidden rounded-3xl border shadow-sm">
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Сотрудник</TableHead>
-                <TableHead>Контакты</TableHead>
-                <TableHead>Группа</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-center">Норма</TableHead>
-                <TableHead className="text-center">План</TableHead>
-                <TableHead className="text-center">Отпуск</TableHead>
-                <TableHead>Отпуска</TableHead>
-                {isAdmin && <TableHead className="text-right">Действия</TableHead>}
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Сотрудник</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Контакты</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Группа</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Статус</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Норма</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">План</TableHead>
+                <TableHead className="py-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Отпуск</TableHead>
+                <TableHead className="py-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Отпуска</TableHead>
+                {isAdmin && <TableHead className="py-4 pr-5 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Действия</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -343,21 +387,21 @@ export function StaffPage() {
                   .reduce((a, s) => a + Number(s.hours), 0);
                 const pendingCount = vacs.filter((v) => v.status === "pending").length;
                 return (
-                  <TableRow key={p.id} className="align-top">
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{p.full_name || "Без имени"}</span>
+                  <TableRow key={p.id} className="align-middle transition-colors hover:bg-muted/30">
+                    <TableCell className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-base font-semibold leading-tight">{p.full_name || "Без имени"}</span>
                         <span className="flex flex-wrap gap-1">
                           {roles.map((r) => (
-                            <Badge key={r} variant={r === "admin" ? "default" : "secondary"}>
+                            <Badge key={r} variant={r === "admin" ? "default" : "secondary"} className="rounded-full px-2.5">
                               {roleLabels[r]}
                             </Badge>
                           ))}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    <TableCell className="py-4">
+                      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Mail className="size-3 shrink-0" />
                           {p.email ?? "—"}
@@ -389,7 +433,7 @@ export function StaffPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge
-                          className={`border-0 text-[10px] ${
+                          className={`rounded-full border-0 px-2.5 py-0.5 text-[10px] ${
                             (p as any).is_active === false
                               ? "bg-destructive/15 text-destructive"
                               : "bg-emerald-100 text-emerald-800"
@@ -398,7 +442,7 @@ export function StaffPage() {
                           {(p as any).is_active === false ? "Отключён" : "Активен"}
                         </Badge>
                         {(p as any).is_approved === false && (
-                          <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800">
+                          <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800 rounded-full">
                             Ждёт подтверждения
                           </Badge>
                         )}
@@ -456,15 +500,16 @@ export function StaffPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center font-medium">{formatHours(norm)} ч</TableCell>
-                    <TableCell className="text-center font-medium">{formatHours(planned)} ч</TableCell>
+                    <TableCell className="text-center"><span className="text-base font-bold tabular-nums">{formatHours(norm)}</span> <span className="text-xs text-muted-foreground">ч</span></TableCell>
+                    <TableCell className="text-center"><span className="text-base font-bold tabular-nums">{formatHours(planned)}</span> <span className="text-xs text-muted-foreground">ч</span></TableCell>
                     <TableCell className="text-center">
-                      <span className="inline-flex items-center gap-1 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
                         <Plane className="size-3.5 text-muted-foreground" />
-                        {vacDays} дн.
+                        <span className="text-base font-bold tabular-nums">{vacDays}</span>
+                        <span className="text-xs text-muted-foreground">дн.</span>
                       </span>
                       {pendingCount > 0 && (
-                        <Badge className="ml-1 bg-amber-100 text-amber-800 border-0 text-[10px]">
+                        <Badge className="ml-1 rounded-full bg-amber-100 text-amber-800 border-0 text-[10px]">
                           +{pendingCount} ждёт
                         </Badge>
                       )}
@@ -637,6 +682,7 @@ export function StaffPage() {
               })}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
