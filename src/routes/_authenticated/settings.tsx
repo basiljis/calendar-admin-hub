@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
 import { Calendar, Clock, RefreshCw, Info, CheckCircle2, XCircle, Pencil, Plus, Trash2, Save, ShieldCheck } from "lucide-react";
 import { SystemSettings } from "@/components/settings/SystemSettings";
+import { Directories } from "@/components/settings/Directories";
+
 import { MONTH_NAMES } from "@/lib/schedule";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
