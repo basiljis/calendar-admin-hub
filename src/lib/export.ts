@@ -10,7 +10,28 @@ export function exportToExcel(
     const ws = XLSX.utils.json_to_sheet(s.rows.length ? s.rows : [{ "": "Нет данных" }]);
     XLSX.utils.book_append_sheet(wb, ws, s.name.slice(0, 31));
   });
-  XLSX.writeFile(wb, fileName.endsWith(".xlsx") ? fileName : `${fileName}.xlsx`);
+  const name = fileName.endsWith(".xlsx") ? fileName : `${fileName}.xlsx`;
+  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+  const blob = new Blob([data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  downloadBlob(blob, name);
+}
+
+/** Надёжное скачивание файла (работает и внутри iframe-превью) */
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 2000);
 }
 
 /** Скачивание графика (SVG внутри контейнера) как PNG-картинки */
@@ -54,10 +75,11 @@ export async function downloadChartPng(container: HTMLElement | null, fileName: 
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = fileName.endsWith(".png") ? fileName : `${fileName}.png`;
-        a.click();
+        canvas.toBlob((blob) => {
+          if (blob) downloadBlob(blob, fileName.endsWith(".png") ? fileName : `${fileName}.png`);
+          resolve();
+        }, "image/png");
+        return;
       }
       resolve();
     };
