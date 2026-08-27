@@ -252,7 +252,7 @@ function AuthPage() {
             <Button
               type="submit"
               disabled={busy}
-              className="h-12 w-full rounded-full text-sm font-semibold tracking-wide uppercase focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="h-13 w-full rounded-2xl text-base font-semibold focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {mode === "in" ? "Войти" : "Создать аккаунт"}
               <ArrowRight className="size-4" />
