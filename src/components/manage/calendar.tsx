@@ -748,7 +748,7 @@ export function CalendarPage() {
     <div className="space-y-6">
       {canEditSchedule && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
-          {isAdmin && (
+          {canViewAll && (
           <Select
             value={groupFilter}
             onValueChange={(v) => {
@@ -802,7 +802,7 @@ export function CalendarPage() {
             disabled={generate.isPending}
           >
             <Wand2 className="size-4" />
-            {!isAdmin
+            {!canViewAll
               ? "Сформировать моё расписание"
               : groupFilter === "all"
                 ? "Сформировать месяц"
@@ -1259,7 +1259,7 @@ export function CalendarPage() {
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
             </DialogTitle>
             <DialogDescription>
-              {isAdmin
+              {canViewAll
                 ? "Управление сменами и временем обеда сотрудников."
                 : canEditSchedule
                   ? "Включите смену и выберите время обеда."
@@ -1296,7 +1296,7 @@ export function CalendarPage() {
               const isVacation = shift?.type === "vacation";
               const isOwnShift = user?.id === p.id;
 
-              if (!isAdmin && !isOwnShift) return null;
+              if (!canViewAll && !isOwnShift) return null;
 
               return (
                 <div key={p.id} className="space-y-3 rounded-lg border p-3">
@@ -1307,7 +1307,7 @@ export function CalendarPage() {
                         <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
                       )}
                     </div>
-                    {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
+                    {(canViewAll || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">
                         {isVacation && (
                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0">
