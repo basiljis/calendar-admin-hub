@@ -15,7 +15,8 @@ import {
   User,
   Heart,
   ShieldCheck,
-  Menu
+  Menu,
+  Plane
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ProfilePhotoDialog } from "@/components/ProfilePhotoDialog";
+import { VacationRequestDialog } from "@/components/VacationRequestDialog";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
 import { OnboardingTour } from "@/components/OnboardingTour";
