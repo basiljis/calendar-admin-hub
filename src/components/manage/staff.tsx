@@ -59,6 +59,8 @@ export function StaffPage() {
   const qc = useQueryClient();
   const createUser = useServerFn(createUserAdmin);
   const [addOpen, setAddOpen] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const [newUser, setNewUser] = useState({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" });
   const [vacUser, setVacUser] = useState("");
   const [vacFrom, setVacFrom] = useState("");
