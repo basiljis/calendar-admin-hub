@@ -198,8 +198,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
           mobileNavOpen ? "translate-x-0" : "-translate-x-full"
         } ${isSidebarCollapsed ? "md:w-20" : "md:w-64"}`}
       >
-        <div className="flex h-16 items-center px-6">
-          <Link to="/calendar" className="flex items-center gap-2">
+        <div className={`flex h-16 items-center px-6 ${isSidebarCollapsed ? "md:justify-center md:px-0" : ""}`}>
+          <Link to="/calendar" className={`flex items-center gap-2 ${isSidebarCollapsed ? "md:justify-center" : ""}`}>
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
