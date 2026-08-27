@@ -500,12 +500,13 @@ export function StaffPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center font-medium">{formatHours(norm)} ч</TableCell>
-                    <TableCell className="text-center font-medium">{formatHours(planned)} ч</TableCell>
+                    <TableCell className="text-center"><span className="text-base font-bold tabular-nums">{formatHours(norm)}</span> <span className="text-xs text-muted-foreground">ч</span></TableCell>
+                    <TableCell className="text-center"><span className="text-base font-bold tabular-nums">{formatHours(planned)}</span> <span className="text-xs text-muted-foreground">ч</span></TableCell>
                     <TableCell className="text-center">
-                      <span className="inline-flex items-center gap-1 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
                         <Plane className="size-3.5 text-muted-foreground" />
-                        {vacDays} дн.
+                        <span className="text-base font-bold tabular-nums">{vacDays}</span>
+                        <span className="text-xs text-muted-foreground">дн.</span>
                       </span>
                       {pendingCount > 0 && (
                         <Badge className="ml-1 bg-amber-100 text-amber-800 border-0 text-[10px]">
