@@ -996,7 +996,9 @@ export function CalendarPage() {
                 </button>
               ))}
             </div>
-            <ShiftVacationLegend />
+            <div className="lg:hidden">
+              <ShiftVacationLegend />
+            </div>
           </div>
         </div>
         {view === "year" ? (
