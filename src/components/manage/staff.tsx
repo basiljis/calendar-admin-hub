@@ -509,7 +509,7 @@ export function StaffPage() {
                         <span className="text-xs text-muted-foreground">дн.</span>
                       </span>
                       {pendingCount > 0 && (
-                        <Badge className="ml-1 bg-amber-100 text-amber-800 border-0 text-[10px]">
+                        <Badge className="ml-1 rounded-full bg-amber-100 text-amber-800 border-0 text-[10px]">
                           +{pendingCount} ждёт
                         </Badge>
                       )}
