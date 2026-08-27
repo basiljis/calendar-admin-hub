@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
+import { MiniMonth } from "@/components/manage/mini-month";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
 import {
