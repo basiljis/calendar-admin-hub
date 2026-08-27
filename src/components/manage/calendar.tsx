@@ -1027,38 +1027,47 @@ export function CalendarPage() {
                     }
                     if (s.type === "vacation") {
                       return (
-                        <div className="flex items-center gap-1 rounded-md bg-amber-100/70 px-1.5 py-1 text-[10px] font-medium text-amber-800">
-                          <Plane className="size-2.5" /> Отпуск
+                        <div className="flex items-center gap-1.5 rounded-lg border border-amber-200/70 bg-amber-50/80 px-2 py-1.5 text-xs font-semibold text-amber-800 shadow-sm">
+                          <Plane className="size-3.5" /> Отпуск
                         </div>
                       );
                     }
                     const pr = getShiftProgress(d, now);
+                    const rows = [
+                      { icon: Sunrise, label: "Начало", value: START_LABEL },
+                      {
+                        icon: Coffee,
+                        label: "Обед",
+                        value: s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран",
+                      },
+                      { icon: Sunset, label: "Конец", value: END_LABEL },
+                    ];
                     return (
                       <div
-                        className={`space-y-0.5 rounded-md px-1.5 py-1 text-[10px] leading-tight ${
+                        className={`overflow-hidden rounded-lg border text-xs leading-none shadow-sm ${
                           pr.status === "done"
-                            ? "bg-emerald-50 text-emerald-800"
+                            ? "border-emerald-200/70 bg-emerald-50/80"
                             : pr.status === "active"
-                              ? "bg-primary/10 text-foreground"
-                              : "bg-muted/70 text-foreground"
+                              ? "border-primary/25 bg-primary/5"
+                              : "border-border/60 bg-muted/40"
                         }`}
                       >
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Начало</span>
-                          <span className="font-medium">{START_LABEL}</span>
+                        <div className={`px-2 py-1 text-center text-[11px] font-bold tracking-wide ${
+                          pr.status === "done" ? "text-emerald-700" : "text-primary"
+                        }`}>
+                          {START_LABEL} — {END_LABEL}
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Обед</span>
-                          <span className="font-medium">
-                            {s.break_time ? `${s.break_time}–${addHour(s.break_time)}` : "не выбран"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Конец</span>
-                          <span className="font-medium">{END_LABEL}</span>
+                        <div className="border-border/50 space-y-1 border-t px-2 py-1.5">
+                          {rows.map(({ icon: Icon, label, value }) => (
+                            <div key={label} className="flex items-center gap-1.5">
+                              <Icon className="text-muted-foreground size-3 shrink-0" />
+                              <span className="text-muted-foreground text-[11px]">{label}</span>
+                              <span className="ml-auto font-semibold tabular-nums">{value}</span>
+                            </div>
+                          ))}
                         </div>
                         {pr.status === "active" && (
-                          <div className="bg-background/60 h-1 w-full overflow-hidden rounded-full">
+                          <div className="bg-background/70 h-1.5 w-full overflow-hidden">
                             <div className="h-full bg-emerald-600" style={{ width: `${pr.percent}%` }} />
                           </div>
                         )}
