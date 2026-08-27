@@ -198,8 +198,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
           mobileNavOpen ? "translate-x-0" : "-translate-x-full"
         } ${isSidebarCollapsed ? "md:w-20" : "md:w-64"}`}
       >
-        <div className="flex h-16 items-center px-6">
-          <Link to="/calendar" className="flex items-center gap-2">
+        <div className={`flex h-16 items-center px-6 ${isSidebarCollapsed ? "md:justify-center md:px-0" : ""}`}>
+          <Link to="/calendar" className={`flex items-center gap-2 ${isSidebarCollapsed ? "md:justify-center" : ""}`}>
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
@@ -218,7 +218,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     data-tour={`nav-${n.to}`}
                     aria-label={n.label}
                     onClick={() => setMobileNavOpen(false)}
-                    className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    className={`group flex items-center rounded-lg py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                      isSidebarCollapsed ? "md:justify-center md:px-0" : "gap-3 px-3"
+                    }`}
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
                   >
                     <n.icon className="size-5 shrink-0" />
@@ -292,7 +294,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             size="icon"
             aria-label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="w-full justify-start gap-3 px-3"
+            className={`w-full ${
+              isSidebarCollapsed ? "md:justify-center md:px-0" : "justify-start gap-3 px-3"
+            }`}
           >
             {isSidebarCollapsed ? <ChevronRight className="size-5" /> : (
               <>
