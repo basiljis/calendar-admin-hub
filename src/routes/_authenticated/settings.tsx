@@ -224,13 +224,6 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Настройки системы</h1>
-        <p className="text-muted-foreground text-sm">
-          Управление праздничными днями, нормами часов и параметрами отпусков.
-        </p>
-      </div>
-
       <Tabs
         value={tab}
         onValueChange={(value) =>

@@ -65,13 +65,6 @@ function ManagePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Управление персоналом</h1>
-        <p className="text-sm text-muted-foreground">
-          Сотрудники, смены, заявки на отпуск и права доступа — в одном месте.
-        </p>
-      </div>
-
       <Tabs
         value={tab}
         onValueChange={(value) =>

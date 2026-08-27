@@ -66,11 +66,28 @@ const sectionTitles: Record<string, string> = {
   "/admin": "Администрирование",
 };
 
+const sectionDescriptions: Record<string, string> = {
+  "/dashboard": "Смены, часы и заявки за текущий период",
+  "/calendar": "Смены 2/2, обеды, отпуска и праздничные дни",
+  "/manage": "Сотрудники, смены, заявки на отпуск и права доступа — в одном месте",
+  "/settings": "Праздники РФ, нормы часов и параметры системы",
+  "/vacations": "Подтверждение, отклонение и экспорт заявок сотрудников",
+  "/staff": "Состав групп, контакты и индивидуальная норма за период",
+  "/vacations-stats": "Использование отпусков и загрузка команды по месяцам",
+  "/admin": "Управление пользователями и ролями доступа",
+};
+
 function getSectionTitle(pathname: string) {
   if (sectionTitles[pathname]) return sectionTitles[pathname];
   if (pathname.startsWith("/admin/users/")) return "Профиль пользователя";
   if (pathname.startsWith("/admin/")) return sectionTitles["/admin"];
   return "График ОКП";
+}
+
+function getSectionDescription(pathname: string) {
+  if (sectionDescriptions[pathname]) return sectionDescriptions[pathname];
+  if (pathname.startsWith("/admin/")) return sectionDescriptions["/admin"];
+  return null;
 }
 
 
@@ -84,6 +101,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const sectionTitle = getSectionTitle(pathname);
+  const sectionDescription = getSectionDescription(pathname);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
@@ -304,8 +322,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
             >
               <Menu className="size-5" />
             </Button>
-            <div className="truncate text-sm font-semibold text-foreground sm:text-base">
-              {sectionTitle}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
+                {sectionTitle}
+              </div>
+              {sectionDescription && (
+                <div className="hidden truncate text-xs text-muted-foreground sm:block">
+                  {sectionDescription}
+                </div>
+              )}
             </div>
           </div>
 
