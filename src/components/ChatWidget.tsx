@@ -53,6 +53,55 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
 
+function ChatAttachment({ file }: { file: any }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const raw: string = file.path ?? file.url ?? "";
+    if (!raw) return;
+    if (raw.startsWith("http") && !raw.includes("/storage/v1/object/public/chat-attachments/")) {
+      setUrl(raw);
+      return;
+    }
+    const path = raw.includes("/chat-attachments/") ? raw.split("/chat-attachments/")[1].split("?")[0] : raw;
+    supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(decodeURIComponent(path), 3600)
+      .then(({ data }) => {
+        if (active) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [file]);
+
+  const size = typeof file.size === "number" ? `${(file.size / 1024).toFixed(1)} KB` : "";
+
+  return (
+    <div className="rounded border bg-background/10 p-2">
+      {!url ? (
+        <div className="text-xs opacity-60">Загрузка файла…</div>
+      ) : file.type?.startsWith("image/") ? (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <img src={url} alt={file.name} className="max-h-32 rounded object-contain" />
+        </a>
+      ) : (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-xs hover:underline"
+        >
+          <FileIcon className="size-4 shrink-0" />
+          <span className="truncate max-w-[120px]">{file.name}</span>
+          <span className="opacity-60">({size})</span>
+        </a>
+      )}
+    </div>
+  );
+}
+
 export function ChatWidget() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
