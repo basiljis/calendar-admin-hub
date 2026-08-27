@@ -387,21 +387,21 @@ export function StaffPage() {
                   .reduce((a, s) => a + Number(s.hours), 0);
                 const pendingCount = vacs.filter((v) => v.status === "pending").length;
                 return (
-                  <TableRow key={p.id} className="align-top">
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{p.full_name || "Без имени"}</span>
+                  <TableRow key={p.id} className="align-middle transition-colors hover:bg-muted/30">
+                    <TableCell className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-base font-semibold leading-tight">{p.full_name || "Без имени"}</span>
                         <span className="flex flex-wrap gap-1">
                           {roles.map((r) => (
-                            <Badge key={r} variant={r === "admin" ? "default" : "secondary"}>
+                            <Badge key={r} variant={r === "admin" ? "default" : "secondary"} className="rounded-full px-2.5">
                               {roleLabels[r]}
                             </Badge>
                           ))}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    <TableCell className="py-4">
+                      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Mail className="size-3 shrink-0" />
                           {p.email ?? "—"}
