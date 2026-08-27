@@ -272,22 +272,79 @@ export const createUserAdmin = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Предварительная проверка: пользователь с таким email уже существует?
+    const email = data.email.trim().toLowerCase();
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (existingProfile) {
+      throw new Error("Пользователь с таким email уже существует");
+    }
+    const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const emailTaken = (usersPage?.users ?? []).some(
+      (u: any) => (u.email ?? "").toLowerCase() === email,
+    );
+    if (emailTaken) {
+      throw new Error("Пользователь с таким email уже зарегистрирован");
+    }
+
     const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
+      email,
       password: data.password,
       email_confirm: true,
     });
-    if (authError || !created.user) throw new Error(authError?.message ?? "Не удалось создать пользователя");
+    if (authError || !created.user) {
+      const msg = authError?.message ?? "Не удалось создать пользователя";
+      if (/already|exists|duplicate/i.test(msg)) {
+        throw new Error("Пользователь с таким email уже зарегистрирован");
+      }
+      throw new Error(msg);
+    }
 
-    // Триггер handle_new_user уже создал профиль и роль — обновляем их
-    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
-      id: created.user.id, email: data.email, full_name: data.full_name,
-      phone: data.phone, position: data.position, shift_group: data.shift_group,
-      is_approved: true,
-    }, { onConflict: "id" });
-    if (profileError) {
+    // Триггер handle_new_user обычно уже создал профиль — обновляем его,
+    // а при отсутствии (гонка/триггер не сработал) создаём. UPDATE сначала
+    // исключает duplicate key по profiles_pkey.
+    const { data: updatedProfile, error: updErr } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        email, full_name: data.full_name,
+        phone: data.phone, position: data.position, shift_group: data.shift_group,
+        is_approved: true,
+      })
+      .eq("id", created.user.id)
+      .select("id");
+    if (updErr) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-      throw new Error(profileError.message);
+      throw new Error(updErr.message);
+    }
+    if (!updatedProfile || updatedProfile.length === 0) {
+      const { error: insErr } = await supabaseAdmin.from("profiles").insert({
+        id: created.user.id, email, full_name: data.full_name,
+        phone: data.phone, position: data.position, shift_group: data.shift_group,
+        is_approved: true,
+      });
+      if (insErr && !/duplicate key/i.test(insErr.message)) {
+        await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+        throw new Error(insErr.message);
+      }
+      if (insErr) {
+        // Профиль появился между UPDATE и INSERT (триггер) — просто обновим
+        const { error: retryErr } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            email, full_name: data.full_name,
+            phone: data.phone, position: data.position, shift_group: data.shift_group,
+            is_approved: true,
+          })
+          .eq("id", created.user.id);
+        if (retryErr) {
+          await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+          throw new Error(retryErr.message);
+        }
+      }
     }
     const { error: roleDeleteError } = await supabaseAdmin
       .from("user_roles").delete().eq("user_id", created.user.id);
