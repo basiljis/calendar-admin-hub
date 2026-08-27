@@ -250,15 +250,19 @@ function SettingsPage() {
           <MonthlyNormsCard canEdit={isManager} />
         </TabsContent>
 
-        <TabsContent value="system" className="mt-0">
+        <TabsContent value="system" className="mt-0 space-y-6">
           {isManager ? (
-            <SystemSettings />
+            <>
+              <SystemSettings />
+              <Directories />
+            </>
           ) : (
             <p className="text-muted-foreground text-sm">
               Раздел доступен администратору и руководителю.
             </p>
           )}
         </TabsContent>
+
 
 
         <TabsContent value="holidays" className="mt-0 space-y-6">
