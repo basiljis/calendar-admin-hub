@@ -101,6 +101,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const sectionTitle = getSectionTitle(pathname);
+  const sectionDescription = getSectionDescription(pathname);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
