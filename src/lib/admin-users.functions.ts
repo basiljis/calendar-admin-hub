@@ -295,6 +295,14 @@ export const createUserAdmin = createServerFn({ method: "POST" })
       email,
       password: data.password,
       email_confirm: true,
+      user_metadata: {
+        full_name: data.full_name,
+        phone: data.phone,
+        position: data.position,
+        shift_group: String(data.shift_group),
+        role: data.role,
+        approved_by_admin: "true",
+      },
     });
     if (authError || !created.user) {
       const msg = authError?.message ?? "Не удалось создать пользователя";
