@@ -262,6 +262,30 @@ export type Database = {
         }
         Relationships: []
       }
+      positions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -303,6 +327,33 @@ export type Database = {
           position?: string | null
           shift_group?: number
           theme?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shift_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          number: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          number: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          number?: number
           updated_at?: string
         }
         Relationships: []
