@@ -244,25 +244,49 @@ export function StaffPage() {
         </div>
       )}
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) setFormErrors({}); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Новый пользователь</DialogTitle></DialogHeader>
           <div className="grid gap-3">
-            <Label>ФИО<Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} /></Label>
-            <Label>Электронная почта<Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></Label>
-            <Label>Пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /><span className="text-xs font-normal text-muted-foreground">Минимум 8 символов</span></Label>
-            <Label>Роль<Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
-            <Label>Телефон<Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></Label>
+            <Label>ФИО <span className="text-destructive">*</span>
+              <Input aria-invalid={!!formErrors["full_name"]} className={formErrors["full_name"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.full_name} onChange={(e) => { setNewUser({ ...newUser, full_name: e.target.value }); setFormErrors((p) => ({ ...p, full_name: "" })); }} />
+              {formErrors["full_name"] && <span className="text-xs font-normal text-destructive">{formErrors["full_name"]}</span>}
+            </Label>
+            <Label>Электронная почта <span className="text-destructive">*</span>
+              <Input type="email" aria-invalid={!!formErrors["email"]} className={formErrors["email"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.email} onChange={(e) => { setNewUser({ ...newUser, email: e.target.value }); setFormErrors((p) => ({ ...p, email: "" })); }} />
+              {formErrors["email"] && <span className="text-xs font-normal text-destructive">{formErrors["email"]}</span>}
+            </Label>
+            <Label>Пароль <span className="text-destructive">*</span>
+              <Input type="password" minLength={8} aria-invalid={!!formErrors["password"]} className={formErrors["password"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.password} onChange={(e) => { setNewUser({ ...newUser, password: e.target.value }); setFormErrors((p) => ({ ...p, password: "" })); }} />
+              <span className="text-xs font-normal text-muted-foreground">Минимум 8 символов</span>
+              {formErrors["password"] && <span className="text-xs font-normal text-destructive">{formErrors["password"]}</span>}
+            </Label>
+            <Label>Роль <span className="text-destructive">*</span><Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
+            <Label>Телефон
+              <Input aria-invalid={!!formErrors["phone"]} className={formErrors["phone"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.phone} onChange={(e) => { setNewUser({ ...newUser, phone: e.target.value }); setFormErrors((p) => ({ ...p, phone: "" })); }} />
+              {formErrors["phone"] && <span className="text-xs font-normal text-destructive">{formErrors["phone"]}</span>}
+            </Label>
             <Label>Должность<Input value={newUser.position} onChange={(e) => setNewUser({ ...newUser, position: e.target.value })} /></Label>
+            <p className="text-xs text-muted-foreground">Поля, отмеченные <span className="text-destructive">*</span>, обязательны для заполнения.</p>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Отмена</Button><Button onClick={() => {
-            if (!newUser.full_name.trim()) { toast.error("Укажите ФИО"); return; }
-            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newUser.email.trim())) { toast.error("Укажите корректный адрес электронной почты"); return; }
-            if (newUser.password.length < 8) { toast.error("Пароль должен содержать минимум 8 символов"); return; }
-            createUser({ data: { ...newUser, email: newUser.email.trim(), full_name: newUser.full_name.trim(), phone: newUser.phone || null, position: newUser.position || null, shift_group: Number(newUser.shift_group) } }).then(() => { toast.success("Пользователь добавлен"); setAddOpen(false); setNewUser({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" }); qc.invalidateQueries({ queryKey: ["staff"] }); }).catch((e: Error) => toast.error(humanizeError(e)));
+            const email = newUser.email.trim().toLowerCase();
+            const errors: Record<string, string> = {};
+            if (!newUser.full_name.trim()) errors["full_name"] = "Укажите ФИО";
+            else if (newUser.full_name.trim().length < 2) errors["full_name"] = "ФИО слишком короткое";
+            if (!email) errors["email"] = "Укажите электронную почту";
+            else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors["email"] = "Некорректный адрес электронной почты";
+            else if (profiles.some((p) => (p.email ?? "").trim().toLowerCase() === email)) errors["email"] = "Пользователь с такой почтой уже существует";
+            if (!newUser.password) errors["password"] = "Укажите пароль";
+            else if (newUser.password.length < 8) errors["password"] = "Пароль должен содержать минимум 8 символов";
+            if (newUser.phone.trim() && !/^\+?[\d\s()-]{7,20}$/.test(newUser.phone.trim())) errors["phone"] = "Некорректный номер телефона";
+            setFormErrors(errors);
+            if (Object.keys(errors).length > 0) { toast.error(Object.values(errors)[0] ?? "Проверьте правильность заполнения полей"); return; }
+            createUser({ data: { ...newUser, email, full_name: newUser.full_name.trim(), phone: newUser.phone.trim() || null, position: newUser.position.trim() || null, shift_group: Number(newUser.shift_group) } }).then(() => { toast.success("Пользователь добавлен"); setAddOpen(false); setFormErrors({}); setNewUser({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" }); qc.invalidateQueries({ queryKey: ["staff"] }); }).catch((e: Error) => { const msg = humanizeError(e); if (/почтой уже существует/.test(msg)) setFormErrors({ email: msg }); toast.error(msg); });
           }}>Создать</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       <Card>
         <CardContent className="p-0">
