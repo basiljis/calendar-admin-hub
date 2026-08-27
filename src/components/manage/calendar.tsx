@@ -433,7 +433,9 @@ function YearGrid({
 
 
 export function CalendarPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
+  // Администратор и руководитель видят календарь по всем сотрудникам
+  const canViewAll = isAdmin || isManager;
   const employeeCanCreateShifts = useEmployeeCanCreateShifts();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState(() => {
@@ -550,12 +552,12 @@ export function CalendarPage() {
 
   // Сотрудник всегда видит подробный график по себе.
   // Администратор/руководитель выбирает сотрудника из списка.
-  const detailUserId = isAdmin ? detailUser : (user?.id ?? "");
+  const detailUserId = canViewAll ? detailUser : (user?.id ?? "");
   const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
   // Сотрудник может формировать расписание только себе, если это разрешено в настройках
-  const canEditSchedule = isAdmin || employeeCanCreateShifts;
-  const genProfiles = isAdmin ? profiles : allProfiles.filter((p) => p.id === user?.id);
+  const canEditSchedule = canViewAll || employeeCanCreateShifts;
+  const genProfiles = canViewAll ? profiles : allProfiles.filter((p) => p.id === user?.id);
 
   const generate = useMutation({
     mutationFn: async (range?: { from: string; to: string }) => {
@@ -746,7 +748,7 @@ export function CalendarPage() {
     <div className="space-y-6">
       {canEditSchedule && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
-          {isAdmin && (
+          {canViewAll && (
           <Select
             value={groupFilter}
             onValueChange={(v) => {
@@ -767,7 +769,7 @@ export function CalendarPage() {
             </SelectContent>
           </Select>
           )}
-          {isAdmin && (
+          {canViewAll && (
           <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
             <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
               <SelectValue placeholder="Подробный график сотрудника" />
@@ -800,7 +802,7 @@ export function CalendarPage() {
             disabled={generate.isPending}
           >
             <Wand2 className="size-4" />
-            {!isAdmin
+            {!canViewAll
               ? "Сформировать моё расписание"
               : groupFilter === "all"
                 ? "Сформировать месяц"
@@ -1257,7 +1259,7 @@ export function CalendarPage() {
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
             </DialogTitle>
             <DialogDescription>
-              {isAdmin
+              {canViewAll
                 ? "Управление сменами и временем обеда сотрудников."
                 : canEditSchedule
                   ? "Включите смену и выберите время обеда."
@@ -1278,6 +1280,7 @@ export function CalendarPage() {
                 </div>
                 <Switch
                   checked={data.holidays.get(openDay)?.is_working ?? false}
+                  disabled={!isAdmin}
                   onCheckedChange={(v) =>
                     updateHoliday.mutate({ date: openDay, isWorking: v })
                   }
@@ -1294,7 +1297,7 @@ export function CalendarPage() {
               const isVacation = shift?.type === "vacation";
               const isOwnShift = user?.id === p.id;
 
-              if (!isAdmin && !isOwnShift) return null;
+              if (!canViewAll && !isOwnShift) return null;
 
               return (
                 <div key={p.id} className="space-y-3 rounded-lg border p-3">
@@ -1305,7 +1308,7 @@ export function CalendarPage() {
                         <div className="text-muted-foreground text-xs">Группа {p.shift_group}</div>
                       )}
                     </div>
-                    {(isAdmin || (employeeCanCreateShifts && p.id === user?.id)) && (
+                    {(canViewAll || (employeeCanCreateShifts && p.id === user?.id)) && (
                       <div className="flex items-center gap-2">
                         {isVacation && (
                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0">
