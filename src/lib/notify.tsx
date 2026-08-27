@@ -17,6 +17,7 @@ export interface NotifyItem {
   level: NotifyLevel;
   title: string;
   description?: string | undefined;
+  action?: { label: string; onClick: () => void } | undefined;
 }
 
 // ---- Перевод типовых системных сообщений на русский язык ----
@@ -87,11 +88,15 @@ export function dismissNotification(id: number) {
   emit();
 }
 
-type Options = { description?: string } | string | undefined;
+type Options =
+  | { description?: string; action?: { label: string; onClick: () => void } }
+  | string
+  | undefined;
 
 function push(level: NotifyLevel, title: unknown, options?: Options) {
   const description =
     typeof options === "string" ? options : options?.description;
+  const action = typeof options === "string" ? undefined : options?.action;
   const item: NotifyItem = {
     id: ++seq,
     level,
@@ -99,6 +104,7 @@ function push(level: NotifyLevel, title: unknown, options?: Options) {
       title instanceof Error ? title.message : title,
     ),
     description: description ? translateMessage(description) : undefined,
+    action,
   };
   items = [...items, item];
   emit();
@@ -182,6 +188,18 @@ export function NotificationModals() {
           )}
         </DialogHeader>
         <DialogFooter className="sm:justify-center">
+          {current.action && (
+            <Button
+              variant="outline"
+              className="min-w-28"
+              onClick={() => {
+                current.action?.onClick();
+                dismissNotification(current.id);
+              }}
+            >
+              {current.action.label}
+            </Button>
+          )}
           <Button className="min-w-28" onClick={() => dismissNotification(current.id)}>
             Понятно
           </Button>
