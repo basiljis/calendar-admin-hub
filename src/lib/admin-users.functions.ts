@@ -279,14 +279,21 @@ export const createUserAdmin = createServerFn({ method: "POST" })
     });
     if (authError || !created.user) throw new Error(authError?.message ?? "Не удалось создать пользователя");
 
-    const { error: profileError } = await supabaseAdmin.from("profiles").insert({
+    // Триггер handle_new_user уже создал профиль и роль — обновляем их
+    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
       id: created.user.id, email: data.email, full_name: data.full_name,
       phone: data.phone, position: data.position, shift_group: data.shift_group,
       is_approved: true,
-    });
+    }, { onConflict: "id" });
     if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
       throw new Error(profileError.message);
+    }
+    const { error: roleDeleteError } = await supabaseAdmin
+      .from("user_roles").delete().eq("user_id", created.user.id);
+    if (roleDeleteError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(roleDeleteError.message);
     }
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
       user_id: created.user.id, role: data.role,
@@ -295,6 +302,7 @@ export const createUserAdmin = createServerFn({ method: "POST" })
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
       throw new Error(roleError.message);
     }
+
     return { ok: true, userId: created.user.id };
   });
 
