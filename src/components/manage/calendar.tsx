@@ -289,7 +289,10 @@ function TimeGridColumn({
                       isDay ? "text-xs" : "text-[10px]"
                     }`}
                   >
-                    Конец {END_LABEL}
+                    <span className="flex items-center justify-end gap-1">
+                      <Sunset className="size-3 shrink-0" />
+                      <span className="font-medium tabular-nums">{END_LABEL}</span>
+                    </span>
                   </div>
 
                   {pr.status === "active" && (
