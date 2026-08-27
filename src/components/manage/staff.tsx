@@ -45,6 +45,15 @@ const roleLabels: Record<AppRole, string> = {
 
 const allRoles: AppRole[] = ["admin", "manager", "employee"];
 
+function humanizeError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (/at least 8|too_small.*password|Password should be at least/i.test(raw)) return "Пароль должен содержать минимум 8 символов";
+  if (/invalid.*email|email.*invalid/i.test(raw)) return "Некорректный адрес электронной почты";
+  if (/already been registered|already exists|duplicate key/i.test(raw)) return "Пользователь с такой почтой уже существует";
+  if (raw.trim().startsWith("[") || raw.trim().startsWith("{")) return "Проверьте правильность заполнения полей";
+  return raw;
+}
+
 export function StaffPage() {
   const { isAdmin, isManager, user } = useAuth();
   const qc = useQueryClient();
