@@ -276,34 +276,6 @@ function AuthPage() {
         </div>
       </div>
 
-      {/* Правая колонка — изображение */}
-      <div className="relative hidden h-full lg:block">
-        <img
-          src={officeImg}
-          alt="Современный офис ОКП"
-          width={1024}
-          height={1400}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <div className="absolute right-10 bottom-10 left-10 text-white">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-lg font-semibold">Работать стало проще</p>
-            <div className="flex gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
-          </div>
-          <p className="mt-3 text-sm leading-relaxed text-white/80">
-            График смен, отпуска и учёт часов — всё в одном месте. Больше никаких таблиц в
-            блокнотах и потерянных заявок.
-          </p>
-          <p className="mt-4 text-xs font-medium text-white/70">
-            Команда психологов ОКП
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
