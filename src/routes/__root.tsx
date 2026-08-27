@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { installGlobalErrorLogging, recordEvent } from "@/lib/log-client";
 import { Button } from "@/components/ui/button";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -53,6 +54,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    recordEvent({
+      level: "error",
+      category: "error",
+      event: "Сбой страницы",
+      message: error.message,
+      context: { path: typeof window !== "undefined" ? window.location.pathname : "" },
+    });
   }, [error]);
 
   return (
@@ -119,6 +127,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    installGlobalErrorLogging();
+  }, []);
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>

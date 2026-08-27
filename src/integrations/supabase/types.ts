@@ -340,6 +340,48 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          category: string
+          context: Json
+          created_at: string
+          event: string
+          id: string
+          ip_address: string | null
+          level: string
+          message: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string
+          context?: Json
+          created_at?: string
+          event: string
+          id?: string
+          ip_address?: string | null
+          level?: string
+          message?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          context?: Json
+          created_at?: string
+          event?: string
+          id?: string
+          ip_address?: string | null
+          level?: string
+          message?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

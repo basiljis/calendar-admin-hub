@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import illustrationImg from "@/assets/auth-illustration.jpg";
+import { recordEvent } from "@/lib/log-client";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -68,9 +69,22 @@ function AuthPage() {
         : error.message;
       setAuthError(msg);
       toast.error(msg);
+      recordEvent({
+        level: "warning",
+        category: "auth",
+        event: "Неудачная попытка входа",
+        message: msg,
+        userEmail: email,
+      });
       emailRef.current?.focus();
       return;
     }
+    recordEvent({
+      category: "auth",
+      event: "Вход в систему",
+      message: "Успешная авторизация по email и паролю",
+      userEmail: email,
+    });
     setAuthSuccess("Вход выполнен. Переходим в систему…");
     navigate({ to: "/calendar", replace: true });
   }
@@ -92,8 +106,21 @@ function AuthPage() {
     if (error) {
       setAuthError(error.message);
       toast.error(error.message);
+      recordEvent({
+        level: "warning",
+        category: "auth",
+        event: "Ошибка регистрации",
+        message: error.message,
+        userEmail: email,
+      });
       return;
     }
+    recordEvent({
+      category: "auth",
+      event: "Новая регистрация",
+      message: "Заявка на регистрацию отправлена на подтверждение",
+      userEmail: email,
+    });
     const successMessage =
       "Заявка на регистрацию отправлена. Доступ откроется после подтверждения администратором или руководителем.";
     if (data.session) await supabase.auth.signOut();
