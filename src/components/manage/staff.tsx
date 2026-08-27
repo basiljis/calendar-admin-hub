@@ -442,7 +442,7 @@ export function StaffPage() {
                           {(p as any).is_active === false ? "Отключён" : "Активен"}
                         </Badge>
                         {(p as any).is_approved === false && (
-                          <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800">
+                          <Badge className="border-0 bg-amber-100 text-[10px] text-amber-800 rounded-full">
                             Ждёт подтверждения
                           </Badge>
                         )}
