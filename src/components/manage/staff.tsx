@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "@/lib/notify";
-import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff, ShieldCheck, ShieldQuestion } from "lucide-react";
+import { Plane, Trash2, History, Mail, Phone, UserPlus, Power, PowerOff, ShieldCheck, ShieldQuestion, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { createUserAdmin, setUserActive, setUserApproved } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 import { usePositions, useShiftGroups } from "@/components/settings/Directories";
+import { exportToExcel } from "@/lib/export";
 
 
 const roleLabels: Record<AppRole, string> = {
