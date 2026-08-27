@@ -218,7 +218,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     data-tour={`nav-${n.to}`}
                     aria-label={n.label}
                     onClick={() => setMobileNavOpen(false)}
-                    className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    className={`group flex items-center rounded-lg py-2.5 text-sm font-medium transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                      isSidebarCollapsed ? "md:justify-center md:px-0" : "gap-3 px-3"
+                    }`}
                     activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
                   >
                     <n.icon className="size-5 shrink-0" />
