@@ -36,7 +36,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ProfilePhotoDialog } from "@/components/ProfilePhotoDialog";
 import { VacationRequestDialog } from "@/components/VacationRequestDialog";

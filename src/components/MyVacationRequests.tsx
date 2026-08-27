@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Trash2, Lock } from "lucide-react";
 import { Hint } from "@/components/Hint";
 import { supabase } from "@/integrations/supabase/client";
