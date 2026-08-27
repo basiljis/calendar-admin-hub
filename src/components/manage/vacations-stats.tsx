@@ -240,13 +240,6 @@ export function VacationsStatsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Аналитика отпусков</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Использование отпусков по сотрудникам и загрузка команды по месяцам.
-        </p>
-      </div>
-
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
