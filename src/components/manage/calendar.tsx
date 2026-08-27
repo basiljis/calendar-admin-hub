@@ -22,7 +22,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
-import { MiniMonth } from "@/components/manage/mini-month";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
 import { HelpHint } from "@/components/Hint";
 import {
@@ -865,66 +864,8 @@ export function CalendarPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="hidden space-y-4 lg:block">
-          <MiniMonth
-            year={cursor.year}
-            month={cursor.month}
-            selected={anchor}
-            today={todayStr}
-            workDays={new Set(monthShifts.filter((s) => s.type === "work" && (!detailUserId || s.user_id === detailUserId)).map((s) => s.work_date))}
-            vacationDays={new Set(monthShifts.filter((s) => s.type === "vacation" && (!detailUserId || s.user_id === detailUserId)).map((s) => s.work_date))}
-            holidays={new Set(Array.from(data?.holidays.keys() ?? []))}
-            onPickDay={(d) => {
-              setCursor({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
-              setAnchor(d);
-            }}
-            onShiftMonth={(delta) => shiftMonth(delta)}
-          />
 
-          <div className="bg-card space-y-3 rounded-2xl border p-4 shadow-sm">
-            <p className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-              Этот месяц
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-muted-foreground text-[11px] font-medium">План</p>
-                <p className="text-xl font-bold tracking-tight">{plannedHours} ч</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[11px] font-medium">С отпуском</p>
-                <p className="text-xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[11px] font-medium">Прошло</p>
-                <p className="text-xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[11px] font-medium">Смен</p>
-                <p className="text-xl font-bold tracking-tight">
-                  {monthShifts.filter((s) => s.type === "work" && (!detailUserId || s.user_id === detailUserId)).length}
-                </p>
-              </div>
-            </div>
-            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-              <div className="bg-chart-3 h-full" style={{ width: `${passedPercent}%` }} />
-            </div>
-            <p className="text-muted-foreground text-xs font-medium">
-              {passedPercent}% · осталось {Math.max(0, monthHours - passedHours)} ч
-            </p>
-          </div>
-
-          <div className="bg-card rounded-2xl border p-4 shadow-sm">
-            <p className="text-muted-foreground mb-3 text-[11px] font-semibold tracking-wider uppercase">
-              Обозначения
-            </p>
-            <ShiftVacationLegend />
-          </div>
-        </aside>
-
-        <div className="min-w-0">
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
-
         <div className="flex flex-wrap items-center justify-between gap-3 border-b p-3 sm:p-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="bg-muted/60 flex items-center gap-1 rounded-full border p-1">
@@ -996,9 +937,7 @@ export function CalendarPage() {
                 </button>
               ))}
             </div>
-            <div className="lg:hidden">
-              <ShiftVacationLegend />
-            </div>
+            <ShiftVacationLegend />
           </div>
         </div>
         {view === "year" ? (
@@ -1248,11 +1187,9 @@ export function CalendarPage() {
           </>
         )}
       </div>
-      </div>
-      </div>
+
 
       <div className="grid gap-4 sm:grid-cols-3">
-
         <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
