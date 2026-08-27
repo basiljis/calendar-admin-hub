@@ -433,7 +433,9 @@ function YearGrid({
 
 
 export function CalendarPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
+  // Администратор и руководитель видят календарь по всем сотрудникам
+  const canViewAll = isAdmin || isManager;
   const employeeCanCreateShifts = useEmployeeCanCreateShifts();
   const qc = useQueryClient();
   const [cursor, setCursor] = useState(() => {
@@ -550,12 +552,12 @@ export function CalendarPage() {
 
   // Сотрудник всегда видит подробный график по себе.
   // Администратор/руководитель выбирает сотрудника из списка.
-  const detailUserId = isAdmin ? detailUser : (user?.id ?? "");
+  const detailUserId = canViewAll ? detailUser : (user?.id ?? "");
   const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
   // Сотрудник может формировать расписание только себе, если это разрешено в настройках
-  const canEditSchedule = isAdmin || employeeCanCreateShifts;
-  const genProfiles = isAdmin ? profiles : allProfiles.filter((p) => p.id === user?.id);
+  const canEditSchedule = canViewAll || employeeCanCreateShifts;
+  const genProfiles = canViewAll ? profiles : allProfiles.filter((p) => p.id === user?.id);
 
   const generate = useMutation({
     mutationFn: async (range?: { from: string; to: string }) => {
