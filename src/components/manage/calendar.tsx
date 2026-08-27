@@ -544,6 +544,10 @@ export function CalendarPage() {
   const detailUserId = isAdmin ? detailUser : (user?.id ?? "");
   const detailProfile = profiles.find((p) => p.id === detailUserId) ?? null;
 
+  // Сотрудник может формировать расписание только себе, если это разрешено в настройках
+  const canEditSchedule = isAdmin || employeeCanCreateShifts;
+  const genProfiles = isAdmin ? profiles : allProfiles.filter((p) => p.id === user?.id);
+
   const generate = useMutation({
     mutationFn: async (range?: { from: string; to: string }) => {
       const from = range?.from ?? first;
@@ -556,7 +560,7 @@ export function CalendarPage() {
         type: "work" | "vacation";
         break_time?: string;
       }[] = [];
-      for (const p of profiles) {
+      for (const p of genProfiles) {
         const vac = vacationDatesInRange(data?.vacations ?? [], from, to);
 
         for (const d of targetDays) {
@@ -731,8 +735,9 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      {isAdmin && (
+      {canEditSchedule && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
+          {isAdmin && (
           <Select
             value={groupFilter}
             onValueChange={(v) => {
@@ -752,6 +757,8 @@ export function CalendarPage() {
               ))}
             </SelectContent>
           </Select>
+          )}
+          {isAdmin && (
           <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
             <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
               <SelectValue placeholder="Подробный график сотрудника" />
@@ -765,6 +772,7 @@ export function CalendarPage() {
               ))}
             </SelectContent>
           </Select>
+          )}
           <Button
             className="rounded-full"
             onClick={() => {
@@ -783,7 +791,11 @@ export function CalendarPage() {
             disabled={generate.isPending}
           >
             <Wand2 className="size-4" />
-            {groupFilter === "all" ? "Сформировать месяц" : `Сформировать месяц · группа ${groupFilter}`}
+            {!isAdmin
+              ? "Сформировать моё расписание"
+              : groupFilter === "all"
+                ? "Сформировать месяц"
+                : `Сформировать месяц · группа ${groupFilter}`}
           </Button>
         </div>
       )}
@@ -986,7 +998,7 @@ export function CalendarPage() {
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
-                } ${isAdmin ? "cursor-pointer" : "cursor-default"} ${
+                } ${canEditSchedule ? "cursor-pointer" : "cursor-default"} ${
                   view !== "month" ? "flex flex-col" : ""
                 }`}
               >
@@ -1229,7 +1241,9 @@ export function CalendarPage() {
             <DialogDescription>
               {isAdmin
                 ? "Управление сменами и временем обеда сотрудников."
-                : "Просмотр смен и выбор времени обеда."}
+                : canEditSchedule
+                  ? "Включите смену и выберите время обеда."
+                  : "Просмотр смен и времени обеда."}
             </DialogDescription>
           </DialogHeader>
           {openDay && data?.holidays.get(openDay) && (
