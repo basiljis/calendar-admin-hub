@@ -72,12 +72,13 @@ docker exec <edge> rm    /etc/nginx/flags/maintenance.enabled   # выключи
 
 | Симптом | Решение |
 | --- | --- |
+| nginx: `invalid number of arguments in "server_name"` | Переменные `APP_DOMAIN`/`API_DOMAIN` пусты на сервере — envsubst подставляет пустую строку. Задать их в настройках приложения (`psygrafik.ru` / `api.psygrafik.ru`) или использовать значения по умолчанию из `docker-compose.yml` (`${APP_DOMAIN:-psygrafik.ru}`) |
 | 502 Bad Gateway | Проверить, что внешний порт = 8082 (edge), а не 8080 (app) |
 | CORS: multiple Access-Control-Allow-Origin | Добавить `proxy_hide_header Access-Control-Allow-*` в nginx |
 | 526 Invalid SSL | Добавить `proxy_ssl_server_name on` и `proxy_ssl_name` |
 | Realtime не подключается | Проверить `map $http_upgrade` и заголовки Upgrade/Connection |
 
-Все четыре меры уже заложены в `edge/nginx.conf.template` и `docker-compose.yml`.
+Все меры уже заложены в `edge/nginx.conf.template` и `docker-compose.yml` (домены по умолчанию — psygrafik.ru).
 
 
 ## Чек-лист
