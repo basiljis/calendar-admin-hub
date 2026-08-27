@@ -272,10 +272,16 @@ function TimeGridColumn({
                         {isDay ? p.full_name : p.full_name.split(" ")[0]}
                       </span>
                     </div>
-                    <div className={`opacity-80 ${isDay ? "text-xs" : "text-[10px]"}`}>
-                      Начало {START_LABEL}
+                    <div className={`mt-1 flex items-center gap-1 opacity-80 ${isDay ? "text-xs" : "text-[10px]"}`}>
+                      <Sunrise className="size-3 shrink-0" />
+                      <span className="font-medium tabular-nums">{START_LABEL}</span>
                     </div>
-                    {isDay && <div className="text-[11px] opacity-70">Обед {breakLabel}</div>}
+                    {isDay && (
+                      <div className="flex items-center gap-1 text-[11px] opacity-70">
+                        <Coffee className="size-3 shrink-0" />
+                        <span className="font-medium tabular-nums">{breakLabel}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div
