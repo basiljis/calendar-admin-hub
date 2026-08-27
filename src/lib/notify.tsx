@@ -16,7 +16,7 @@ export interface NotifyItem {
   id: number;
   level: NotifyLevel;
   title: string;
-  description?: string;
+  description?: string | undefined;
 }
 
 // ---- Перевод типовых системных сообщений на русский язык ----
