@@ -433,7 +433,7 @@ export function StaffPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Badge
-                          className={`border-0 text-[10px] ${
+                          className={`rounded-full border-0 px-2.5 py-0.5 text-[10px] ${
                             (p as any).is_active === false
                               ? "bg-destructive/15 text-destructive"
                               : "bg-emerald-100 text-emerald-800"
