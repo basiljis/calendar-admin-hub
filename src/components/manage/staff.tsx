@@ -264,6 +264,17 @@ export function StaffPage() {
               {formErrors["password"] && <span className="text-xs font-normal text-destructive">{formErrors["password"]}</span>}
             </Label>
             <Label>Роль <span className="text-destructive">*</span><Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
+            <Label>Смена (группа)
+              <Select value={newUser.shift_group} onValueChange={(v) => setNewUser({ ...newUser, shift_group: v })}>
+                <SelectTrigger aria-label="Группа смены нового сотрудника"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Группа 1</SelectItem>
+                  <SelectItem value="2">Группа 2</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs font-normal text-muted-foreground">Можно выбрать сейчас или изменить позже в таблице сотрудников.</span>
+            </Label>
+
             <Label>Телефон
               <Input aria-invalid={!!formErrors["phone"]} className={formErrors["phone"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.phone} onChange={(e) => { setNewUser({ ...newUser, phone: e.target.value }); setFormErrors((p) => ({ ...p, phone: "" })); }} />
               {formErrors["phone"] && <span className="text-xs font-normal text-destructive">{formErrors["phone"]}</span>}
