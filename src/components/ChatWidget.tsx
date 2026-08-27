@@ -799,29 +799,9 @@ export function ChatWidget() {
                         {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                           <div className="mt-2 space-y-2">
                             {(m.attachments as any[]).map((file: any, idx: number) => (
-                              <div key={idx} className="rounded border bg-background/10 p-2">
-                                {file.type?.startsWith("image/") ? (
-                                  <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                    <img
-                                      src={file.url}
-                                      alt={file.name}
-                                      className="max-h-32 rounded object-contain"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-xs hover:underline"
-                                  >
-                                    <FileIcon className="size-4" />
-                                    <span className="truncate max-w-[120px]">{file.name}</span>
-                                    <span className="opacity-60">({(file.size / 1024).toFixed(1)} KB)</span>
-                                  </a>
-                                )}
-                              </div>
+                              <ChatAttachment key={idx} file={file} />
                             ))}
+
                           </div>
                         )}
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
