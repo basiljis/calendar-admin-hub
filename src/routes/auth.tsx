@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast, translateMessage } from "@/lib/notify";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +66,7 @@ function AuthPage() {
     if (error) {
       const msg = /banned|disabled/i.test(error.message)
         ? "Учётная запись отключена. Обратитесь к администратору."
-        : error.message;
+        : translateMessage(error.message);
       setAuthError(msg);
       toast.error(msg);
       recordEvent({
@@ -104,8 +104,8 @@ function AuthPage() {
     });
     setBusy(false);
     if (error) {
-      setAuthError(error.message);
-      toast.error(error.message);
+      setAuthError(translateMessage(error.message));
+      toast.error(translateMessage(error.message));
       recordEvent({
         level: "warning",
         category: "auth",
