@@ -244,10 +244,52 @@ export function StaffPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const handleExport = () => {
+    const staffRows = profiles.map((p) => {
+      const roles = (data?.roles ?? [])
+        .filter((r) => r.user_id === p.id)
+        .map((r) => roleLabels[r.role as AppRole] ?? r.role)
+        .join(", ");
+      const vacs = (data?.vacations ?? []).filter((v) => v.user_id === p.id);
+      const vacDays = vacationDatesInRange(vacs, PERIOD.start, PERIOD.end).size;
+      const planned = (data?.shifts ?? [])
+        .filter((s) => s.user_id === p.id && s.type === "work")
+        .reduce((a, s) => a + Number(s.hours), 0);
+      return {
+        "ФИО": p.full_name ?? "",
+        "Почта": p.email ?? "",
+        "Телефон": p.phone ?? "",
+        "Должность": p.position ?? "",
+        "Группа": p.shift_group ?? "",
+        "Роли": roles,
+        "Статус": (p as any).is_active === false ? "Отключён" : "Активен",
+        "Подтверждён": (p as any).is_approved === false ? "Нет" : "Да",
+        "Норма, ч": Number(formatHours(personalNorm(vacDays)).replace(",", ".")),
+        "План, ч": Number(planned.toFixed(1)),
+        "Отпуск, дн": vacDays,
+      };
+    });
+    const vacationRows = (data?.vacations ?? []).map((v) => ({
+      "Сотрудник": profiles.find((p) => p.id === v.user_id)?.full_name ?? "",
+      "С": v.start_date.split("-").reverse().join("."),
+      "По": v.end_date.split("-").reverse().join("."),
+      "Статус": v.status === "approved" ? "Подтверждён" : v.status === "rejected" ? "Отклонён" : "Ожидает",
+    }));
+    exportToExcel(
+      [
+        { name: "Сотрудники", rows: staffRows },
+        { name: "Отпуска", rows: vacationRows },
+      ],
+      `Сотрудники_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+    toast.success("Файл Excel сформирован");
+  };
+
   return (
     <div className="space-y-8">
       {(isAdmin || isManager) && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport}><FileSpreadsheet className="mr-2 size-4" />Выгрузить в Excel</Button>
           <Button className="w-full sm:w-auto" onClick={() => setAddOpen(true)}><UserPlus className="mr-2 size-4" />Добавить пользователя</Button>
         </div>
       )}
