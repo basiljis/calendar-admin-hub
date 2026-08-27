@@ -64,7 +64,9 @@ function ChatAttachment({ file }: { file: any }) {
       setUrl(raw);
       return;
     }
-    const path = raw.includes("/chat-attachments/") ? raw.split("/chat-attachments/")[1].split("?")[0] : raw;
+    const path = raw.includes("/chat-attachments/")
+      ? (raw.split("/chat-attachments/")[1] ?? "").split("?")[0] ?? ""
+      : raw;
     supabase.storage
       .from("chat-attachments")
       .createSignedUrl(decodeURIComponent(path), 3600)
