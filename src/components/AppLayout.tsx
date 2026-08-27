@@ -39,6 +39,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ProfilePhotoDialog } from "@/components/ProfilePhotoDialog";
+import { VacationRequestDialog } from "@/components/VacationRequestDialog";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -340,6 +341,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Hint>
             )}
             <ThemeToggle />
+            <VacationRequestDialog className="hidden h-9 gap-1.5 rounded-full px-4 text-xs sm:inline-flex" />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
                 <Button data-tour="notifications" variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
