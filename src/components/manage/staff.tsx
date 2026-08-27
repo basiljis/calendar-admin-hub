@@ -45,6 +45,15 @@ const roleLabels: Record<AppRole, string> = {
 
 const allRoles: AppRole[] = ["admin", "manager", "employee"];
 
+function humanizeError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (/at least 8|too_small.*password|Password should be at least/i.test(raw)) return "Пароль должен содержать минимум 8 символов";
+  if (/invalid.*email|email.*invalid/i.test(raw)) return "Некорректный адрес электронной почты";
+  if (/already been registered|already exists|duplicate key/i.test(raw)) return "Пользователь с такой почтой уже существует";
+  if (raw.trim().startsWith("[") || raw.trim().startsWith("{")) return "Проверьте правильность заполнения полей";
+  return raw;
+}
+
 export function StaffPage() {
   const { isAdmin, isManager, user } = useAuth();
   const qc = useQueryClient();
@@ -243,12 +252,17 @@ export function StaffPage() {
           <div className="grid gap-3">
             <Label>ФИО<Input value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} /></Label>
             <Label>Электронная почта<Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></Label>
-            <Label>Пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /></Label>
+            <Label>Пароль<Input type="password" minLength={8} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} /><span className="text-xs font-normal text-muted-foreground">Минимум 8 символов</span></Label>
             <Label>Роль<Select value={newUser.role} onValueChange={(role: AppRole) => setNewUser({ ...newUser, role })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{allRoles.filter((role) => isAdmin || role === "employee").map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></Label>
             <Label>Телефон<Input value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></Label>
             <Label>Должность<Input value={newUser.position} onChange={(e) => setNewUser({ ...newUser, position: e.target.value })} /></Label>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Отмена</Button><Button onClick={() => createUser({ data: { ...newUser, phone: newUser.phone || null, position: newUser.position || null, shift_group: Number(newUser.shift_group) } }).then(() => { toast.success("Пользователь добавлен"); setAddOpen(false); qc.invalidateQueries({ queryKey: ["staff"] }); }).catch((e: Error) => toast.error(e.message))}>Создать</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Отмена</Button><Button onClick={() => {
+            if (!newUser.full_name.trim()) { toast.error("Укажите ФИО"); return; }
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newUser.email.trim())) { toast.error("Укажите корректный адрес электронной почты"); return; }
+            if (newUser.password.length < 8) { toast.error("Пароль должен содержать минимум 8 символов"); return; }
+            createUser({ data: { ...newUser, email: newUser.email.trim(), full_name: newUser.full_name.trim(), phone: newUser.phone || null, position: newUser.position || null, shift_group: Number(newUser.shift_group) } }).then(() => { toast.success("Пользователь добавлен"); setAddOpen(false); setNewUser({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" }); qc.invalidateQueries({ queryKey: ["staff"] }); }).catch((e: Error) => toast.error(humanizeError(e)));
+          }}>Создать</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
