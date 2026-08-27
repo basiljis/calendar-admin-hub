@@ -1187,9 +1187,11 @@ export function CalendarPage() {
           </>
         )}
       </div>
-
+      </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
+
         <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
