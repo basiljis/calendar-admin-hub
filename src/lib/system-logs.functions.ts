@@ -17,7 +17,7 @@ export const logSystemEvent = createServerFn({ method: "POST" })
         message: z.string().max(4000).default(""),
         userEmail: z.string().max(255).nullable().default(null),
         userId: z.string().uuid().nullable().default(null),
-        context: z.record(z.string(), z.unknown()).default({}),
+        context: z.record(z.string(), z.string()).default({}),
       })
       .parse(data),
   )
@@ -94,7 +94,7 @@ export const listSystemLogs = createServerFn({ method: "GET" })
       user_email: (r.user_email as string | null) ?? null,
       ip_address: (r.ip_address as string | null) ?? null,
       user_agent: (r.user_agent as string | null) ?? null,
-      context: (r.context as Record<string, unknown>) ?? {},
+      context: JSON.stringify(r.context ?? {}),
       created_at: r.created_at as string,
     }));
   });
