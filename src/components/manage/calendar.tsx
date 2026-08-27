@@ -740,66 +740,62 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
-          {isAdmin && (
-            <Select
-              value={groupFilter}
-              onValueChange={(v) => {
-                setGroupFilter(v);
-                setDetailUser("");
-              }}
-            >
-              <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Фильтр по группе">
-                <SelectValue placeholder="Группа" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все группы</SelectItem>
-                {groups.map((g) => (
-                  <SelectItem key={g} value={String(g)}>
-                    Группа {g}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {isAdmin && (
-            <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
-              <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
-                <SelectValue placeholder="Подробный график сотрудника" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все сотрудники (общий вид)</SelectItem>
-                {profiles.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.full_name || "Без имени"} · группа {p.shift_group}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {isAdmin && (
-            <Button
-              className="rounded-full"
-              onClick={() => {
-                const t = new Date();
-                const isCurrentMonth =
-                  t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
-                if (isCurrentMonth && t.getDate() > 1) {
-                  setGenMode("fromToday");
-                  setGenUntil(last);
-                  setGenOpen(true);
+      {isAdmin && (
+        <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
+          <Select
+            value={groupFilter}
+            onValueChange={(v) => {
+              setGroupFilter(v);
+              setDetailUser("");
+            }}
+          >
+            <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Фильтр по группе">
+              <SelectValue placeholder="Группа" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все группы</SelectItem>
+              {groups.map((g) => (
+                <SelectItem key={g} value={String(g)}>
+                  Группа {g}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
+            <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
+              <SelectValue placeholder="Подробный график сотрудника" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все сотрудники (общий вид)</SelectItem>
+              {profiles.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.full_name || "Без имени"} · группа {p.shift_group}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            className="rounded-full"
+            onClick={() => {
+              const t = new Date();
+              const isCurrentMonth =
+                t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
+              if (isCurrentMonth && t.getDate() > 1) {
+                setGenMode("fromToday");
+                setGenUntil(last);
+                setGenOpen(true);
 
-                } else {
-                  generate.mutate({ from: first, to: last });
-                }
-              }}
-              disabled={generate.isPending}
-            >
-              <Wand2 className="size-4" />
-              {groupFilter === "all" ? "Сформировать месяц" : `Сформировать месяц · группа ${groupFilter}`}
-            </Button>
-          )}
-      </div>
+              } else {
+                generate.mutate({ from: first, to: last });
+              }
+            }}
+            disabled={generate.isPending}
+          >
+            <Wand2 className="size-4" />
+            {groupFilter === "all" ? "Сформировать месяц" : `Сформировать месяц · группа ${groupFilter}`}
+          </Button>
+        </div>
+      )}
 
       <Dialog open={genOpen} onOpenChange={setGenOpen}>
         <DialogContent>
