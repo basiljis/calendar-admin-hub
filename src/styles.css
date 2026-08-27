@@ -137,6 +137,14 @@
   --shadow-pop: 0 12px 40px oklch(0 0 0 / 45%);
 }
 
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-pop {
+  box-shadow: var(--shadow-pop);
+}
+
 
 @layer base {
   * {
