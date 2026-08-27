@@ -341,6 +341,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Hint>
             )}
             <ThemeToggle />
+            <VacationRequestDialog className="hidden h-9 gap-1.5 rounded-full px-4 text-xs sm:inline-flex" />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
                 <Button data-tour="notifications" variant="ghost" size="icon" aria-label="Уведомления" title="Уведомления" className="relative h-10 w-10 rounded-full border">
