@@ -268,8 +268,7 @@ export function StaffPage() {
               <Select value={newUser.shift_group} onValueChange={(v) => setNewUser({ ...newUser, shift_group: v })}>
                 <SelectTrigger aria-label="Группа смены нового сотрудника"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Группа 1</SelectItem>
-                  <SelectItem value="2">Группа 2</SelectItem>
+                  {activeGroups.map((g) => <SelectItem key={g.id} value={String(g.number)}>{g.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <span className="text-xs font-normal text-muted-foreground">Можно выбрать сейчас или изменить позже в таблице сотрудников.</span>
@@ -279,7 +278,16 @@ export function StaffPage() {
               <Input aria-invalid={!!formErrors["phone"]} className={formErrors["phone"] ? "border-destructive focus-visible:ring-destructive" : ""} value={newUser.phone} onChange={(e) => { setNewUser({ ...newUser, phone: e.target.value }); setFormErrors((p) => ({ ...p, phone: "" })); }} />
               {formErrors["phone"] && <span className="text-xs font-normal text-destructive">{formErrors["phone"]}</span>}
             </Label>
-            <Label>Должность<Input value={newUser.position} onChange={(e) => setNewUser({ ...newUser, position: e.target.value })} /></Label>
+            <Label>Должность
+              <Select value={newUser.position || undefined} onValueChange={(v) => setNewUser({ ...newUser, position: v })}>
+                <SelectTrigger aria-label="Должность нового сотрудника"><SelectValue placeholder="Выберите должность" /></SelectTrigger>
+                <SelectContent>
+                  {activePositions.map((p) => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <span className="text-xs font-normal text-muted-foreground">Список настраивается в разделе «Настройки → Система».</span>
+            </Label>
+
             <p className="text-xs text-muted-foreground">Поля, отмеченные <span className="text-destructive">*</span>, обязательны для заполнения.</p>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Отмена</Button><Button onClick={() => {
