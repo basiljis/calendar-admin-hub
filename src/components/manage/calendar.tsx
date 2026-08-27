@@ -1280,6 +1280,7 @@ export function CalendarPage() {
                 </div>
                 <Switch
                   checked={data.holidays.get(openDay)?.is_working ?? false}
+                  disabled={!isAdmin}
                   onCheckedChange={(v) =>
                     updateHoliday.mutate({ date: openDay, isWorking: v })
                   }
