@@ -304,61 +304,45 @@ export const createUserAdmin = createServerFn({ method: "POST" })
       throw new Error(msg);
     }
 
-    // Триггер handle_new_user обычно уже создал профиль — обновляем его,
-    // а при отсутствии (гонка/триггер не сработал) создаём. UPDATE сначала
-    // исключает duplicate key по profiles_pkey.
-    const { data: updatedProfile, error: updErr } = await supabaseAdmin
+    // Идемпотентно: профиль и роль приводятся к нужному состоянию независимо
+    // от того, сработал ли триггер handle_new_user и сколько раз вызван сценарий.
+    const profilePayload = {
+      id: created.user.id,
+      email,
+      full_name: data.full_name,
+      phone: data.phone,
+      position: data.position,
+      shift_group: data.shift_group,
+      is_approved: true,
+    };
+
+    const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .update({
-        email, full_name: data.full_name,
-        phone: data.phone, position: data.position, shift_group: data.shift_group,
-        is_approved: true,
-      })
-      .eq("id", created.user.id)
-      .select("id");
-    if (updErr) {
+      .upsert(profilePayload, { onConflict: "id" });
+    if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-      throw new Error(updErr.message);
+      throw new Error(profileError.message);
     }
-    if (!updatedProfile || updatedProfile.length === 0) {
-      const { error: insErr } = await supabaseAdmin.from("profiles").insert({
-        id: created.user.id, email, full_name: data.full_name,
-        phone: data.phone, position: data.position, shift_group: data.shift_group,
-        is_approved: true,
-      });
-      if (insErr && !/duplicate key/i.test(insErr.message)) {
-        await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-        throw new Error(insErr.message);
-      }
-      if (insErr) {
-        // Профиль появился между UPDATE и INSERT (триггер) — просто обновим
-        const { error: retryErr } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            email, full_name: data.full_name,
-            phone: data.phone, position: data.position, shift_group: data.shift_group,
-            is_approved: true,
-          })
-          .eq("id", created.user.id);
-        if (retryErr) {
-          await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-          throw new Error(retryErr.message);
-        }
-      }
-    }
-    const { error: roleDeleteError } = await supabaseAdmin
-      .from("user_roles").delete().eq("user_id", created.user.id);
-    if (roleDeleteError) {
-      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-      throw new Error(roleDeleteError.message);
-    }
-    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
-      user_id: created.user.id, role: data.role,
-    });
+
+    // Нужная роль добавляется идемпотентно, лишние роли удаляются.
+    const { error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: created.user.id, role: data.role }, { onConflict: "user_id,role" });
     if (roleError) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
       throw new Error(roleError.message);
     }
+
+    const { error: roleCleanupError } = await supabaseAdmin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", created.user.id)
+      .neq("role", data.role);
+    if (roleCleanupError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw new Error(roleCleanupError.message);
+    }
+
 
     return { ok: true, userId: created.user.id };
   });
