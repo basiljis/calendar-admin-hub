@@ -322,8 +322,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
             >
               <Menu className="size-5" />
             </Button>
-            <div className="truncate text-sm font-semibold text-foreground sm:text-base">
-              {sectionTitle}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
+                {sectionTitle}
+              </div>
+              {sectionDescription && (
+                <div className="hidden truncate text-xs text-muted-foreground sm:block">
+                  {sectionDescription}
+                </div>
+              )}
             </div>
           </div>
 
