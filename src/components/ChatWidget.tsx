@@ -53,6 +53,57 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
 
+function ChatAttachment({ file }: { file: any }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const raw: string = file.path ?? file.url ?? "";
+    if (!raw) return;
+    if (raw.startsWith("http") && !raw.includes("/storage/v1/object/public/chat-attachments/")) {
+      setUrl(raw);
+      return;
+    }
+    const path = raw.includes("/chat-attachments/")
+      ? (raw.split("/chat-attachments/")[1] ?? "").split("?")[0] ?? ""
+      : raw;
+    supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(decodeURIComponent(path), 3600)
+      .then(({ data }) => {
+        if (active) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [file]);
+
+  const size = typeof file.size === "number" ? `${(file.size / 1024).toFixed(1)} KB` : "";
+
+  return (
+    <div className="rounded border bg-background/10 p-2">
+      {!url ? (
+        <div className="text-xs opacity-60">Загрузка файла…</div>
+      ) : file.type?.startsWith("image/") ? (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <img src={url} alt={file.name} className="max-h-32 rounded object-contain" />
+        </a>
+      ) : (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-xs hover:underline"
+        >
+          <FileIcon className="size-4 shrink-0" />
+          <span className="truncate max-w-[120px]">{file.name}</span>
+          <span className="opacity-60">({size})</span>
+        </a>
+      )}
+    </div>
+  );
+}
+
 export function ChatWidget() {
   const { user, isAdmin } = useAuth();
   const qc = useQueryClient();
@@ -422,10 +473,7 @@ export function ChatWidget() {
         const filePath = `${user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(filePath, file);
         if (uploadError) throw uploadError;
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("chat-attachments").getPublicUrl(filePath);
-        uploadedAttachments.push({ name: file.name, url: publicUrl, type: file.type, size: file.size });
+        uploadedAttachments.push({ name: file.name, path: filePath, url: filePath, type: file.type, size: file.size });
       }
       const { error } = await supabase.from("chat_messages").insert({
         user_id: user.id,
@@ -802,29 +850,9 @@ export function ChatWidget() {
                         {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                           <div className="mt-2 space-y-2">
                             {(m.attachments as any[]).map((file: any, idx: number) => (
-                              <div key={idx} className="rounded border bg-background/10 p-2">
-                                {file.type?.startsWith("image/") ? (
-                                  <a href={file.url} target="_blank" rel="noopener noreferrer">
-                                    <img
-                                      src={file.url}
-                                      alt={file.name}
-                                      className="max-h-32 rounded object-contain"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-xs hover:underline"
-                                  >
-                                    <FileIcon className="size-4" />
-                                    <span className="truncate max-w-[120px]">{file.name}</span>
-                                    <span className="opacity-60">({(file.size / 1024).toFixed(1)} KB)</span>
-                                  </a>
-                                )}
-                              </div>
+                              <ChatAttachment key={idx} file={file} />
                             ))}
+
                           </div>
                         )}
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
