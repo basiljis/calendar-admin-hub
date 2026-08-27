@@ -681,6 +681,7 @@ export function StaffPage() {
               })}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
