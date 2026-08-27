@@ -380,8 +380,9 @@ export function StaffPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">Группа 1</SelectItem>
-                          <SelectItem value="2">Группа 2</SelectItem>
+                          {activeGroups.map((g) => (
+                            <SelectItem key={g.id} value={String(g.number)}>{g.name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </TableCell>
