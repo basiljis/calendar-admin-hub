@@ -1071,7 +1071,7 @@ export function CalendarPage() {
                             <div key={label} className="flex items-center gap-1.5">
                               <Icon className="text-muted-foreground size-3 shrink-0" />
                               <span className="text-muted-foreground text-[11px]">{label}</span>
-                              <span className="ml-auto font-semibold tabular-nums">{value}</span>
+                              <span className="ml-auto font-semibold tabular-nums whitespace-nowrap">{value}</span>
                             </div>
                           ))}
                         </div>
