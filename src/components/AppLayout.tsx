@@ -15,7 +15,8 @@ import {
   User,
   Heart,
   ShieldCheck,
-  Menu
+  Menu,
+  BookOpen
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,6 +54,7 @@ const nav = [
   { to: "/dashboard", label: "Сводка", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
   { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки, аналитика и роли" },
   { to: "/settings", label: "Настройки", icon: Settings, managerOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
+  { to: "/help", label: "Инструкции", icon: BookOpen, hint: "Пошаговые инструкции по вашей роли" },
 ];
 
 const sectionTitles: Record<string, string> = {
@@ -64,6 +66,7 @@ const sectionTitles: Record<string, string> = {
   "/staff": "Сотрудники",
   "/vacations-stats": "Статистика отпусков",
   "/admin": "Администрирование",
+  "/help": "Инструкции",
 };
 
 const sectionDescriptions: Record<string, string> = {
@@ -75,6 +78,7 @@ const sectionDescriptions: Record<string, string> = {
   "/staff": "Состав групп, контакты и индивидуальная норма за период",
   "/vacations-stats": "Использование отпусков и загрузка команды по месяцам",
   "/admin": "Управление пользователями и ролями доступа",
+  "/help": "Пошаговые инструкции по работе в системе с учётом вашей роли",
 };
 
 function getSectionTitle(pathname: string) {
