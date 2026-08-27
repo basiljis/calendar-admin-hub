@@ -106,20 +106,42 @@ function AuthPage() {
 
   return (
     <div className="grid h-screen w-screen overflow-hidden bg-background lg:grid-cols-2">
-      {/* Левая колонка — форма */}
+      {/* Левая колонка — иллюстрация на белой карточке */}
+      <div className="relative hidden h-full p-6 lg:block">
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-3xl bg-card shadow-sm">
+          <img
+            src={illustrationImg}
+            alt="Команда планирует график смен в календаре"
+            width={1024}
+            height={1400}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute bottom-8 left-8 rounded-2xl bg-card/90 px-5 py-4 shadow-lg backdrop-blur">
+            <p className="text-sm font-semibold">Работать стало проще</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              График смен, отпуска и учёт часов — всё в одном месте.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Правая колонка — форма */}
       <div className="flex h-full flex-col overflow-y-auto px-8 py-10 sm:px-14 sm:py-14">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
           <span className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-xl">
             <CalendarDays className="size-5" />
           </span>
-          <span className="text-primary text-xl font-bold tracking-tight">График ОКП</span>
+          <span className="text-foreground text-xl font-bold tracking-tight">График ОКП</span>
           </div>
           <ThemeToggle />
         </div>
 
         <div className="mt-14 sm:mt-20">
-          <h1 className="text-primary text-4xl font-bold tracking-tight sm:text-5xl">
+          <p className="text-sm font-medium text-muted-foreground">
+            {mode === "in" ? "Вход в систему" : "Новый аккаунт"}
+          </p>
+          <h1 className="mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
             {mode === "in" ? "Здравствуйте!" : "Регистрация"}
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
