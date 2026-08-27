@@ -75,10 +75,11 @@ export async function downloadChartPng(container: HTMLElement | null, fileName: 
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = fileName.endsWith(".png") ? fileName : `${fileName}.png`;
-        a.click();
+        canvas.toBlob((blob) => {
+          if (blob) downloadBlob(blob, fileName.endsWith(".png") ? fileName : `${fileName}.png`);
+          resolve();
+        }, "image/png");
+        return;
       }
       resolve();
     };
