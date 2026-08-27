@@ -777,8 +777,6 @@ export function CalendarPage() {
               </SelectContent>
             </Select>
           )}
-          <ShiftVacationLegend />
-          <VacationRequestDialog className="rounded-full" />
           {isAdmin && (
             <Button
               className="rounded-full"
