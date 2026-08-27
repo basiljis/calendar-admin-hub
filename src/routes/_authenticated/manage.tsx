@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { Users, Plane, CalendarDays, BarChart3, ShieldCheck } from "lucide-react";
+import { Users, Plane, CalendarDays, BarChart3, ShieldCheck, ScrollText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,10 +10,11 @@ import { VacationsAdminPage } from "@/components/manage/vacations";
 import { CalendarPage } from "@/components/manage/calendar";
 import { VacationsStatsPage } from "@/components/manage/vacations-stats";
 import { AdminPage } from "@/components/manage/admin";
+import { SystemLogsPage } from "@/components/manage/logs";
 
 const searchSchema = z.object({
   tab: fallback(
-    z.enum(["staff", "requests", "shifts", "stats", "users"]),
+    z.enum(["staff", "requests", "shifts", "stats", "users", "logs"]),
     "staff"
   ).default("staff"),
 });
@@ -61,6 +62,7 @@ function ManagePage() {
     { value: "requests", label: "Заявки на отпуск", icon: Plane, show: true },
     { value: "stats", label: "Отпуска и аналитика", icon: BarChart3, show: true },
     { value: "users", label: "Роли и доступы", icon: ShieldCheck, show: isAdmin },
+    { value: "logs", label: "Журнал событий", icon: ScrollText, show: true },
   ].filter((t) => t.show);
 
   return (
@@ -98,6 +100,9 @@ function ManagePage() {
             <AdminPage />
           </TabsContent>
         )}
+        <TabsContent value="logs" className="mt-0">
+          <SystemLogsPage />
+        </TabsContent>
       </Tabs>
     </div>
   );
