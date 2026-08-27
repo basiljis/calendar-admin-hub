@@ -3,9 +3,9 @@ services:
     build:
       context: ./edge
     environment:
-      APP_DOMAIN: ${APP_DOMAIN}
-      API_DOMAIN: ${API_DOMAIN}
-      SUPABASE_UPSTREAM: ${SUPABASE_UPSTREAM}
+      APP_DOMAIN: ${APP_DOMAIN:-psygrafik.ru}
+      API_DOMAIN: ${API_DOMAIN:-api.psygrafik.ru}
+      SUPABASE_UPSTREAM: ${SUPABASE_UPSTREAM:-muuthcezvdaltiylcssh.supabase.co}
     ports:
       - "8082:8080"
     volumes:
