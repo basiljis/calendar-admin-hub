@@ -294,7 +294,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             size="icon"
             aria-label={isSidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="w-full justify-start gap-3 px-3"
+            className={`w-full ${
+              isSidebarCollapsed ? "md:justify-center md:px-0" : "justify-start gap-3 px-3"
+            }`}
           >
             {isSidebarCollapsed ? <ChevronRight className="size-5" /> : (
               <>
