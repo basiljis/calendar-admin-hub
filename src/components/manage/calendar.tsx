@@ -769,7 +769,7 @@ export function CalendarPage() {
             </SelectContent>
           </Select>
           )}
-          {isAdmin && (
+          {canViewAll && (
           <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
             <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
               <SelectValue placeholder="Подробный график сотрудника" />
