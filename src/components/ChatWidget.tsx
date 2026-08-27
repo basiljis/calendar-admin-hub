@@ -422,10 +422,7 @@ export function ChatWidget() {
         const filePath = `${user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(filePath, file);
         if (uploadError) throw uploadError;
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("chat-attachments").getPublicUrl(filePath);
-        uploadedAttachments.push({ name: file.name, url: publicUrl, type: file.type, size: file.size });
+        uploadedAttachments.push({ name: file.name, path: filePath, url: filePath, type: file.type, size: file.size });
       }
       const { error } = await supabase.from("chat_messages").insert({
         user_id: user.id,
