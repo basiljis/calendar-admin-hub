@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ArrowRight, CalendarDays, Star } from "lucide-react";
+import { ArrowRight, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import officeImg from "@/assets/auth-office.jpg";
+import illustrationImg from "@/assets/auth-illustration.jpg";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
