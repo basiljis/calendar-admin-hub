@@ -35,6 +35,7 @@ import {
 import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { createUserAdmin, setUserActive, setUserApproved } from "@/lib/admin-users.functions";
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
+import { usePositions, useShiftGroups } from "@/components/settings/Directories";
 
 
 const roleLabels: Record<AppRole, string> = {
@@ -60,6 +61,10 @@ export function StaffPage() {
   const createUser = useServerFn(createUserAdmin);
   const [addOpen, setAddOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const groupsQuery = useShiftGroups();
+  const positionsQuery = usePositions();
+  const activeGroups = (groupsQuery.data ?? []).filter((g) => g.is_active);
+  const activePositions = (positionsQuery.data ?? []).filter((p) => p.is_active);
 
   const [newUser, setNewUser] = useState({ email: "", password: "", full_name: "", role: "employee" as AppRole, phone: "", position: "", shift_group: "1" });
   const [vacUser, setVacUser] = useState("");
@@ -279,7 +284,7 @@ export function StaffPage() {
               {formErrors["phone"] && <span className="text-xs font-normal text-destructive">{formErrors["phone"]}</span>}
             </Label>
             <Label>Должность
-              <Select value={newUser.position || undefined} onValueChange={(v) => setNewUser({ ...newUser, position: v })}>
+              <Select value={newUser.position} onValueChange={(v) => setNewUser({ ...newUser, position: v })}>
                 <SelectTrigger aria-label="Должность нового сотрудника"><SelectValue placeholder="Выберите должность" /></SelectTrigger>
                 <SelectContent>
                   {activePositions.map((p) => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
