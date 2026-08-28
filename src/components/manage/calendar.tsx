@@ -913,7 +913,7 @@ export function CalendarPage() {
               <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
                 {headerTitle}
               </h1>
-              <p className="text-muted-foreground truncate text-xs sm:text-sm">
+              <p className="text-muted-foreground hidden truncate text-xs sm:block sm:text-sm">
                 {detailProfile
                   ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
                   : groupFilter === "all"
@@ -930,27 +930,35 @@ export function CalendarPage() {
               className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
             >
               {([
-                { key: "month", label: "Месяц" },
-                { key: "week", label: "Неделя" },
-                { key: "day", label: "День" },
-                { key: "year", label: "Год" },
+                { key: "month", label: "Месяц", icon: CalendarDays },
+                { key: "week", label: "Неделя", icon: CalendarRange },
+                { key: "day", label: "День", icon: CalendarClock },
+                { key: "year", label: "Год", icon: LayoutGrid },
               ] as const).map((o) => (
-                <button
-                  key={o.key}
-                  type="button"
-                  aria-pressed={view === o.key}
-                  onClick={() => setView(o.key)}
-                  className={`focus-visible:ring-ring h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none ${
-                    view === o.key
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-background hover:text-foreground"
-                  }`}
-                >
-                  {o.label}
-                </button>
+                <Tooltip key={o.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-pressed={view === o.key}
+                      aria-label={o.label}
+                      onClick={() => changeView(o.key)}
+                      className={`focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-3 ${
+                        view === o.key
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-background hover:text-foreground"
+                      }`}
+                    >
+                      <o.icon className="size-4" />
+                      <span className="hidden sm:inline">{o.label}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{o.label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
-            <ShiftVacationLegend />
+            <div className="hidden sm:block">
+              <ShiftVacationLegend />
+            </div>
           </div>
         </div>
         {view === "year" ? (
@@ -962,14 +970,15 @@ export function CalendarPage() {
             detailUserId={detailUserId}
             onPickMonth={(m) => {
               setCursor({ year: cursor.year, month: m });
-              setView("month");
+              changeView("month");
             }}
             onPickDay={(d) => {
               setCursor({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
               setAnchor(d);
-              setView("day");
+              changeView("day");
             }}
           />
+
         ) : (
           <>
         <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
