@@ -17,6 +17,7 @@ import {
   Minimize2,
   Pin,
   PinOff,
+  PanelLeft,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -109,6 +110,11 @@ export function ChatWidget() {
   const qc = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobileChat = useIsMobile();
+  const [isListOpen, setIsListOpen] = useState(true);
+  useEffect(() => {
+    setIsListOpen(!isMobileChat);
+  }, [isMobileChat]);
   const [isPinned, setIsPinned] = useState(false);
 
   // Восстанавливаем состояние окна чата (закреплён / развёрнут) после перезагрузки
