@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/notify";
-import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
+import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, CalendarRange, CalendarClock, LayoutGrid, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -450,11 +451,21 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  const isMobile = useIsMobile();
   const [view, setView] = useState<"month" | "week" | "day" | "year">("month");
+  const [viewTouched, setViewTouched] = useState(false);
+  useEffect(() => {
+    if (!viewTouched && isMobile) setView("week");
+  }, [isMobile, viewTouched]);
+  function changeView(v: "month" | "week" | "day" | "year") {
+    setViewTouched(true);
+    setView(v);
+  }
   const [anchor, setAnchor] = useState<string>(() => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
   });
+
 
 
   // Обновляем прогресс смены в реальном времени
@@ -745,9 +756,9 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {canEditSchedule && (
-        <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
+        <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm sm:p-4">
           {canViewAll && (
           <Select
             value={groupFilter}
@@ -756,7 +767,7 @@ export function CalendarPage() {
               setDetailUser("");
             }}
           >
-            <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Фильтр по группе">
+            <SelectTrigger className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" aria-label="Фильтр по группе">
               <SelectValue placeholder="Группа" />
             </SelectTrigger>
             <SelectContent>
@@ -771,8 +782,8 @@ export function CalendarPage() {
           )}
           {canViewAll && (
           <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
-            <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
-              <SelectValue placeholder="Подробный график сотрудника" />
+            <SelectTrigger className="h-9 min-w-0 flex-1 sm:w-56 sm:flex-none" aria-label="Подробный график сотрудника">
+              <SelectValue placeholder="Сотрудник" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все сотрудники (общий вид)</SelectItem>
@@ -785,7 +796,8 @@ export function CalendarPage() {
           </Select>
           )}
           <Button
-            className="rounded-full"
+            className="size-9 shrink-0 rounded-full p-0 sm:h-9 sm:w-auto sm:px-4"
+            aria-label="Сформировать расписание"
             onClick={() => {
               const t = new Date();
               const isCurrentMonth =
@@ -802,12 +814,15 @@ export function CalendarPage() {
             disabled={generate.isPending}
           >
             <Wand2 className="size-4" />
-            {!canViewAll
-              ? "Сформировать моё расписание"
-              : groupFilter === "all"
-                ? "Сформировать месяц"
-                : `Сформировать месяц · группа ${groupFilter}`}
+            <span className="hidden sm:inline">
+              {!canViewAll
+                ? "Сформировать моё расписание"
+                : groupFilter === "all"
+                  ? "Сформировать месяц"
+                  : `Сформировать месяц · группа ${groupFilter}`}
+            </span>
           </Button>
+
         </div>
       )}
 
@@ -902,7 +917,7 @@ export function CalendarPage() {
               <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
                 {headerTitle}
               </h1>
-              <p className="text-muted-foreground truncate text-xs sm:text-sm">
+              <p className="text-muted-foreground hidden truncate text-xs sm:block sm:text-sm">
                 {detailProfile
                   ? `Подробный график · ${detailProfile.full_name || "Без имени"} · группа ${detailProfile.shift_group}`
                   : groupFilter === "all"
@@ -919,27 +934,35 @@ export function CalendarPage() {
               className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
             >
               {([
-                { key: "month", label: "Месяц" },
-                { key: "week", label: "Неделя" },
-                { key: "day", label: "День" },
-                { key: "year", label: "Год" },
+                { key: "month", label: "Месяц", icon: CalendarDays },
+                { key: "week", label: "Неделя", icon: CalendarRange },
+                { key: "day", label: "День", icon: CalendarClock },
+                { key: "year", label: "Год", icon: LayoutGrid },
               ] as const).map((o) => (
-                <button
-                  key={o.key}
-                  type="button"
-                  aria-pressed={view === o.key}
-                  onClick={() => setView(o.key)}
-                  className={`focus-visible:ring-ring h-8 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none ${
-                    view === o.key
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-background hover:text-foreground"
-                  }`}
-                >
-                  {o.label}
-                </button>
+                <Tooltip key={o.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-pressed={view === o.key}
+                      aria-label={o.label}
+                      onClick={() => changeView(o.key)}
+                      className={`focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-3 ${
+                        view === o.key
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-background hover:text-foreground"
+                      }`}
+                    >
+                      <o.icon className="size-4" />
+                      <span className="hidden sm:inline">{o.label}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{o.label}</TooltipContent>
+                </Tooltip>
               ))}
             </div>
-            <ShiftVacationLegend />
+            <div className="hidden sm:block">
+              <ShiftVacationLegend />
+            </div>
           </div>
         </div>
         {view === "year" ? (
@@ -951,14 +974,15 @@ export function CalendarPage() {
             detailUserId={detailUserId}
             onPickMonth={(m) => {
               setCursor({ year: cursor.year, month: m });
-              setView("month");
+              changeView("month");
             }}
             onPickDay={(d) => {
               setCursor({ year: Number(d.slice(0, 4)), month: Number(d.slice(5, 7)) });
               setAnchor(d);
-              setView("day");
+              changeView("day");
             }}
           />
+
         ) : (
           <>
         <div className={`grid border-b ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
@@ -1003,8 +1027,8 @@ export function CalendarPage() {
                   view === "month"
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
-                      ? "min-h-40 sm:min-h-64"
-                      : "min-h-[44rem] p-3 sm:p-4"
+                      ? "min-h-32 sm:min-h-64"
+                      : "min-h-[32rem] p-2 sm:min-h-[44rem] sm:p-4"
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
