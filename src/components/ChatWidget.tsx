@@ -679,11 +679,22 @@ export function ChatWidget() {
                 })}
               </div>
             </div>
+            )}
 
-            <div className="flex flex-col h-full overflow-hidden bg-background/50">
-              <div className="border-b px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
+            <div className="flex min-h-0 min-w-0 flex-col h-full overflow-hidden bg-background/50">
+              <div className="border-b px-3 py-2.5 sm:px-4 sm:py-3">
+                <div className="flex items-center justify-between gap-1">
+                  <h3 className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`size-8 shrink-0 ${isListOpen ? "bg-accent" : ""}`}
+                      onClick={() => setIsListOpen((v) => !v)}
+                      aria-label={isListOpen ? "Скрыть список чатов" : "Показать список чатов"}
+                      title={isListOpen ? "Скрыть список чатов" : "Показать список чатов"}
+                    >
+                      <PanelLeft className="size-4" />
+                    </Button>
                     {selectedRoom ? (
                       <>
                         {rooms?.find((r) => r.id === selectedRoom)?.is_group ? (
