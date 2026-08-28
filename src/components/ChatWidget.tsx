@@ -17,6 +17,7 @@ import {
   Minimize2,
   Pin,
   PinOff,
+  PanelLeft,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { EmojiPicker } from "@/components/EmojiPicker";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +111,11 @@ export function ChatWidget() {
   const qc = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobileChat = useIsMobile();
+  const [isListOpen, setIsListOpen] = useState(true);
+  useEffect(() => {
+    setIsListOpen(!isMobileChat);
+  }, [isMobileChat]);
   const [isPinned, setIsPinned] = useState(false);
 
   // Восстанавливаем состояние окна чата (закреплён / развёрнут) после перезагрузки
@@ -570,15 +577,20 @@ export function ChatWidget() {
           className={
             isFullscreen
               ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl"
-              : "flex max-h-[75vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:max-h-[80vh] sm:w-[480px]"
+              : "flex h-[70vh] max-h-[70vh] w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:max-h-[80vh] sm:w-[480px]"
           }
         >
           <div
-            className={`grid h-full overflow-hidden ${
-              isFullscreen ? "grid-cols-[260px_1fr]" : "grid-cols-[160px_1fr]"
+            className={`grid h-full min-h-0 overflow-hidden ${
+              !isListOpen
+                ? "grid-cols-1"
+                : isFullscreen
+                  ? "grid-cols-[260px_1fr]"
+                  : "grid-cols-[150px_1fr]"
             }`}
           >
-            <div className="border-r bg-card p-3 space-y-3">
+            {isListOpen && (
+            <div className="min-h-0 overflow-y-auto border-r bg-card p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Чаты</h2>
                 {isAdmin && (
@@ -636,7 +648,7 @@ export function ChatWidget() {
                 <Button
                   variant={selectedRoom === null ? "secondary" : "ghost"}
                   className="w-full justify-start gap-2 px-2 py-1.5 h-auto text-sm"
-                  onClick={() => setSelectedRoom(null)}
+                  onClick={() => { setSelectedRoom(null); if (isMobileChat) setIsListOpen(false); }}
                 >
                   <Users className="size-4" />
                   <span className="truncate">Общий чат</span>
@@ -653,7 +665,7 @@ export function ChatWidget() {
                       key={room.id}
                       variant={isSelected ? "secondary" : "ghost"}
                       className="w-full justify-start gap-2 px-2 py-1.5 h-auto text-sm"
-                      onClick={() => setSelectedRoom(room.id)}
+                      onClick={() => { setSelectedRoom(room.id); if (isMobileChat) setIsListOpen(false); }}
                     >
                       {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
                       <span className="truncate">{getRoomName(room)}</span>
@@ -667,11 +679,22 @@ export function ChatWidget() {
                 })}
               </div>
             </div>
+            )}
 
-            <div className="flex flex-col h-full overflow-hidden bg-background/50">
-              <div className="border-b px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
+            <div className="flex min-h-0 min-w-0 flex-col h-full overflow-hidden bg-background/50">
+              <div className="border-b px-3 py-2.5 sm:px-4 sm:py-3">
+                <div className="flex items-center justify-between gap-1">
+                  <h3 className="flex min-w-0 items-center gap-1.5 text-sm font-semibold">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`size-8 shrink-0 ${isListOpen ? "bg-accent" : ""}`}
+                      onClick={() => setIsListOpen((v) => !v)}
+                      aria-label={isListOpen ? "Скрыть список чатов" : "Показать список чатов"}
+                      title={isListOpen ? "Скрыть список чатов" : "Показать список чатов"}
+                    >
+                      <PanelLeft className="size-4" />
+                    </Button>
                     {selectedRoom ? (
                       <>
                         {rooms?.find((r) => r.id === selectedRoom)?.is_group ? (

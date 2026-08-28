@@ -1027,7 +1027,7 @@ export function CalendarPage() {
                   view === "month"
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
-                      ? "min-h-32 sm:min-h-64"
+                      ? "min-h-24 sm:min-h-64"
                       : "min-h-[32rem] p-2 sm:min-h-[44rem] sm:p-4"
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
@@ -1053,7 +1053,7 @@ export function CalendarPage() {
                     </span>
                   )}
                 </div>
-                {view === "month" ? (
+                {view === "month" || (view === "week" && isMobile) ? (
                 <div className="mt-1 space-y-1">
                   {detailUserId ? (() => {
                     const s = list.find((x) => x.user_id === detailUserId);
@@ -1215,61 +1215,73 @@ export function CalendarPage() {
       </div>
 
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-2.5 sm:grid-cols-3 sm:gap-4">
         <Card className="border-l-4 border-l-chart-1 shadow-sm transition-shadow hover:shadow-md">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-foreground/90 text-sm font-semibold">Предполагается в месяце</p>
+                  <p className="text-foreground/90 truncate text-xs font-semibold sm:text-sm">
+                    Предполагается в месяце
+                  </p>
                   <HelpHint text="Плановое количество часов по графику смен за выбранный месяц, до вычета отпусков и праздников." />
                 </div>
-                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-1">{plannedHours} ч</p>
+                <p className="mt-1 text-2xl font-bold tracking-tight text-chart-1 sm:mt-2 sm:text-3xl">
+                  {plannedHours} ч
+                </p>
               </div>
-              <div className="bg-chart-1/15 flex size-10 items-center justify-center rounded-xl">
-                <CalendarDays className="size-5 text-chart-1" />
+              <div className="bg-chart-1/15 flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-10">
+                <CalendarDays className="size-4 text-chart-1 sm:size-5" />
               </div>
             </div>
-            <p className="text-muted-foreground mt-3 text-xs font-medium">По графику 2/2 без учёта отпусков</p>
+            <p className="text-muted-foreground mt-2 text-[11px] font-medium sm:mt-3 sm:text-xs">
+              По графику 2/2 без учёта отпусков
+            </p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-chart-2 shadow-sm transition-shadow hover:shadow-md">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-foreground/90 text-sm font-semibold">Выходит с учётом отпуска</p>
+                  <p className="text-foreground/90 truncate text-xs font-semibold sm:text-sm">
+                    Выходит с учётом отпуска
+                  </p>
                   <HelpHint text="Расчётная норма часов после вычета подтверждённых отпусков и нерабочих праздничных дней." />
                 </div>
-                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-2">{monthHours} ч</p>
+                <p className="mt-1 text-2xl font-bold tracking-tight text-chart-2 sm:mt-2 sm:text-3xl">
+                  {monthHours} ч
+                </p>
               </div>
-              <div className="bg-chart-2/15 flex size-10 items-center justify-center rounded-xl">
-                <Plane className="size-5 text-chart-2" />
+              <div className="bg-chart-2/15 flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-10">
+                <Plane className="size-4 text-chart-2 sm:size-5" />
               </div>
             </div>
-            <p className="text-muted-foreground mt-3 text-xs font-medium">
+            <p className="text-muted-foreground mt-2 text-[11px] font-medium sm:mt-3 sm:text-xs">
               {vacationHours > 0 ? `Минус ${vacationHours} ч отпусков` : "Отпусков в месяце нет"}
             </p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-chart-3 shadow-sm transition-shadow hover:shadow-md">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
+          <CardContent className="p-3 sm:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-foreground/90 text-sm font-semibold">Уже прошло</p>
+                  <p className="text-foreground/90 truncate text-xs font-semibold sm:text-sm">Уже прошло</p>
                   <HelpHint text="Количество часов, которые уже прошли в текущем месяце по календарю, включая завершённые и текущие смены." />
                 </div>
-                <p className="mt-2 text-3xl font-bold tracking-tight text-chart-3">{passedHours} ч</p>
+                <p className="mt-1 text-2xl font-bold tracking-tight text-chart-3 sm:mt-2 sm:text-3xl">
+                  {passedHours} ч
+                </p>
               </div>
-              <div className="bg-chart-3/15 flex size-10 items-center justify-center rounded-xl">
-                <TrendingUp className="size-5 text-chart-3" />
+              <div className="bg-chart-3/15 flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-10">
+                <TrendingUp className="size-4 text-chart-3 sm:size-5" />
               </div>
             </div>
-            <div className="bg-muted mt-4 h-2.5 w-full overflow-hidden rounded-full">
+            <div className="bg-muted mt-2.5 h-2 w-full overflow-hidden rounded-full sm:mt-4 sm:h-2.5">
               <div className="h-full bg-chart-3" style={{ width: `${passedPercent}%` }} />
             </div>
-            <p className="text-muted-foreground mt-2 text-xs font-medium">
+            <p className="text-muted-foreground mt-1.5 text-[11px] font-medium sm:mt-2 sm:text-xs">
               {passedPercent}% · осталось {Math.max(0, monthHours - passedHours)} ч
             </p>
           </CardContent>
