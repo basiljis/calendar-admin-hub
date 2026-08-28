@@ -451,11 +451,21 @@ export function CalendarPage() {
   const [genMode, setGenMode] = useState<"month" | "fromToday" | "until">("month");
   const [genUntil, setGenUntil] = useState<string>("");
   const [groupFilter, setGroupFilter] = useState<string>("all");
+  const isMobile = useIsMobile();
   const [view, setView] = useState<"month" | "week" | "day" | "year">("month");
+  const [viewTouched, setViewTouched] = useState(false);
+  useEffect(() => {
+    if (!viewTouched && isMobile) setView("week");
+  }, [isMobile, viewTouched]);
+  function changeView(v: "month" | "week" | "day" | "year") {
+    setViewTouched(true);
+    setView(v);
+  }
   const [anchor, setAnchor] = useState<string>(() => {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
   });
+
 
 
   // Обновляем прогресс смены в реальном времени
