@@ -162,12 +162,19 @@ export function OnboardingTour() {
       }
     : null;
 
-  const cardWidth = 320;
+  const cardWidth = Math.min(320, window.innerWidth - 32);
+  const cardHeight = 240;
   let cardTop = window.innerHeight / 2 - 100;
   let cardLeft = window.innerWidth / 2 - cardWidth / 2;
   if (spotlight) {
     const below = spotlight.top + spotlight.height + 12;
-    cardTop = below + 200 > window.innerHeight ? Math.max(spotlight.top - 210, 16) : below;
+    const above = spotlight.top - cardHeight - 12;
+    cardTop =
+      below + cardHeight <= window.innerHeight
+        ? below
+        : above >= 16
+          ? above
+          : Math.max(window.innerHeight - cardHeight - 16, 16);
     cardLeft = Math.min(
       Math.max(spotlight.left, 16),
       Math.max(window.innerWidth - cardWidth - 16, 16)
