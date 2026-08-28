@@ -10,7 +10,7 @@ type Step = {
   description: string;
 };
 
-const STEPS: Step[] = [
+const DESKTOP_STEPS: Step[] = [
   {
     selector: '[data-tour="sidebar-nav"]',
     title: "Разделы системы",
@@ -43,12 +43,56 @@ const STEPS: Step[] = [
   },
 ];
 
+const MOBILE_STEPS: Step[] = [
+  {
+    selector: '[data-tour="mobile-nav"]',
+    title: "Меню внизу экрана",
+    description:
+      "Ключевые разделы всегда под рукой: график, сводка и остальные доступные вам страницы.",
+  },
+  {
+    selector: '[data-tour="mobile-menu"]',
+    title: "Полное меню",
+    description:
+      "Кнопка-гамбургер в шапке открывает боковое меню со всеми разделами и помощью.",
+  },
+  {
+    selector: '[data-tour="notifications"]',
+    title: "Уведомления",
+    description:
+      "Колокольчик показывает статусы заявок на отпуск и другие важные события.",
+  },
+  {
+    selector: '[data-tour="chat-button"]',
+    title: "Чат команды",
+    description:
+      "Общий и личные чаты: файлы, эмодзи, реакции и индикатор набора текста.",
+  },
+  {
+    selector: '[data-tour="profile"]',
+    title: "Профиль и выход",
+    description: "Ваше фото, данные и кнопка выхода из системы.",
+  },
+];
+
 type Rect = { top: number; left: number; width: number; height: number };
 
 export function OnboardingTour() {
   const [isActive, setIsActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const STEPS = isMobile ? MOBILE_STEPS : DESKTOP_STEPS;
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -118,12 +162,19 @@ export function OnboardingTour() {
       }
     : null;
 
-  const cardWidth = 320;
+  const cardWidth = Math.min(320, window.innerWidth - 32);
+  const cardHeight = 240;
   let cardTop = window.innerHeight / 2 - 100;
   let cardLeft = window.innerWidth / 2 - cardWidth / 2;
   if (spotlight) {
     const below = spotlight.top + spotlight.height + 12;
-    cardTop = below + 200 > window.innerHeight ? Math.max(spotlight.top - 210, 16) : below;
+    const above = spotlight.top - cardHeight - 12;
+    cardTop =
+      below + cardHeight <= window.innerHeight
+        ? below
+        : above >= 16
+          ? above
+          : Math.max(window.innerHeight - cardHeight - 16, 16);
     cardLeft = Math.min(
       Math.max(spotlight.left, 16),
       Math.max(window.innerWidth - cardWidth - 16, 16)
@@ -148,8 +199,8 @@ export function OnboardingTour() {
       )}
 
       <div
-        className="absolute w-80 rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
-        style={{ top: cardTop, left: cardLeft }}
+        className="absolute rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
+        style={{ top: cardTop, left: cardLeft, width: cardWidth }}
       >
         <div className="mb-2 flex items-start justify-between gap-2">
           <div>
