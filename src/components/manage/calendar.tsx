@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/notify";
-import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
+import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, CalendarRange, CalendarClock, LayoutGrid, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
