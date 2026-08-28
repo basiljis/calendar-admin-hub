@@ -506,8 +506,34 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="mx-auto max-w-7xl p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 md:pb-8">{children}</main>
       </div>
+
+      {/* Нижнее меню-иконки для мобильных */}
+      <nav
+        data-tour="mobile-nav"
+        aria-label="Основная навигация"
+        className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      >
+        <div className="grid grid-cols-4">
+          {nav
+            .filter((n) => !n.managerOnly || isManager)
+            .slice(0, 4)
+            .map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                aria-label={n.label}
+                className="flex min-w-0 flex-col items-center gap-1 px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors"
+                activeProps={{ className: "text-primary" }}
+              >
+                <n.icon className="size-5 shrink-0" />
+                <span className="w-full truncate text-center">{n.label}</span>
+              </Link>
+            ))}
+        </div>
+      </nav>
+
       <ChatWidget />
       <OnboardingTour />
     </div>
