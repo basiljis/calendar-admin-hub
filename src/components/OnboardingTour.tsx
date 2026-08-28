@@ -199,8 +199,8 @@ export function OnboardingTour() {
       )}
 
       <div
-        className="absolute w-80 rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
-        style={{ top: cardTop, left: cardLeft }}
+        className="absolute rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
+        style={{ top: cardTop, left: cardLeft, width: cardWidth }}
       >
         <div className="mb-2 flex items-start justify-between gap-2">
           <div>
