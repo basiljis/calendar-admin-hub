@@ -577,15 +577,20 @@ export function ChatWidget() {
           className={
             isFullscreen
               ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl"
-              : "flex max-h-[75vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:max-h-[80vh] sm:w-[480px]"
+              : "flex h-[70vh] max-h-[70vh] w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl sm:h-[560px] sm:max-h-[80vh] sm:w-[480px]"
           }
         >
           <div
-            className={`grid h-full overflow-hidden ${
-              isFullscreen ? "grid-cols-[260px_1fr]" : "grid-cols-[160px_1fr]"
+            className={`grid h-full min-h-0 overflow-hidden ${
+              !isListOpen
+                ? "grid-cols-1"
+                : isFullscreen
+                  ? "grid-cols-[260px_1fr]"
+                  : "grid-cols-[150px_1fr]"
             }`}
           >
-            <div className="border-r bg-card p-3 space-y-3">
+            {isListOpen && (
+            <div className="min-h-0 overflow-y-auto border-r bg-card p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Чаты</h2>
                 {isAdmin && (
