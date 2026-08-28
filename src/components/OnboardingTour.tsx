@@ -43,12 +43,56 @@ const DESKTOP_STEPS: Step[] = [
   },
 ];
 
+const MOBILE_STEPS: Step[] = [
+  {
+    selector: '[data-tour="mobile-nav"]',
+    title: "Меню внизу экрана",
+    description:
+      "Ключевые разделы всегда под рукой: график, сводка и остальные доступные вам страницы.",
+  },
+  {
+    selector: '[data-tour="mobile-menu"]',
+    title: "Полное меню",
+    description:
+      "Кнопка-гамбургер в шапке открывает боковое меню со всеми разделами и помощью.",
+  },
+  {
+    selector: '[data-tour="notifications"]',
+    title: "Уведомления",
+    description:
+      "Колокольчик показывает статусы заявок на отпуск и другие важные события.",
+  },
+  {
+    selector: '[data-tour="chat-button"]',
+    title: "Чат команды",
+    description:
+      "Общий и личные чаты: файлы, эмодзи, реакции и индикатор набора текста.",
+  },
+  {
+    selector: '[data-tour="profile"]',
+    title: "Профиль и выход",
+    description: "Ваше фото, данные и кнопка выхода из системы.",
+  },
+];
+
 type Rect = { top: number; left: number; width: number; height: number };
 
 export function OnboardingTour() {
   const [isActive, setIsActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const STEPS = isMobile ? MOBILE_STEPS : DESKTOP_STEPS;
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
