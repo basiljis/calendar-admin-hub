@@ -20,6 +20,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAuth } from "@/hooks/useAuth";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/help")({
   head: () => ({
@@ -201,6 +204,7 @@ const sections: Section[] = [
 ];
 
 function HelpPage() {
+  const [query, setQuery] = useState("");
   const { isAdmin, isManager, profile } = useAuth();
   const role: "employee" | "manager" | "admin" = isAdmin
     ? "admin"
