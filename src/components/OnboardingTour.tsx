@@ -10,7 +10,7 @@ type Step = {
   description: string;
 };
 
-const STEPS: Step[] = [
+const DESKTOP_STEPS: Step[] = [
   {
     selector: '[data-tour="sidebar-nav"]',
     title: "Разделы системы",
