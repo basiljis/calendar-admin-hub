@@ -756,7 +756,7 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {canEditSchedule && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm sm:p-4">
           {canViewAll && (
@@ -1027,8 +1027,8 @@ export function CalendarPage() {
                   view === "month"
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
-                      ? "min-h-40 sm:min-h-64"
-                      : "min-h-[44rem] p-3 sm:p-4"
+                      ? "min-h-32 sm:min-h-64"
+                      : "min-h-[32rem] p-2 sm:min-h-[44rem] sm:p-4"
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
