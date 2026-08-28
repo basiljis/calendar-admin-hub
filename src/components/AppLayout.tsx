@@ -350,27 +350,37 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 description="Посмотреть систему глазами руководителя или сотрудника"
                 side="bottom"
               >
-                <div className="flex items-center gap-1">
-                  <Eye className="size-4 text-muted-foreground" />
-                  <Select
-                    value={rolePreview ?? "admin"}
-                    onValueChange={(v) =>
-                      setRolePreview(v === "admin" ? null : (v as Exclude<RolePreview, null>))
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label="Режим просмотра роли"
-                      className="h-9 w-[190px] rounded-full text-xs"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Администратор</SelectItem>
-                      <SelectItem value="manager">{rolePreviewLabels.manager}</SelectItem>
-                      <SelectItem value="employee1">{rolePreviewLabels.employee1}</SelectItem>
-                      <SelectItem value="employee2">{rolePreviewLabels.employee2}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center gap-1 rounded-full border p-1">
+                  {(
+                    [
+                      { value: "admin", icon: ShieldCheck, label: "Администратор" },
+                      { value: "manager", icon: Users, label: rolePreviewLabels.manager },
+                      { value: "employee1", icon: User, label: rolePreviewLabels.employee1 },
+                      { value: "employee2", icon: User, label: rolePreviewLabels.employee2 },
+                    ] as const
+                  ).map((r) => {
+                    const active = (rolePreview ?? "admin") === r.value;
+                    return (
+                      <Hint key={r.value} label={r.label} description="Режим просмотра роли" side="bottom">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={r.label}
+                          aria-pressed={active}
+                          onClick={() =>
+                            setRolePreview(r.value === "admin" ? null : r.value)
+                          }
+                          className={`h-8 w-8 rounded-full ${
+                            active
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          <r.icon className="size-4" />
+                        </Button>
+                      </Hint>
+                    );
+                  })}
                 </div>
               </Hint>
             )}
