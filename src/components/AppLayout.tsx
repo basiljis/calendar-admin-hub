@@ -325,6 +325,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon"
               className="shrink-0 md:hidden"
+              data-tour="mobile-menu"
               aria-label="Открыть меню"
               onClick={() => setMobileNavOpen(true)}
             >
