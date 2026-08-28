@@ -758,7 +758,7 @@ export function CalendarPage() {
   return (
     <div className="space-y-6">
       {canEditSchedule && (
-        <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-3 shadow-sm sm:p-4">
+        <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm sm:p-4">
           {canViewAll && (
           <Select
             value={groupFilter}
@@ -767,7 +767,7 @@ export function CalendarPage() {
               setDetailUser("");
             }}
           >
-            <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Фильтр по группе">
+            <SelectTrigger className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" aria-label="Фильтр по группе">
               <SelectValue placeholder="Группа" />
             </SelectTrigger>
             <SelectContent>
@@ -782,8 +782,8 @@ export function CalendarPage() {
           )}
           {canViewAll && (
           <Select value={detailUser || "all"} onValueChange={(v) => setDetailUser(v === "all" ? "" : v)}>
-            <SelectTrigger className="h-9 w-full sm:w-56" aria-label="Подробный график сотрудника">
-              <SelectValue placeholder="Подробный график сотрудника" />
+            <SelectTrigger className="h-9 min-w-0 flex-1 sm:w-56 sm:flex-none" aria-label="Подробный график сотрудника">
+              <SelectValue placeholder="Сотрудник" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все сотрудники (общий вид)</SelectItem>
@@ -796,7 +796,8 @@ export function CalendarPage() {
           </Select>
           )}
           <Button
-            className="rounded-full"
+            className="size-9 shrink-0 rounded-full p-0 sm:h-9 sm:w-auto sm:px-4"
+            aria-label="Сформировать расписание"
             onClick={() => {
               const t = new Date();
               const isCurrentMonth =
@@ -813,12 +814,15 @@ export function CalendarPage() {
             disabled={generate.isPending}
           >
             <Wand2 className="size-4" />
-            {!canViewAll
-              ? "Сформировать моё расписание"
-              : groupFilter === "all"
-                ? "Сформировать месяц"
-                : `Сформировать месяц · группа ${groupFilter}`}
+            <span className="hidden sm:inline">
+              {!canViewAll
+                ? "Сформировать моё расписание"
+                : groupFilter === "all"
+                  ? "Сформировать месяц"
+                  : `Сформировать месяц · группа ${groupFilter}`}
+            </span>
           </Button>
+
         </div>
       )}
 
