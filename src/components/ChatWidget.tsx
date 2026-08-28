@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { EmojiPicker } from "@/components/EmojiPicker";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
