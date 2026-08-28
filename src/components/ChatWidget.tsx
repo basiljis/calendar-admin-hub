@@ -648,7 +648,7 @@ export function ChatWidget() {
                 <Button
                   variant={selectedRoom === null ? "secondary" : "ghost"}
                   className="w-full justify-start gap-2 px-2 py-1.5 h-auto text-sm"
-                  onClick={() => setSelectedRoom(null)}
+                  onClick={() => { setSelectedRoom(null); if (isMobileChat) setIsListOpen(false); }}
                 >
                   <Users className="size-4" />
                   <span className="truncate">Общий чат</span>
@@ -665,7 +665,7 @@ export function ChatWidget() {
                       key={room.id}
                       variant={isSelected ? "secondary" : "ghost"}
                       className="w-full justify-start gap-2 px-2 py-1.5 h-auto text-sm"
-                      onClick={() => setSelectedRoom(room.id)}
+                      onClick={() => { setSelectedRoom(room.id); if (isMobileChat) setIsListOpen(false); }}
                     >
                       {room.is_group ? <Users className="size-4" /> : <User className="size-4" />}
                       <span className="truncate">{getRoomName(room)}</span>
