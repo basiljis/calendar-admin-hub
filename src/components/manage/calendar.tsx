@@ -355,10 +355,17 @@ function YearGrid({
     byDate.set(s.work_date, arr);
   }
 
+  const currentMonth = today.startsWith(String(year)) ? Number(today.slice(5, 7)) : 0;
+  const currentRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    currentRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [year, currentMonth]);
+
   return (
     <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3 xl:grid-cols-4">
       {MONTH_NAMES.map((name, mi) => {
         const month = mi + 1;
+        const isCurrentMonth = month === currentMonth;
         const monthList = monthDays(year, month);
         const blanks = (parseISO(monthList[0]!).getDay() + 6) % 7;
         const workCount = monthList.filter((d) =>
