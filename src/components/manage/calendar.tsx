@@ -814,31 +814,14 @@ export function CalendarPage() {
           </Select>
           )}
           <Button
-            className="size-9 shrink-0 rounded-full p-0 sm:h-9 sm:w-auto sm:px-4"
-            aria-label="Сформировать расписание"
-            onClick={() => {
-              const t = new Date();
-              const isCurrentMonth =
-                t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
-              if (isCurrentMonth && t.getDate() > 1) {
-                setGenMode("fromToday");
-                setGenUntil(last);
-                setGenOpen(true);
-
-              } else {
-                generate.mutate({ from: first, to: last });
-              }
-            }}
+            className="min-h-11 min-w-11 shrink-0 rounded-full p-0 sm:h-9 sm:min-h-9 sm:w-auto sm:px-4"
+            aria-label={generateLabel}
+            title={generateLabel}
+            onClick={startGenerate}
             disabled={generate.isPending}
           >
-            <Wand2 className="size-4" />
-            <span className="hidden sm:inline">
-              {!canViewAll
-                ? "Сформировать моё расписание"
-                : groupFilter === "all"
-                  ? "Сформировать месяц"
-                  : `Сформировать месяц · группа ${groupFilter}`}
-            </span>
+            <Wand2 className="size-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{generateLabel}</span>
           </Button>
 
         </div>
