@@ -886,20 +886,24 @@ export function CalendarPage() {
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b p-3 sm:p-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="bg-muted/60 flex items-center gap-1 rounded-full border p-1">
+            <div
+              role="group"
+              aria-label="Навигация по календарю"
+              className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
+            >
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full"
+                className="size-11 rounded-full sm:size-8"
                 onClick={goPrev}
                 aria-label={`Предыдущий ${navLabel}`}
               >
-                <ChevronLeft className="size-4" />
+                <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 rounded-full px-3 text-xs font-semibold"
+                className="h-11 rounded-full px-3 text-xs font-semibold sm:h-8"
                 onClick={goToday}
               >
                 Сегодня
@@ -907,11 +911,11 @@ export function CalendarPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full"
+                className="size-11 rounded-full sm:size-8"
                 onClick={goNext}
                 aria-label={`Следующий ${navLabel}`}
               >
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
             <div className="min-w-0">
