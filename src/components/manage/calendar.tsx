@@ -755,9 +755,27 @@ export function CalendarPage() {
     setAnchor(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`);
   }
 
+  function startGenerate() {
+    const t = new Date();
+    const isCurrentMonth = t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
+    if (isCurrentMonth && t.getDate() > 1) {
+      setGenMode("fromToday");
+      setGenUntil(last);
+      setGenOpen(true);
+    } else {
+      generate.mutate({ from: first, to: last });
+    }
+  }
+
+  const generateLabel = !canViewAll
+    ? "Сформировать моё расписание"
+    : groupFilter === "all"
+      ? "Сформировать месяц"
+      : `Сформировать месяц · группа ${groupFilter}`;
+
   return (
     <div className="space-y-3 sm:space-y-6">
-      {canEditSchedule && (
+      {canEditSchedule && canViewAll && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm sm:p-4">
           {canViewAll && (
           <Select
