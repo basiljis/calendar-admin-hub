@@ -215,7 +215,17 @@ function HelpPage() {
   const roleLabel =
     role === "admin" ? "Администратор" : role === "manager" ? "Руководитель" : "Сотрудник";
 
-  const visible = sections.filter((s) => s.roles.includes(role));
+  const q = query.trim().toLowerCase();
+  const byRole = sections.filter((s) => s.roles.includes(role));
+  const visible = q
+    ? byRole
+        .map((s) => {
+          const titleHit = s.title.toLowerCase().includes(q);
+          const steps = titleHit ? s.steps : s.steps.filter((t) => t.toLowerCase().includes(q));
+          return steps.length ? { ...s, steps } : null;
+        })
+        .filter((s): s is Section => s !== null)
+    : byRole;
 
   return (
     <div className="space-y-6">
