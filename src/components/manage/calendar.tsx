@@ -417,7 +417,11 @@ function YearGrid({
                       <button
                         type="button"
                         onClick={() => onPickDay(d)}
-                        className={`flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors ${tone} ${
+                        aria-label={`${d.split("-").reverse().join(".")}${
+                          hasVacation ? ", отпуск" : hasWork ? ", есть смены" : ""
+                        }`}
+                        aria-current={isToday ? "date" : undefined}
+                        className={`focus-visible:ring-ring flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none ${tone} ${
                           isToday ? "ring-primary ring-2" : ""
                         }`}
                       >
