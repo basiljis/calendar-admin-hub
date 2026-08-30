@@ -491,6 +491,8 @@ export function ChatWidget() {
       if (error) throw error;
       setText("");
       setAttachments([]);
+      await qc.invalidateQueries({ queryKey: ["chat"] });
+      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
