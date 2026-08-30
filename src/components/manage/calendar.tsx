@@ -373,7 +373,14 @@ function YearGrid({
         ).length;
 
         return (
-          <div key={name} className="bg-card rounded-xl border p-3 shadow-sm">
+          <div
+            key={name}
+            ref={isCurrentMonth ? currentRef : undefined}
+            aria-current={isCurrentMonth ? "date" : undefined}
+            className={`bg-card rounded-xl border p-3 shadow-sm ${
+              isCurrentMonth ? "ring-primary/60 border-primary/40 ring-2" : ""
+            }`}
+          >
             <button
               type="button"
               onClick={() => onPickMonth(month)}
