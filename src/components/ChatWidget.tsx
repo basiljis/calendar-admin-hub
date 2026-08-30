@@ -491,6 +491,8 @@ export function ChatWidget() {
       if (error) throw error;
       setText("");
       setAttachments([]);
+      await qc.invalidateQueries({ queryKey: ["chat"] });
+      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -537,12 +539,14 @@ export function ChatWidget() {
       toast.error(partError.message);
       return;
     }
-    toast.success("Чат создан");
+    await qc.invalidateQueries({ queryKey: ["chat-rooms"] });
     setIsCreateDialogOpen(false);
     setNewRoomName("");
     setSelectedUsers([]);
+    setIsOpen(true);
     setSelectedRoom(room.id);
-    void qc.invalidateQueries({ queryKey: ["chat-rooms"] });
+    if (isMobileChat) setIsListOpen(false);
+    toast.success("Чат создан");
   }
 
   const getRoomName = (room: any) => {

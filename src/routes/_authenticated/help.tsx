@@ -215,7 +215,17 @@ function HelpPage() {
   const roleLabel =
     role === "admin" ? "Администратор" : role === "manager" ? "Руководитель" : "Сотрудник";
 
-  const visible = sections.filter((s) => s.roles.includes(role));
+  const q = query.trim().toLowerCase();
+  const byRole = sections.filter((s) => s.roles.includes(role));
+  const visible = q
+    ? byRole
+        .map((s) => {
+          const titleHit = s.title.toLowerCase().includes(q);
+          const steps = titleHit ? s.steps : s.steps.filter((t) => t.toLowerCase().includes(q));
+          return steps.length ? { ...s, steps } : null;
+        })
+        .filter((s): s is Section => s !== null)
+    : byRole;
 
   return (
     <div className="space-y-6">
@@ -242,7 +252,32 @@ function HelpPage() {
             Ваша группа смены — {profile.shift_group}. График строится по циклу 2/2.
           </CardContent>
         ) : null}
+        <CardContent className="pt-0">
+          <div className="relative">
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Поиск по инструкциям"
+              aria-label="Поиск по инструкциям"
+              className="pl-9"
+            />
+          </div>
+          {q && (
+            <p className="text-muted-foreground mt-2 text-xs">
+              Найдено разделов: {visible.length}
+            </p>
+          )}
+        </CardContent>
       </Card>
+
+      {visible.length === 0 && (
+        <Card>
+          <CardContent className="text-muted-foreground py-8 text-center text-sm">
+            Ничего не найдено. Попробуйте другой запрос.
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {visible.map((s) => (

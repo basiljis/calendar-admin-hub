@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/notify";
 import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, CalendarRange, CalendarClock, LayoutGrid, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -355,10 +355,17 @@ function YearGrid({
     byDate.set(s.work_date, arr);
   }
 
+  const currentMonth = today.startsWith(String(year)) ? Number(today.slice(5, 7)) : 0;
+  const currentRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    currentRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [year, currentMonth]);
+
   return (
     <div className="grid gap-4 p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-3 xl:grid-cols-4">
       {MONTH_NAMES.map((name, mi) => {
         const month = mi + 1;
+        const isCurrentMonth = month === currentMonth;
         const monthList = monthDays(year, month);
         const blanks = (parseISO(monthList[0]!).getDay() + 6) % 7;
         const workCount = monthList.filter((d) =>
@@ -366,7 +373,14 @@ function YearGrid({
         ).length;
 
         return (
-          <div key={name} className="bg-card rounded-xl border p-3 shadow-sm">
+          <div
+            key={name}
+            ref={isCurrentMonth ? currentRef : undefined}
+            aria-current={isCurrentMonth ? "date" : undefined}
+            className={`bg-card rounded-xl border p-3 shadow-sm ${
+              isCurrentMonth ? "ring-primary/60 border-primary/40 ring-2" : ""
+            }`}
+          >
             <button
               type="button"
               onClick={() => onPickMonth(month)}
@@ -403,7 +417,11 @@ function YearGrid({
                       <button
                         type="button"
                         onClick={() => onPickDay(d)}
-                        className={`flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors ${tone} ${
+                        aria-label={`${d.split("-").reverse().join(".")}${
+                          hasVacation ? ", отпуск" : hasWork ? ", есть смены" : ""
+                        }`}
+                        aria-current={isToday ? "date" : undefined}
+                        className={`focus-visible:ring-ring flex aspect-square items-center justify-center rounded-[5px] text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none ${tone} ${
                           isToday ? "ring-primary ring-2" : ""
                         }`}
                       >
@@ -755,9 +773,27 @@ export function CalendarPage() {
     setAnchor(`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`);
   }
 
+  function startGenerate() {
+    const t = new Date();
+    const isCurrentMonth = t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
+    if (isCurrentMonth && t.getDate() > 1) {
+      setGenMode("fromToday");
+      setGenUntil(last);
+      setGenOpen(true);
+    } else {
+      generate.mutate({ from: first, to: last });
+    }
+  }
+
+  const generateLabel = !canViewAll
+    ? "Сформировать моё расписание"
+    : groupFilter === "all"
+      ? "Сформировать месяц"
+      : `Сформировать месяц · группа ${groupFilter}`;
+
   return (
     <div className="space-y-3 sm:space-y-6">
-      {canEditSchedule && (
+      {canEditSchedule && canViewAll && (
         <div className="bg-card flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm sm:p-4">
           {canViewAll && (
           <Select
@@ -796,31 +832,14 @@ export function CalendarPage() {
           </Select>
           )}
           <Button
-            className="size-9 shrink-0 rounded-full p-0 sm:h-9 sm:w-auto sm:px-4"
-            aria-label="Сформировать расписание"
-            onClick={() => {
-              const t = new Date();
-              const isCurrentMonth =
-                t.getFullYear() === cursor.year && t.getMonth() + 1 === cursor.month;
-              if (isCurrentMonth && t.getDate() > 1) {
-                setGenMode("fromToday");
-                setGenUntil(last);
-                setGenOpen(true);
-
-              } else {
-                generate.mutate({ from: first, to: last });
-              }
-            }}
+            className="min-h-11 min-w-11 shrink-0 rounded-full p-0 sm:h-9 sm:min-h-9 sm:w-auto sm:px-4"
+            aria-label={generateLabel}
+            title={generateLabel}
+            onClick={startGenerate}
             disabled={generate.isPending}
           >
-            <Wand2 className="size-4" />
-            <span className="hidden sm:inline">
-              {!canViewAll
-                ? "Сформировать моё расписание"
-                : groupFilter === "all"
-                  ? "Сформировать месяц"
-                  : `Сформировать месяц · группа ${groupFilter}`}
-            </span>
+            <Wand2 className="size-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{generateLabel}</span>
           </Button>
 
         </div>
@@ -885,20 +904,24 @@ export function CalendarPage() {
       <div className="bg-card overflow-hidden rounded-2xl border shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b p-3 sm:p-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="bg-muted/60 flex items-center gap-1 rounded-full border p-1">
+            <div
+              role="group"
+              aria-label="Навигация по календарю"
+              className="bg-muted/60 flex items-center gap-1 rounded-full border p-1"
+            >
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full"
+                className="size-11 rounded-full sm:size-8"
                 onClick={goPrev}
                 aria-label={`Предыдущий ${navLabel}`}
               >
-                <ChevronLeft className="size-4" />
+                <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 rounded-full px-3 text-xs font-semibold"
+                className="h-11 rounded-full px-3 text-xs font-semibold sm:h-8"
                 onClick={goToday}
               >
                 Сегодня
@@ -906,11 +929,11 @@ export function CalendarPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 rounded-full"
+                className="size-11 rounded-full sm:size-8"
                 onClick={goNext}
                 aria-label={`Следующий ${navLabel}`}
               >
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
             <div className="min-w-0">
@@ -946,13 +969,13 @@ export function CalendarPage() {
                       aria-pressed={view === o.key}
                       aria-label={o.label}
                       onClick={() => changeView(o.key)}
-                      className={`focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-3 ${
+                      className={`focus-visible:ring-ring flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:h-8 sm:min-w-0 sm:px-3 ${
                         view === o.key
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:bg-background hover:text-foreground"
                       }`}
                     >
-                      <o.icon className="size-4" />
+                      <o.icon className="size-4" aria-hidden="true" />
                       <span className="hidden sm:inline">{o.label}</span>
                     </button>
                   </TooltipTrigger>
@@ -960,6 +983,18 @@ export function CalendarPage() {
                 </Tooltip>
               ))}
             </div>
+            {canEditSchedule && !canViewAll && (
+              <Button
+                className="min-h-11 min-w-11 shrink-0 rounded-full p-0 sm:h-9 sm:min-h-9 sm:w-auto sm:px-4"
+                aria-label={generateLabel}
+                title={generateLabel}
+                onClick={startGenerate}
+                disabled={generate.isPending}
+              >
+                <Wand2 className="size-4" aria-hidden="true" />
+                <span className="hidden sm:inline">{generateLabel}</span>
+              </Button>
+            )}
             <div className="hidden sm:block">
               <ShiftVacationLegend />
             </div>
