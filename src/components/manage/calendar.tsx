@@ -951,13 +951,13 @@ export function CalendarPage() {
                       aria-pressed={view === o.key}
                       aria-label={o.label}
                       onClick={() => changeView(o.key)}
-                      className={`focus-visible:ring-ring flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-3 ${
+                      className={`focus-visible:ring-ring flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:outline-none sm:h-8 sm:min-w-0 sm:px-3 ${
                         view === o.key
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:bg-background hover:text-foreground"
                       }`}
                     >
-                      <o.icon className="size-4" />
+                      <o.icon className="size-4" aria-hidden="true" />
                       <span className="hidden sm:inline">{o.label}</span>
                     </button>
                   </TooltipTrigger>
@@ -965,6 +965,18 @@ export function CalendarPage() {
                 </Tooltip>
               ))}
             </div>
+            {canEditSchedule && !canViewAll && (
+              <Button
+                className="min-h-11 min-w-11 shrink-0 rounded-full p-0 sm:h-9 sm:min-h-9 sm:w-auto sm:px-4"
+                aria-label={generateLabel}
+                title={generateLabel}
+                onClick={startGenerate}
+                disabled={generate.isPending}
+              >
+                <Wand2 className="size-4" aria-hidden="true" />
+                <span className="hidden sm:inline">{generateLabel}</span>
+              </Button>
+            )}
             <div className="hidden sm:block">
               <ShiftVacationLegend />
             </div>
