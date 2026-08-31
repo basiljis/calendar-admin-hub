@@ -1058,12 +1058,13 @@ export function CalendarPage() {
               <button
                 key={d}
                 onClick={() => setOpenDay(d)}
-                className={`group relative min-w-0 border-r border-b p-1.5 text-left align-top transition-colors sm:p-2 ${
+                className={`group relative min-w-0 border-r border-b p-1 text-left align-top transition-colors active:bg-muted sm:p-2 ${
                   view === "month"
                     ? "min-h-20 sm:min-h-28"
                     : view === "week"
-                      ? "min-h-24 sm:min-h-64"
+                      ? "min-h-28 sm:min-h-64"
                       : "min-h-[32rem] p-2 sm:min-h-[44rem] sm:p-4"
+
                 } ${
                   holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
                 } ${isPastDay && !isToday ? "opacity-90" : ""} ${
@@ -1324,7 +1325,8 @@ export function CalendarPage() {
       </div>
 
       <Dialog open={!!openDay} onOpenChange={(o) => !o && setOpenDay(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[88svh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
+
           <DialogHeader>
             <DialogTitle>
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
