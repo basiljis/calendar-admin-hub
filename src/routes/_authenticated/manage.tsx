@@ -76,12 +76,16 @@ function ManagePage() {
       >
         <TabsList aria-label="Разделы управления персоналом">
           {tabs.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
+            <TabsTrigger key={t.value} value={t.value} title={t.label} aria-label={t.label}>
               <t.icon className="size-4 shrink-0" aria-hidden="true" />
-              <span className="whitespace-nowrap">{t.label}</span>
+              <span className="hidden whitespace-nowrap sm:inline">{t.label}</span>
             </TabsTrigger>
           ))}
         </TabsList>
+        <p className="text-muted-foreground -mt-3 text-xs sm:hidden">
+          {tabs.find((t) => t.value === tab)?.label}
+        </p>
+
 
         <TabsContent value="staff" className="mt-0">
           <StaffPage />

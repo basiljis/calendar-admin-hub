@@ -1324,7 +1324,8 @@ export function CalendarPage() {
       </div>
 
       <Dialog open={!!openDay} onOpenChange={(o) => !o && setOpenDay(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[88svh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
+
           <DialogHeader>
             <DialogTitle>
               Смены {openDay ? openDay.split("-").reverse().join(".") : ""}
