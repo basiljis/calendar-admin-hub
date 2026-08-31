@@ -510,7 +510,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
         )}
 
         <main className="mx-auto max-w-7xl p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 md:pb-8">{children}</main>
+        <footer className="mx-auto max-w-7xl px-4 pb-28 text-center text-xs text-muted-foreground sm:px-6 md:pb-6 lg:px-8">
+          <Link to="/changelog" className="hover:text-foreground underline-offset-4 hover:underline">
+            Версия системы {APP_VERSION} — что нового
+          </Link>
+        </footer>
       </div>
+
 
       {/* Нижнее меню-иконки для мобильных */}
       <nav
