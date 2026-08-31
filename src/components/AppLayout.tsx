@@ -24,6 +24,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth, setRolePreview, rolePreviewLabels, type RolePreview } from "@/hooks/useAuth";
 import { Eye, X } from "lucide-react";
+import { APP_VERSION } from "@/lib/version";
+
 import {
   Popover,
   PopoverContent,
