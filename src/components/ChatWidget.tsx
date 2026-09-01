@@ -487,7 +487,9 @@ export function ChatWidget() {
   async function deliver(item: PendingMessage) {
     if (!user) return;
     setPending((prev) => prev.map((p) => (p.id === item.id ? { ...p, status: "sending" } : p)));
+    setIsUploading(true);
     try {
+
       const uploadedAttachments: any[] = [];
       for (const file of item.files) {
         const fileExt = file.name.split(".").pop();
