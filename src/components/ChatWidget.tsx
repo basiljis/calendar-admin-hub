@@ -18,7 +18,12 @@ import {
   Pin,
   PinOff,
   PanelLeft,
+  Loader2,
+  AlertCircle,
+  RotateCw,
+  Check,
 } from "lucide-react";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/notify";
