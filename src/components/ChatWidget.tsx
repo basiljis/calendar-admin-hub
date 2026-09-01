@@ -977,7 +977,58 @@ export function ChatWidget() {
                     </div>
                   );
                 })}
+                {!isSearching &&
+                  pending
+                    .filter((p) => p.roomId === selectedRoom)
+                    .map((p) => (
+                      <div key={p.id} className="mb-3 flex items-end justify-end gap-2">
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-3.5 py-2 ${
+                            p.status === "error"
+                              ? "bg-destructive/15 text-foreground border-destructive/40 border"
+                              : "bg-primary/70 text-primary-foreground"
+                          }`}
+                        >
+                          <div className="text-sm break-words whitespace-pre-wrap">
+                            {p.content || "Вложение"}
+                          </div>
+                          <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-90">
+                            {p.status === "sending" ? (
+                              <span className="flex items-center gap-1">
+                                <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                                Отправляется…
+                              </span>
+                            ) : (
+                              <>
+                                <span className="text-destructive flex items-center gap-1">
+                                  <AlertCircle className="size-3" aria-hidden="true" />
+                                  Не отправлено
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => void deliver(p)}
+                                  className="text-primary flex items-center gap-1 underline-offset-2 hover:underline"
+                                >
+                                  <RotateCw className="size-3" aria-hidden="true" />
+                                  Повторить
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPending((prev) => prev.filter((x) => x.id !== p.id))
+                                  }
+                                  className="opacity-70 hover:opacity-100"
+                                >
+                                  Удалить
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 <div ref={bottom} />
+
               </ScrollArea>
 
               <div className="border-t p-3 space-y-2">
