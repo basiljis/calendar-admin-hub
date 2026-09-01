@@ -162,11 +162,22 @@ export function OnboardingTour() {
       }
     : null;
 
-  const cardWidth = Math.min(320, window.innerWidth - 32);
-  const cardHeight = 240;
+  const isNarrow = window.innerWidth < 768;
+  const navOffset = isNarrow ? 76 : 16;
+  const cardWidth = isNarrow ? window.innerWidth - 24 : 320;
+  const cardHeight = isNarrow ? 260 : 240;
   let cardTop = window.innerHeight / 2 - 100;
   let cardLeft = window.innerWidth / 2 - cardWidth / 2;
-  if (spotlight) {
+  if (isNarrow) {
+    cardLeft = 12;
+    const spotlightBottom = spotlight ? spotlight.top + spotlight.height : 0;
+    const bottomDocked = window.innerHeight - cardHeight - navOffset;
+    // если подсветка в нижней половине экрана — показываем карточку сверху
+    cardTop =
+      spotlight && spotlightBottom > window.innerHeight / 2
+        ? Math.max(12, Math.min(spotlight.top - cardHeight - 12, bottomDocked))
+        : Math.max(12, bottomDocked);
+  } else if (spotlight) {
     const below = spotlight.top + spotlight.height + 12;
     const above = spotlight.top - cardHeight - 12;
     cardTop =
@@ -199,9 +210,10 @@ export function OnboardingTour() {
       )}
 
       <div
-        className="absolute rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
+        className="absolute max-h-[70svh] overflow-y-auto rounded-2xl border bg-card p-4 shadow-xl transition-all duration-300"
         style={{ top: cardTop, left: cardLeft, width: cardWidth }}
       >
+
         <div className="mb-2 flex items-start justify-between gap-2">
           <div>
             <p className="text-xs font-medium text-muted-foreground">
