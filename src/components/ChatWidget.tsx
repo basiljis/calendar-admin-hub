@@ -972,6 +972,13 @@ export function ChatWidget() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
+                          {mine && (
+                            <span className="flex items-center gap-0.5" title="Доставлено">
+                              <Check className="size-3" aria-hidden="true" />
+                              Доставлено
+                            </span>
+                          )}
+
                           {(mine || isAdmin) && (
                             <button onClick={() => remove(m.id)} aria-label="Удалить сообщение">
                               <Trash2 className="size-3" />
