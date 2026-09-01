@@ -467,38 +467,66 @@ export function ChatWidget() {
     setIsSearchOpen(false);
   };
 
+  async function deliver(item: PendingMessage) {
+    if (!user) return;
+    setPending((prev) => prev.map((p) => (p.id === item.id ? { ...p, status: "sending" } : p)));
+    try {
+      const uploadedAttachments: any[] = [];
+      for (const file of item.files) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("chat-attachments")
+          .upload(filePath, file);
+        if (uploadError) throw uploadError;
+        uploadedAttachments.push({
+          name: file.name,
+          path: filePath,
+          url: filePath,
+          type: file.type,
+          size: file.size,
+        });
+      }
+      const { error } = await supabase.from("chat_messages").insert({
+        user_id: user.id,
+        content: item.content,
+        room_id: item.roomId,
+        attachments: uploadedAttachments,
+      });
+      if (error) throw error;
+      setPending((prev) => prev.filter((p) => p.id !== item.id));
+      await qc.invalidateQueries({ queryKey: ["chat"] });
+      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
+    } catch (error: any) {
+      setPending((prev) =>
+        prev.map((p) =>
+          p.id === item.id
+            ? { ...p, status: "error", error: error?.message || "Не удалось отправить" }
+            : p,
+        ),
+      );
+      toast.error(error?.message || "Сообщение не отправлено");
+    }
+  }
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const content = text.trim();
     if ((!content && attachments.length === 0) || !user) return;
-    setIsUploading(true);
-    const uploadedAttachments = [];
-    try {
-      for (const { file } of attachments) {
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(filePath, file);
-        if (uploadError) throw uploadError;
-        uploadedAttachments.push({ name: file.name, path: filePath, url: filePath, type: file.type, size: file.size });
-      }
-      const { error } = await supabase.from("chat_messages").insert({
-        user_id: user.id,
-        content,
-        room_id: selectedRoom,
-        attachments: uploadedAttachments,
-      });
-      if (error) throw error;
-      setText("");
-      setAttachments([]);
-      await qc.invalidateQueries({ queryKey: ["chat"] });
-      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsUploading(false);
-    }
+    const item: PendingMessage = {
+      id: crypto.randomUUID(),
+      content,
+      files: attachments.map((a) => a.file),
+      roomId: selectedRoom,
+      status: "sending",
+    };
+    setPending((prev) => [...prev, item]);
+    setText("");
+    setAttachments([]);
+    await deliver(item);
   }
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
