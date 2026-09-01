@@ -58,6 +58,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { Hint } from "@/components/Hint";
+import { recordEvent } from "@/lib/log-client";
 
 
 
@@ -196,7 +197,12 @@ export function VacationsAdminPage() {
 
       await supabase.from("notifications").insert(notifications);
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
+      recordEvent({
+        category: "action",
+        event: vars.status === "approved" ? "Заявки на отпуск подтверждены" : "Заявки на отпуск отклонены",
+        message: `Обработано заявок: ${vars.ids.length}`,
+      });
       toast.success("Статус обновлен");
       setSelectedIds([]);
       qc.invalidateQueries({ queryKey: ["admin-vacations"] });
