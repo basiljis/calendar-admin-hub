@@ -526,7 +526,10 @@ export function ChatWidget() {
         ),
       );
       toast.error(error?.message || "Сообщение не отправлено");
+    } finally {
+      setIsUploading(false);
     }
+
   }
 
   async function send(e: React.FormEvent) {
