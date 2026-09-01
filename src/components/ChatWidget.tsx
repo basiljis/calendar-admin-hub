@@ -18,7 +18,12 @@ import {
   Pin,
   PinOff,
   PanelLeft,
+  Loader2,
+  AlertCircle,
+  RotateCw,
+  Check,
 } from "lucide-react";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/lib/notify";
@@ -54,6 +59,16 @@ import { ru } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
+
+type PendingMessage = {
+  id: string;
+  content: string;
+  files: File[];
+  roomId: string | null;
+  status: "sending" | "error";
+  error?: string;
+};
+
 
 function ChatAttachment({ file }: { file: any }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -144,6 +159,8 @@ export function ChatWidget() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [pending, setPending] = useState<PendingMessage[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
@@ -467,38 +484,71 @@ export function ChatWidget() {
     setIsSearchOpen(false);
   };
 
+  async function deliver(item: PendingMessage) {
+    if (!user) return;
+    setPending((prev) => prev.map((p) => (p.id === item.id ? { ...p, status: "sending" } : p)));
+    setIsUploading(true);
+    try {
+
+      const uploadedAttachments: any[] = [];
+      for (const file of item.files) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("chat-attachments")
+          .upload(filePath, file);
+        if (uploadError) throw uploadError;
+        uploadedAttachments.push({
+          name: file.name,
+          path: filePath,
+          url: filePath,
+          type: file.type,
+          size: file.size,
+        });
+      }
+      const { error } = await supabase.from("chat_messages").insert({
+        user_id: user.id,
+        content: item.content,
+        room_id: item.roomId,
+        attachments: uploadedAttachments,
+      });
+      if (error) throw error;
+      setPending((prev) => prev.filter((p) => p.id !== item.id));
+      await qc.invalidateQueries({ queryKey: ["chat"] });
+      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
+    } catch (error: any) {
+      setPending((prev) =>
+        prev.map((p) =>
+          p.id === item.id
+            ? { ...p, status: "error", error: error?.message || "Не удалось отправить" }
+            : p,
+        ),
+      );
+      toast.error(error?.message || "Сообщение не отправлено");
+    } finally {
+      setIsUploading(false);
+    }
+
+  }
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const content = text.trim();
     if ((!content && attachments.length === 0) || !user) return;
-    setIsUploading(true);
-    const uploadedAttachments = [];
-    try {
-      for (const { file } of attachments) {
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(filePath, file);
-        if (uploadError) throw uploadError;
-        uploadedAttachments.push({ name: file.name, path: filePath, url: filePath, type: file.type, size: file.size });
-      }
-      const { error } = await supabase.from("chat_messages").insert({
-        user_id: user.id,
-        content,
-        room_id: selectedRoom,
-        attachments: uploadedAttachments,
-      });
-      if (error) throw error;
-      setText("");
-      setAttachments([]);
-      await qc.invalidateQueries({ queryKey: ["chat"] });
-      await qc.invalidateQueries({ queryKey: ["chat-unread", user.id] });
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsUploading(false);
-    }
+    const item: PendingMessage = {
+      id: crypto.randomUUID(),
+      content,
+      files: attachments.map((a) => a.file),
+      roomId: selectedRoom,
+      status: "sending",
+    };
+    setPending((prev) => [...prev, item]);
+    setText("");
+    setAttachments([]);
+    await deliver(item);
   }
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -927,6 +977,13 @@ export function ChatWidget() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
+                          {mine && (
+                            <span className="flex items-center gap-0.5" title="Доставлено">
+                              <Check className="size-3" aria-hidden="true" />
+                              Доставлено
+                            </span>
+                          )}
+
                           {(mine || isAdmin) && (
                             <button onClick={() => remove(m.id)} aria-label="Удалить сообщение">
                               <Trash2 className="size-3" />
@@ -937,7 +994,58 @@ export function ChatWidget() {
                     </div>
                   );
                 })}
+                {!isSearching &&
+                  pending
+                    .filter((p) => p.roomId === selectedRoom)
+                    .map((p) => (
+                      <div key={p.id} className="mb-3 flex items-end justify-end gap-2">
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-3.5 py-2 ${
+                            p.status === "error"
+                              ? "bg-destructive/15 text-foreground border-destructive/40 border"
+                              : "bg-primary/70 text-primary-foreground"
+                          }`}
+                        >
+                          <div className="text-sm break-words whitespace-pre-wrap">
+                            {p.content || "Вложение"}
+                          </div>
+                          <div className="mt-1 flex items-center justify-end gap-2 text-[10px] opacity-90">
+                            {p.status === "sending" ? (
+                              <span className="flex items-center gap-1">
+                                <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                                Отправляется…
+                              </span>
+                            ) : (
+                              <>
+                                <span className="text-destructive flex items-center gap-1">
+                                  <AlertCircle className="size-3" aria-hidden="true" />
+                                  Не отправлено
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => void deliver(p)}
+                                  className="text-primary flex items-center gap-1 underline-offset-2 hover:underline"
+                                >
+                                  <RotateCw className="size-3" aria-hidden="true" />
+                                  Повторить
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPending((prev) => prev.filter((x) => x.id !== p.id))
+                                  }
+                                  className="opacity-70 hover:opacity-100"
+                                >
+                                  Удалить
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 <div ref={bottom} />
+
               </ScrollArea>
 
               <div className="border-t p-3 space-y-2">

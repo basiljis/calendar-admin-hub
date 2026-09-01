@@ -37,6 +37,7 @@ import { createUserAdmin, setUserActive, setUserApproved } from "@/lib/admin-use
 import { PERIOD, formatHours, personalNorm, vacationDatesInRange } from "@/lib/schedule";
 import { usePositions, useShiftGroups } from "@/components/settings/Directories";
 import { exportToExcel } from "@/lib/export";
+import { recordEvent } from "@/lib/log-client";
 
 
 const roleLabels: Record<AppRole, string> = {
@@ -109,6 +110,11 @@ export function StaffPage() {
     mutationFn: async (vars: { userId: string; active: boolean }) =>
       await setActiveFn({ data: vars }),
     onSuccess: (_d, vars) => {
+      recordEvent({
+        category: "action",
+        event: vars.active ? "Активация учётной записи" : "Деактивация учётной записи",
+        message: `Учётная запись ${vars.userId} ${vars.active ? "активирована" : "деактивирована"}`,
+      });
       toast.success(vars.active ? "Учётная запись активирована" : "Учётная запись деактивирована");
       qc.invalidateQueries({ queryKey: ["staff"] });
     },
@@ -120,6 +126,11 @@ export function StaffPage() {
     mutationFn: async (vars: { userId: string; approved: boolean }) =>
       await setApprovedFn({ data: vars }),
     onSuccess: (_d, vars) => {
+      recordEvent({
+        category: "action",
+        event: vars.approved ? "Подтверждение пользователя" : "Отзыв подтверждения",
+        message: `Пользователь ${vars.userId} ${vars.approved ? "подтверждён" : "лишён подтверждения"}`,
+      });
       toast.success(vars.approved ? "Пользователь подтверждён" : "Подтверждение отозвано");
       qc.invalidateQueries({ queryKey: ["staff"] });
     },
@@ -222,7 +233,12 @@ export function StaffPage() {
         type: notificationType
       });
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars) => {
+      recordEvent({
+        category: "action",
+        event: vars.status === "approved" ? "Отпуск подтверждён" : "Отпуск отклонён",
+        message: `Отпуск ${vars.startDate} — ${vars.endDate}`,
+      });
       toast.success("Статус отпуска обновлен");
       qc.invalidateQueries({ queryKey: ["staff"] });
       qc.invalidateQueries({ queryKey: ["calendar"] });

@@ -4,6 +4,7 @@ import { toast } from "@/lib/notify";
 import { ChevronLeft, ChevronRight, Wand2, Plane, CheckCircle2, CalendarDays, CalendarRange, CalendarClock, LayoutGrid, TrendingUp, Sunrise, Coffee, Sunset } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { recordEvent } from "@/lib/log-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -618,7 +619,13 @@ export function CalendarPage() {
       return rows.length;
     },
     onSuccess: (n) => {
+      recordEvent({
+        category: "action",
+        event: "Формирование графика смен",
+        message: `Создано или обновлено записей: ${n}`,
+      });
       toast.success(`График сформирован: ${n} записей`);
+
       setGenOpen(false);
       qc.invalidateQueries({ queryKey: ["calendar"] });
     },

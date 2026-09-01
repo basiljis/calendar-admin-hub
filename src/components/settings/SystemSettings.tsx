@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
 import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { recordEvent } from "@/lib/log-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,11 @@ export function SystemSettings() {
       return value;
     },
     onSuccess: (v) => {
+      recordEvent({
+        category: "action",
+        event: "Изменение настроек системы",
+        message: `Создание смен сотрудниками: ${v ? "включено" : "выключено"}`,
+      });
       toast.success(v ? "Сотрудники могут создавать смены" : "Создание смен сотрудниками отключено");
       qc.invalidateQueries({ queryKey: ["app-setting", SETTING_EMPLOYEE_SHIFTS] });
     },
