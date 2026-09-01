@@ -144,6 +144,8 @@ export function ChatWidget() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<{ file: File; id: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [pending, setPending] = useState<PendingMessage[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
