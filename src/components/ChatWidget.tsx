@@ -55,6 +55,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮", "😢", "🔥"];
 
+type PendingMessage = {
+  id: string;
+  content: string;
+  files: File[];
+  roomId: string | null;
+  status: "sending" | "error";
+  error?: string;
+};
+
+
 function ChatAttachment({ file }: { file: any }) {
   const [url, setUrl] = useState<string | null>(null);
 
