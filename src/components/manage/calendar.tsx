@@ -618,7 +618,13 @@ export function CalendarPage() {
       return rows.length;
     },
     onSuccess: (n) => {
+      recordEvent({
+        category: "action",
+        event: "Формирование графика смен",
+        message: `Создано или обновлено записей: ${n}`,
+      });
       toast.success(`График сформирован: ${n} записей`);
+
       setGenOpen(false);
       qc.invalidateQueries({ queryKey: ["calendar"] });
     },
