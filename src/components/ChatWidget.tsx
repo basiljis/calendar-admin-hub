@@ -35,6 +35,7 @@ import { EmojiPicker } from "@/components/EmojiPicker";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import {
   Dialog,
   DialogContent,
