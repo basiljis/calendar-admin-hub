@@ -35,6 +35,7 @@ import { EmojiPicker } from "@/components/EmojiPicker";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePresenceTracker } from "@/hooks/usePresence";
 import {
   Dialog,
   DialogContent,
@@ -132,6 +133,9 @@ export function ChatWidget() {
     setIsListOpen(!isMobileChat);
   }, [isMobileChat]);
   const [isPinned, setIsPinned] = useState(false);
+
+  // Публикуем статус: в системе / открыт чат
+  usePresenceTracker(user?.id, isOpen);
 
   // Восстанавливаем состояние окна чата (закреплён / развёрнут) после перезагрузки
   useEffect(() => {
@@ -598,6 +602,48 @@ export function ChatWidget() {
     if (isMobileChat) setIsListOpen(false);
     toast.success("Чат создан");
   }
+
+  // Открытие личного чата с сотрудником из календаря и других разделов
+  useEffect(() => {
+    async function handler(e: Event) {
+      const targetId = (e as CustomEvent).detail?.userId as string | undefined;
+      if (!user || !targetId || targetId === user.id) return;
+      setIsOpen(true);
+      if (isMobileChat) setIsListOpen(false);
+      const existing = (rooms ?? []).find(
+        (r: any) =>
+          !r.is_group &&
+          (r.chat_room_participants ?? []).length === 2 &&
+          (r.chat_room_participants ?? []).some((p: any) => p.user_id === targetId) &&
+          (r.chat_room_participants ?? []).some((p: any) => p.user_id === user.id),
+      );
+      if (existing) {
+        setSelectedRoom(existing.id);
+        return;
+      }
+      const { data: room, error } = await supabase
+        .from("chat_rooms")
+        .insert({ name: null, is_group: false, created_by: user.id })
+        .select()
+        .single();
+      if (error || !room) {
+        toast.error(error?.message ?? "Не удалось открыть чат");
+        return;
+      }
+      const { error: partError } = await supabase.from("chat_room_participants").insert([
+        { room_id: room.id, user_id: user.id },
+        { room_id: room.id, user_id: targetId },
+      ]);
+      if (partError) {
+        toast.error(partError.message);
+        return;
+      }
+      await qc.invalidateQueries({ queryKey: ["chat-rooms"] });
+      setSelectedRoom(room.id);
+    }
+    window.addEventListener("open-direct-chat", handler as EventListener);
+    return () => window.removeEventListener("open-direct-chat", handler as EventListener);
+  }, [rooms, user?.id, isMobileChat, qc]);
 
   const getRoomName = (room: any) => {
     if (room.name) return room.name;
