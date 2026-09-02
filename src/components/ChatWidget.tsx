@@ -134,6 +134,9 @@ export function ChatWidget() {
   }, [isMobileChat]);
   const [isPinned, setIsPinned] = useState(false);
 
+  // Публикуем статус: в системе / открыт чат
+  usePresenceTracker(user?.id, isOpen);
+
   // Восстанавливаем состояние окна чата (закреплён / развёрнут) после перезагрузки
   useEffect(() => {
     if (typeof window === "undefined") return;
