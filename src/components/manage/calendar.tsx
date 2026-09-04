@@ -1151,85 +1151,64 @@ export function CalendarPage() {
                         )}
                       </div>
                     );
-                  })() : list.map((s) => {
-                    const p = profiles.find((x) => x.id === s.user_id);
-                    if (!p) return null;
-                    if (s.type === "vacation") {
-                      return (
-                        <div
-                          key={s.id}
-                          className="flex items-center gap-1.5 truncate rounded-md bg-amber-100/70 px-2 py-1 text-xs font-semibold text-amber-800 sm:text-sm"
-                        >
-                          <Plane className="size-3 shrink-0" />
-                          <span className="truncate">{p.full_name.split(" ")[0]}</span>
-                        </div>
-                      );
-                    }
+                  })() : (() => {
+                    const vacations = list.filter((s) => s.type === "vacation");
+                    const works = list.filter((s) => s.type === "work");
                     const progress = getShiftProgress(d, now);
                     const done = progress.status === "done";
-                    const chipBg = done
-                      ? "bg-emerald-50 text-emerald-800"
-                      : p.shift_group === 1
-                        ? "bg-shift-a/12 text-foreground"
-                        : "bg-shift-b/12 text-foreground";
-                    const dot = done
-                      ? "bg-emerald-600"
-                      : p.shift_group === 1
-                        ? "bg-shift-a"
-                        : "bg-shift-b";
-                    const breakLabel = s.break_time
-                      ? `${s.break_time}–${addHour(s.break_time)}`
-                      : "не выбран";
-                    const tooltipLabel = `Начало: ${START_LABEL} | Обед: ${breakLabel} | Конец: ${END_LABEL}`;
+                    // Группируем сотрудников с одинаковым расписанием (одинаковый обед)
+                    const groups = new Map<string, GroupMember[]>();
+                    for (const s of works) {
+                      const p = profiles.find((x) => x.id === s.user_id);
+                      if (!p) continue;
+                      const key = s.break_time || "none";
+                      const arr = groups.get(key) ?? [];
+                      arr.push({
+                        id: p.id,
+                        full_name: p.full_name,
+                        avatar_url: p.avatar_url,
+                        shift_group: p.shift_group,
+                      });
+                      groups.set(key, arr);
+                    }
                     return (
-                      <Tooltip key={s.id}>
-                        <TooltipTrigger asChild>
-                          <div
-                            title={progress.remainingLabel}
-                            className={`relative overflow-hidden rounded-md px-2 py-1 text-xs sm:text-sm ${chipBg}`}
-                          >
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="flex min-w-0 items-center gap-1.5">
-                                {done ? (
-                                  <CheckCircle2 className="size-3 shrink-0" />
-                                ) : (
-                                  <span className={`size-2 shrink-0 rounded-full ${dot}`} />
-                                )}
-                                <UserAvatar
-                                  name={p.full_name}
-                                  avatarPath={p.avatar_url}
-                                  className="size-5 shrink-0"
-                                  fallbackClassName="text-[9px]"
-                                />
-                                <span className="truncate font-semibold">{p.full_name.split(" ")[0]}</span>
-                              </span>
-                              <span className="shrink-0 text-[11px] opacity-70">
-                                {progress.status === "active"
-                                  ? `${Math.round(progress.percent)}%`
-                                  : s.break_time
-                                    ? <span className="hidden sm:inline">{s.break_time}</span>
-                                    : null}
-                              </span>
+                      <>
+                        {vacations.map((s) => {
+                          const p = profiles.find((x) => x.id === s.user_id);
+                          if (!p) return null;
+                          return (
+                            <div
+                              key={s.id}
+                              className="flex items-center gap-1.5 truncate rounded-md bg-amber-100/70 px-2 py-1 text-xs font-semibold text-amber-800 sm:text-sm"
+                            >
+                              <Plane className="size-3 shrink-0" />
+                              <span className="truncate">{p.full_name.split(" ")[0]}</span>
                             </div>
-                            {progress.status === "active" && (
-                              <span
-                                className="absolute inset-x-0 bottom-0 h-0.5 bg-emerald-600 transition-all duration-1000"
-                                style={{ width: `${progress.percent}%` }}
-                                aria-hidden
-                              />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="text-xs">
-                          <p className="font-medium">{p.full_name}</p>
-                          <p className="opacity-80">{tooltipLabel}</p>
-                          {progress.status !== "future" && (
-                            <p className="mt-0.5 opacity-70">{progress.remainingLabel}</p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
+                          );
+                        })}
+                        {[...groups.entries()].map(([key, members]) => (
+                          <ShiftGroupCard
+                            key={key}
+                            timeLabel={`${START_LABEL} — ${END_LABEL}${
+                              key === "none" ? "" : ` · обед ${key}`
+                            }`}
+                            members={members}
+                            currentUserId={user?.id}
+                            done={done}
+                            {...(progress.status === "active" ? { percent: progress.percent } : {})}
+                            tone={
+                              done
+                                ? "bg-emerald-50 text-emerald-800"
+                                : members[0]?.shift_group === 1
+                                  ? "bg-shift-a/12 text-foreground"
+                                  : "bg-shift-b/12 text-foreground"
+                            }
+                          />
+                        ))}
+                      </>
                     );
-                  })}
+                  })()}
+
                 </div>
                 ) : (
                   <TimeGridColumn
