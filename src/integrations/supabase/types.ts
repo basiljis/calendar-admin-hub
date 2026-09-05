@@ -35,6 +35,33 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_marks: {
+        Row: {
+          created_at: string
+          id: string
+          marked_at: string
+          source: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marked_at?: string
+          source?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marked_at?: string
+          source?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       chat_message_reactions: {
         Row: {
           created_at: string

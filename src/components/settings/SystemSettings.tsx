@@ -6,6 +6,12 @@ import { recordEvent } from "@/lib/log-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  SETTING_ATTENDANCE_ENABLED,
+  SETTING_ATTENDANCE_MODE,
+  useAttendanceSettings,
+} from "@/hooks/useAttendance";
 
 export const SETTING_EMPLOYEE_SHIFTS = "employee_can_create_shifts";
 
@@ -27,6 +33,31 @@ export function useEmployeeCanCreateShifts() {
 export function SystemSettings() {
   const qc = useQueryClient();
   const enabled = useEmployeeCanCreateShifts();
+  const attendance = useAttendanceSettings();
+
+  const saveAttendance = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: boolean | string }) => {
+      const { error } = await supabase
+        .from("app_settings")
+        .upsert({ key, value }, { onConflict: "key" });
+      if (error) throw error;
+      return { key, value };
+    },
+    onSuccess: ({ key, value }) => {
+      recordEvent({
+        category: "action",
+        event: "Изменение настроек системы",
+        message:
+          key === SETTING_ATTENDANCE_ENABLED
+            ? `Отметка присутствия: ${value ? "включена" : "выключена"}`
+            : `Способ отметки присутствия: ${value === "auto" ? "автоматически при входе" : "вручную сотрудником"}`,
+      });
+      toast.success("Настройка сохранена");
+      qc.invalidateQueries({ queryKey: ["app-setting", "attendance"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const save = useMutation({
     mutationFn: async (value: boolean) => {
@@ -74,6 +105,52 @@ export function SystemSettings() {
             disabled={save.isPending}
             onCheckedChange={(v) => save.mutate(v)}
           />
+        </div>
+
+        <div className="mt-4 space-y-4 rounded-lg border p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="attendance-enabled" className="text-sm font-medium">
+                Отметка присутствия на смене
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                Сотрудник отмечает, что был на смене — время отметки сохраняется автоматически.
+              </p>
+            </div>
+            <Switch
+              id="attendance-enabled"
+              checked={attendance.enabled}
+              disabled={saveAttendance.isPending}
+              onCheckedChange={(v) => saveAttendance.mutate({ key: SETTING_ATTENDANCE_ENABLED, value: v })}
+            />
+          </div>
+
+          {attendance.enabled && (
+            <RadioGroup
+              value={attendance.mode}
+              onValueChange={(v) => saveAttendance.mutate({ key: SETTING_ATTENDANCE_MODE, value: v })}
+              className="gap-3 border-t pt-4"
+            >
+              <div className="flex items-start gap-3">
+                <RadioGroupItem value="manual" id="attendance-manual" className="mt-1" />
+                <Label htmlFor="attendance-manual" className="space-y-1 font-normal">
+                  <span className="block text-sm font-medium">Сотрудник отмечается сам</span>
+                  <span className="text-muted-foreground block text-sm">
+                    В шапке появляется кнопка «Отметиться» в дни рабочей смены.
+                  </span>
+                </Label>
+              </div>
+              <div className="flex items-start gap-3">
+                <RadioGroupItem value="auto" id="attendance-auto" className="mt-1" />
+                <Label htmlFor="attendance-auto" className="space-y-1 font-normal">
+                  <span className="block text-sm font-medium">Автоматически при первом входе</span>
+                  <span className="text-muted-foreground block text-sm">
+                    Отметка ставится сама, когда сотрудник впервые заходит в систему в день смены.
+                  </span>
+                </Label>
+              </div>
+            </RadioGroup>
+          )}
         </div>
       </CardContent>
     </Card>
