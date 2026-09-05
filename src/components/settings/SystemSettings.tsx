@@ -6,6 +6,12 @@ import { recordEvent } from "@/lib/log-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  SETTING_ATTENDANCE_ENABLED,
+  SETTING_ATTENDANCE_MODE,
+  useAttendanceSettings,
+} from "@/hooks/useAttendance";
 
 export const SETTING_EMPLOYEE_SHIFTS = "employee_can_create_shifts";
 
