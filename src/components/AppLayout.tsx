@@ -382,6 +382,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Hint>
             )}
             <ThemeToggle />
+            <AttendanceButton className="h-9 gap-1.5 rounded-full px-3 text-xs" />
             <VacationRequestDialog className="hidden h-9 gap-1.5 rounded-full px-4 text-xs sm:inline-flex" />
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
