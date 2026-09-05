@@ -6,7 +6,7 @@ import { usePresence, openDirectChat } from "@/hooks/usePresence";
 export type GroupMember = {
   id: string;
   full_name: string;
-  avatar_url?: string | null;
+  avatar_url?: string | null | undefined;
   shift_group?: number;
 };
 
