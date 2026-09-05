@@ -33,6 +33,31 @@ export function useEmployeeCanCreateShifts() {
 export function SystemSettings() {
   const qc = useQueryClient();
   const enabled = useEmployeeCanCreateShifts();
+  const attendance = useAttendanceSettings();
+
+  const saveAttendance = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: boolean | string }) => {
+      const { error } = await supabase
+        .from("app_settings")
+        .upsert({ key, value }, { onConflict: "key" });
+      if (error) throw error;
+      return { key, value };
+    },
+    onSuccess: ({ key, value }) => {
+      recordEvent({
+        category: "action",
+        event: "Изменение настроек системы",
+        message:
+          key === SETTING_ATTENDANCE_ENABLED
+            ? `Отметка присутствия: ${value ? "включена" : "выключена"}`
+            : `Способ отметки присутствия: ${value === "auto" ? "автоматически при входе" : "вручную сотрудником"}`,
+      });
+      toast.success("Настройка сохранена");
+      qc.invalidateQueries({ queryKey: ["app-setting", "attendance"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const save = useMutation({
     mutationFn: async (value: boolean) => {
