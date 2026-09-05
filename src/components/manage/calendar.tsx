@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
 import { UserAvatar } from "@/components/UserAvatar";
+import { ShiftGroupCard, type GroupMember } from "@/components/calendar/ShiftGroupCard";
 import {
   Tooltip,
   TooltipContent,
