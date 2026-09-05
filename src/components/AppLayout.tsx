@@ -36,6 +36,8 @@ import { toast } from "@/lib/notify";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ProfilePhotoDialog } from "@/components/ProfilePhotoDialog";
 import { VacationRequestDialog } from "@/components/VacationRequestDialog";
+import { AttendanceButton } from "@/components/AttendanceButton";
+import { useAutoAttendance } from "@/hooks/useAttendance";
 import { Separator } from "@/components/ui/separator";
 import { ChatWidget } from "@/components/ChatWidget";
 import { OnboardingTour } from "@/components/OnboardingTour";
