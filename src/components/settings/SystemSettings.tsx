@@ -75,6 +75,52 @@ export function SystemSettings() {
             onCheckedChange={(v) => save.mutate(v)}
           />
         </div>
+
+        <div className="mt-4 space-y-4 rounded-lg border p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="attendance-enabled" className="text-sm font-medium">
+                Отметка присутствия на смене
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                Сотрудник отмечает, что был на смене — время отметки сохраняется автоматически.
+              </p>
+            </div>
+            <Switch
+              id="attendance-enabled"
+              checked={attendance.enabled}
+              disabled={saveAttendance.isPending}
+              onCheckedChange={(v) => saveAttendance.mutate({ key: SETTING_ATTENDANCE_ENABLED, value: v })}
+            />
+          </div>
+
+          {attendance.enabled && (
+            <RadioGroup
+              value={attendance.mode}
+              onValueChange={(v) => saveAttendance.mutate({ key: SETTING_ATTENDANCE_MODE, value: v })}
+              className="gap-3 border-t pt-4"
+            >
+              <div className="flex items-start gap-3">
+                <RadioGroupItem value="manual" id="attendance-manual" className="mt-1" />
+                <Label htmlFor="attendance-manual" className="space-y-1 font-normal">
+                  <span className="block text-sm font-medium">Сотрудник отмечается сам</span>
+                  <span className="text-muted-foreground block text-sm">
+                    В шапке появляется кнопка «Отметиться» в дни рабочей смены.
+                  </span>
+                </Label>
+              </div>
+              <div className="flex items-start gap-3">
+                <RadioGroupItem value="auto" id="attendance-auto" className="mt-1" />
+                <Label htmlFor="attendance-auto" className="space-y-1 font-normal">
+                  <span className="block text-sm font-medium">Автоматически при первом входе</span>
+                  <span className="text-muted-foreground block text-sm">
+                    Отметка ставится сама, когда сотрудник впервые заходит в систему в день смены.
+                  </span>
+                </Label>
+              </div>
+            </RadioGroup>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
