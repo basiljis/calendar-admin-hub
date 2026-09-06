@@ -1064,7 +1064,7 @@ export function CalendarPage() {
             const list = shiftsOn(d);
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
             const isToday = d === todayStr;
-            const isWeekendOff2 = false;
+            
             const isWeekendOff = !holiday && isWeekendDate(d, weekendDays);
             const hasVacation = list.some((s) => s.type === "vacation");
             return (
