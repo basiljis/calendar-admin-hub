@@ -1065,6 +1065,7 @@ export function CalendarPage() {
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
             const isToday = d === todayStr;
             const isPastDay = d < todayStr;
+            const isWeekendOff = !holiday && isWeekendDate(d, weekendDays);
             const hasVacation = list.some((s) => s.type === "vacation");
             return (
               <button
@@ -1078,8 +1079,12 @@ export function CalendarPage() {
                       : "min-h-[32rem] p-2 sm:min-h-[44rem] sm:p-4"
 
                 } ${
-                  holiday ? "bg-holiday/40" : "bg-card hover:bg-muted/50"
-                } ${isPastDay && !isToday ? "opacity-90" : ""} ${
+                  holiday
+                    ? "bg-holiday/40"
+                    : isWeekendOff
+                      ? "bg-holiday/20 hover:bg-holiday/30"
+                      : "bg-card hover:bg-muted/30"
+                } ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
                 } ${canEditSchedule ? "cursor-pointer" : "cursor-default"} ${
                   view !== "month" ? "flex flex-col" : ""
@@ -1095,11 +1100,16 @@ export function CalendarPage() {
                   >
                     {Number(d.slice(-2))}
                   </span>
-                  {holiday && (
+                  {holiday ? (
                     <span className="text-holiday-foreground max-w-16 truncate pt-0.5 text-[10px]">
                       {holiday.name}
                     </span>
-                  )}
+                  ) : isWeekendOff ? (
+                    <span className="text-holiday-foreground max-w-16 truncate pt-0.5 text-[10px]">
+                      Выходной
+                    </span>
+                  ) : null}
+
                 </div>
                 {view === "month" || (view === "week" && isMobile) ? (
                 <div className="mt-1 space-y-1">
