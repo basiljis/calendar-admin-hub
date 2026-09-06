@@ -38,7 +38,7 @@ export function ShiftGroupCard({
     <HoverCard openDelay={80} closeDelay={120}>
       <HoverCardTrigger asChild>
         <div
-          className={`relative overflow-hidden rounded-xl px-2 py-1.5 ${tone}`}
+          className={`ring-foreground/5 hover:ring-foreground/25 relative overflow-hidden rounded-xl px-2 py-1.5 shadow-sm ring-1 transition-shadow hover:shadow-md ${tone}`}
           role="group"
           aria-label={`Смена ${timeLabel}, сотрудников: ${members.length}`}
         >
@@ -70,7 +70,7 @@ export function ShiftGroupCard({
           )}
         </div>
       </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-64 p-2">
+      <HoverCardContent align="start" side="top" sideOffset={6} className="z-50 w-64 p-2 shadow-lg">
         <p className="text-muted-foreground mb-2 text-[11px] font-medium">
           {timeLabel} · {members.length} чел.
         </p>
