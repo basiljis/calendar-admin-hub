@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/tooltip";
 import { ShiftVacationLegend } from "@/components/ShiftVacationLegend";
 import { useEmployeeCanCreateShifts } from "@/components/settings/SystemSettings";
+import { useWeekendDays, isWeekendDate } from "@/hooks/useWeekends";
+
 import { HelpHint } from "@/components/Hint";
 import {
   Select,
@@ -458,6 +460,8 @@ export function CalendarPage() {
   // Администратор и руководитель видят календарь по всем сотрудникам
   const canViewAll = isAdmin || isManager;
   const employeeCanCreateShifts = useEmployeeCanCreateShifts();
+  const weekendDays = useWeekendDays();
+
   const qc = useQueryClient();
   const [cursor, setCursor] = useState(() => {
     const t = new Date();
