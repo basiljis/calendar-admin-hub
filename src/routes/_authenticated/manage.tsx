@@ -1,20 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { Users, Plane, CalendarDays, BarChart3, ShieldCheck, ScrollText } from "lucide-react";
+import { Users, Plane, CalendarDays, ShieldCheck, ScrollText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { StaffPage } from "@/components/manage/staff";
 import { VacationsAdminPage } from "@/components/manage/vacations";
 import { CalendarPage } from "@/components/manage/calendar";
-import { VacationsStatsPage } from "@/components/manage/vacations-stats";
 import { AdminPage } from "@/components/manage/admin";
 import { SystemLogsPage } from "@/components/manage/logs";
 
 const searchSchema = z.object({
   tab: fallback(
-    z.enum(["staff", "requests", "shifts", "stats", "users", "logs"]),
+    z.enum(["staff", "requests", "shifts", "users", "logs"]),
     "staff"
   ).default("staff"),
 });
@@ -27,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/manage")({
       {
         name: "description",
         content:
-          "Единая панель управления: сотрудники, смены, заявки на отпуск, статистика и роли доступа.",
+          "Единая панель управления: сотрудники, смены, заявки на отпуск и роли доступа.",
       },
       { property: "og:title", content: "Управление персоналом — График ОКП" },
       {
@@ -60,7 +59,6 @@ function ManagePage() {
     { value: "staff", label: "Сотрудники", icon: Users, show: true },
     { value: "shifts", label: "Смены", icon: CalendarDays, show: true },
     { value: "requests", label: "Заявки на отпуск", icon: Plane, show: true },
-    { value: "stats", label: "Отпуска и аналитика", icon: BarChart3, show: true },
     { value: "users", label: "Роли и доступы", icon: ShieldCheck, show: isAdmin },
     { value: "logs", label: "Журнал событий", icon: ScrollText, show: true },
   ].filter((t) => t.show);
@@ -95,9 +93,6 @@ function ManagePage() {
         </TabsContent>
         <TabsContent value="requests" className="mt-0">
           <VacationsAdminPage />
-        </TabsContent>
-        <TabsContent value="stats" className="mt-0">
-          <VacationsStatsPage />
         </TabsContent>
         {isAdmin && (
           <TabsContent value="users" className="mt-0">
