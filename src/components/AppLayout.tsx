@@ -50,7 +50,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 const nav = [
   { to: "/calendar", label: "График", icon: CalendarDays, hint: "Календарь смен 2/2, обеды и отпуска" },
   { to: "/dashboard", label: "Сводка", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
-  { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки, аналитика и роли" },
+  { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки и роли" },
+  { to: "/vacations-stats", label: "Статистика", icon: BarChart3, managerOnly: true, hint: "Отпуска и загрузка команды в графиках" },
   { to: "/settings", label: "Настройки", icon: Settings, managerOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
   { to: "/help", label: "Инструкции", icon: BookOpen, hint: "Пошаговые инструкции по вашей роли" },
 ];
