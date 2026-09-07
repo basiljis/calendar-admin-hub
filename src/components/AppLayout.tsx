@@ -16,6 +16,7 @@ import {
   Heart,
   ShieldCheck,
   Menu,
+  BarChart3,
   BookOpen
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
