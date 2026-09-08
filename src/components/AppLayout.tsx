@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Menu,
   BarChart3,
-  BookOpen
+  BookOpen,
+  ScrollText
 } from "lucide-react";
 import { type ReactNode, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
