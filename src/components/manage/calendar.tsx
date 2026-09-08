@@ -1107,7 +1107,7 @@ export function CalendarPage() {
                       {holiday.name}
                     </span>
                   ) : isWeekendOff ? (
-                    <span className="text-holiday-foreground max-w-16 truncate pt-0.5 text-[10px]">
+                    <span className="text-muted-foreground/70 max-w-16 truncate pt-0.5 text-[10px]">
                       Выходной
                     </span>
                   ) : null}
