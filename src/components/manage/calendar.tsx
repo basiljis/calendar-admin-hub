@@ -1084,7 +1084,7 @@ export function CalendarPage() {
                   holiday
                     ? "bg-holiday/40"
                     : isWeekendOff
-                      ? "bg-holiday/20 hover:bg-holiday/30"
+                      ? "day-hatch bg-card hover:bg-muted/20"
                       : "bg-card hover:bg-muted/30"
                 } ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
