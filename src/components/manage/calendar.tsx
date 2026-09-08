@@ -219,7 +219,7 @@ function TimeGridColumn({
           const pr = getShiftProgress(date, now);
           const done = pr.status === "done";
           const accent = done
-            ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-100"
+            ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200/70"
             : p.shift_group === 1
               ? "border-shift-a/50 bg-shift-a/15 text-foreground"
               : "border-shift-b/50 bg-shift-b/15 text-foreground";
@@ -1141,14 +1141,14 @@ export function CalendarPage() {
                       <div
                         className={`overflow-hidden rounded-lg border text-xs leading-none shadow-sm ${
                           pr.status === "done"
-                            ? "border-emerald-200/70 bg-emerald-50/80"
+                            ? "border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-500/25 dark:bg-emerald-500/10"
                             : pr.status === "active"
                               ? "border-primary/25 bg-primary/5"
                               : "border-border/60 bg-muted/40"
                         }`}
                       >
                         <div className={`px-2 py-1 text-center text-[11px] font-bold tracking-wide ${
-                          pr.status === "done" ? "text-emerald-700" : "text-primary"
+                          pr.status === "done" ? "text-emerald-700 dark:text-emerald-300/75" : "text-primary"
                         }`}>
                           {START_LABEL} — {END_LABEL}
                         </div>
@@ -1215,7 +1215,7 @@ export function CalendarPage() {
                             {...(progress.status === "active" ? { percent: progress.percent } : {})}
                             tone={
                               done
-                                ? "bg-emerald-50 text-emerald-800"
+                                ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200/70"
                                 : members[0]?.shift_group === 1
                                   ? "bg-shift-a/12 text-foreground"
                                   : "bg-shift-b/12 text-foreground"
