@@ -52,6 +52,7 @@ export function SystemLogsPage() {
   const [category, setCategory] = useState<"all" | "auth" | "error" | "system" | "action">("all");
   const [level, setLevel] = useState<"all" | "info" | "warning" | "error">("all");
   const [search, setSearch] = useState("");
+  const [grouped, setGrouped] = useState(true);
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["system-logs", category, level, search],
@@ -69,6 +70,24 @@ export function SystemLogsPage() {
   });
 
   const logs = data ?? [];
+
+  const entries = grouped
+    ? Array.from(
+        logs
+          .reduce((acc, log) => {
+            const key = `${log.level}|${log.category}|${log.event}|${log.message}`;
+            const prev = acc.get(key);
+            if (prev) {
+              prev.count += 1;
+              if (new Date(log.created_at) > new Date(prev.log.created_at)) prev.log = log;
+            } else {
+              acc.set(key, { log, count: 1 });
+            }
+            return acc;
+          }, new Map<string, { log: (typeof logs)[number]; count: number }>())
+          .values(),
+      ).sort((a, b) => +new Date(b.log.created_at) - +new Date(a.log.created_at))
+    : logs.map((log) => ({ log, count: 1 }));
 
   return (
     <div className="space-y-4">
