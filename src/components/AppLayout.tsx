@@ -52,6 +52,7 @@ const nav = [
   { to: "/dashboard", label: "Сводка", icon: LayoutDashboard, hint: "Сводка по сменам, часам и заявкам" },
   { to: "/manage", label: "Управление", icon: Users, managerOnly: true, hint: "Сотрудники, смены, заявки и роли" },
   { to: "/vacations-stats", label: "Статистика", icon: BarChart3, managerOnly: true, hint: "Отпуска и загрузка команды в графиках" },
+  { to: "/logs", label: "Журнал системы", icon: ScrollText, adminOnly: true, hint: "Входы, действия и ошибки системы" },
   { to: "/settings", label: "Настройки", icon: Settings, managerOnly: true, hint: "Праздники РФ, нормы часов и параметры системы" },
   { to: "/help", label: "Инструкции", icon: BookOpen, hint: "Пошаговые инструкции по вашей роли" },
 ];
@@ -64,6 +65,7 @@ const sectionTitles: Record<string, string> = {
   "/vacations": "Заявки на отпуск",
   "/staff": "Сотрудники",
   "/vacations-stats": "Статистика отпусков",
+  "/logs": "Журнал системы",
   "/admin": "Администрирование",
   "/help": "Инструкции",
 };
@@ -76,6 +78,7 @@ const sectionDescriptions: Record<string, string> = {
   "/vacations": "Подтверждение, отклонение и экспорт заявок сотрудников",
   "/staff": "Состав групп, контакты и индивидуальная норма за период",
   "/vacations-stats": "Использование отпусков и загрузка команды по месяцам",
+  "/logs": "Входы, действия и системные ошибки с группировкой одинаковых записей",
   "/admin": "Управление пользователями и ролями доступа",
   "/help": "Пошаговые инструкции по работе в системе с учётом вашей роли",
 };
@@ -214,7 +217,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <ScrollArea className="flex-1 px-3 py-4">
           <nav data-tour="sidebar-nav" className="space-y-1">
             {nav
-              .filter((n) => !n.managerOnly || isManager)
+              .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
               .map((n) => (
                 <Hint key={n.to} label={n.label} description={n.hint} side="right">
                   <Link
@@ -534,7 +537,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       >
         <div className="grid grid-cols-4">
           {nav
-            .filter((n) => !n.managerOnly || isManager)
+            .filter((n) => (!n.managerOnly || isManager) && (!n.adminOnly || isAdmin))
             .slice(0, 4)
             .map((n) => (
               <Link
