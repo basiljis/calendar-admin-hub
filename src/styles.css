@@ -157,3 +157,14 @@
     font-feature-settings: "cv02", "cv03";
   }
 }
+
+/* Тонкая диагональная штриховка для выходных дней в календаре */
+@utility day-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklch, var(--color-muted-foreground) 18%, transparent) 0px,
+    color-mix(in oklch, var(--color-muted-foreground) 18%, transparent) 1px,
+    transparent 1px,
+    transparent 9px
+  );
+}

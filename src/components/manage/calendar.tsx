@@ -1084,7 +1084,7 @@ export function CalendarPage() {
                   holiday
                     ? "bg-holiday/40"
                     : isWeekendOff
-                      ? "bg-holiday/20 hover:bg-holiday/30"
+                      ? "day-hatch bg-card hover:bg-muted/20"
                       : "bg-card hover:bg-muted/30"
                 } ${
                   hasVacation && !holiday ? "bg-amber-50/50" : ""
@@ -1107,7 +1107,7 @@ export function CalendarPage() {
                       {holiday.name}
                     </span>
                   ) : isWeekendOff ? (
-                    <span className="text-holiday-foreground max-w-16 truncate pt-0.5 text-[10px]">
+                    <span className="text-muted-foreground/70 max-w-16 truncate pt-0.5 text-[10px]">
                       Выходной
                     </span>
                   ) : null}
