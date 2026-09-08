@@ -123,6 +123,14 @@ export function SystemLogsPage() {
               <SelectItem value="error">Ошибки</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant={grouped ? "default" : "outline"}
+            onClick={() => setGrouped((v) => !v)}
+            aria-pressed={grouped}
+          >
+            <Layers className="size-4" aria-hidden="true" />
+            {grouped ? "Одинаковые сгруппированы" : "Группировать одинаковые"}
+          </Button>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
             Обновить
@@ -140,7 +148,7 @@ export function SystemLogsPage() {
         </CardContent>
       </Card>
 
-      {logs.length === 0 ? (
+      {entries.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             Записей пока нет.
@@ -148,7 +156,7 @@ export function SystemLogsPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {logs.map((log) => (
+          {entries.map(({ log, count }) => (
             <Card key={log.id}>
               <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-4">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -157,6 +165,11 @@ export function SystemLogsPage() {
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{log.event}</span>
+                    {count > 1 && (
+                      <Badge variant="outline" className="border-foreground/20">
+                        {count} раз
+                      </Badge>
+                    )}
                     <Badge variant="outline" className={levelStyle(log.level)}>
                       {levelLabels[log.level] ?? log.level}
                     </Badge>
@@ -168,6 +181,7 @@ export function SystemLogsPage() {
                     <p className="break-words text-sm text-muted-foreground">{log.message}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
+                    {count > 1 ? "Последний раз: " : ""}
                     {new Date(log.created_at).toLocaleString("ru-RU")}
                     {log.user_email ? ` • ${log.user_email}` : ""}
                     {log.ip_address ? ` • IP ${log.ip_address}` : ""}
