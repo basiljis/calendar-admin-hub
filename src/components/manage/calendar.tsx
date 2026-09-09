@@ -964,6 +964,60 @@ export function CalendarPage() {
             </div>
           </div>
 
+          {canViewAll && groups.length > 0 && (
+            <div
+              role="group"
+              aria-label="Количество сотрудников по группам"
+              className="flex flex-wrap items-center gap-1.5"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setGroupFilter("all");
+                  setDetailUser("");
+                }}
+                aria-pressed={groupFilter === "all"}
+                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  groupFilter === "all" ? "border-primary bg-primary/10" : "hover:bg-muted"
+                }`}
+              >
+                <span>Все</span>
+                <span className="bg-muted text-foreground rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
+                  {allProfiles.length}
+                </span>
+              </button>
+              {groups.map((g) => {
+                const count = allProfiles.filter((p) => p.shift_group === g).length;
+                const active = groupFilter === String(g);
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => {
+                      setGroupFilter(active ? "all" : String(g));
+                      setDetailUser("");
+                    }}
+                    aria-pressed={active}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      active ? "border-primary bg-primary/10" : "hover:bg-muted"
+                    }`}
+                  >
+                    <span
+                      className={`size-2 rounded-full ${g === 1 ? "bg-chart-1" : "bg-chart-2"}`}
+                      aria-hidden="true"
+                    />
+                    <span>Группа {g}</span>
+                    <span className="bg-muted text-foreground rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+
+
           <div className="flex flex-wrap items-center gap-2">
             <div
               role="group"
