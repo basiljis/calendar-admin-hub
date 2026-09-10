@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
-import { RefreshCw, Trash2, LogIn, AlertTriangle, Info, Activity, Layers } from "lucide-react";
+import { RefreshCw, Trash2, LogIn, AlertTriangle, Info, Activity, Layers, CheckCircle2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { listSystemLogs, purgeSystemLogs } from "@/lib/system-logs.functions";
+import { listSystemLogs, purgeSystemLogs, resolveSystemLogs } from "@/lib/system-logs.functions";
 
 const categoryLabels: Record<string, string> = {
   auth: "Входы",
