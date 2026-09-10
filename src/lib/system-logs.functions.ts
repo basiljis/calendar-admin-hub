@@ -95,6 +95,8 @@ export const listSystemLogs = createServerFn({ method: "GET" })
       ip_address: (r.ip_address as string | null) ?? null,
       user_agent: (r.user_agent as string | null) ?? null,
       context: JSON.stringify(r.context ?? {}),
+      resolved: Boolean(r.resolved),
+      resolved_at: (r.resolved_at as string | null) ?? null,
       created_at: r.created_at as string,
     }));
   });
