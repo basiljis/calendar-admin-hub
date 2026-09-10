@@ -151,6 +151,14 @@ export function SystemLogsPage() {
             <Layers className="size-4" aria-hidden="true" />
             {grouped ? "Одинаковые сгруппированы" : "Группировать одинаковые"}
           </Button>
+          <Button
+            variant={hideResolved ? "default" : "outline"}
+            onClick={() => setHideResolved((v) => !v)}
+            aria-pressed={hideResolved}
+          >
+            <CheckCircle2 className="size-4" aria-hidden="true" />
+            {hideResolved ? "Исправленные скрыты" : "Скрыть исправленные"}
+          </Button>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
             Обновить
