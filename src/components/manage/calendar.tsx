@@ -1092,14 +1092,28 @@ export function CalendarPage() {
           {(view === "day"
             ? [WEEKDAYS[(parseISO(anchor).getDay() + 6) % 7]!]
             : WEEKDAYS
-          ).map((w) => (
-            <div
-              key={w}
-              className="text-muted-foreground px-2 py-2.5 text-center text-[11px] font-semibold tracking-wider uppercase"
-            >
-              {w}
-            </div>
-          ))}
+          ).map((w, wi) => {
+            const dayStr =
+              view === "week" && !isMobile && visibleDays[wi]
+                ? visibleDays[wi]
+                : view === "day"
+                  ? anchor
+                  : null;
+            const headerWeekend =
+              view !== "month" && dayStr
+                ? !data?.holidays.get(dayStr) && isWeekendDate(dayStr, weekendDays)
+                : view === "month" && (wi === 5 || wi === 6);
+            return (
+              <div
+                key={w}
+                className={`px-2 py-2.5 text-center text-[11px] font-semibold tracking-wider uppercase ${
+                  headerWeekend ? "day-hatch text-muted-foreground/80" : "text-muted-foreground"
+                }`}
+              >
+                {w}
+              </div>
+            );
+          })}
         </div>
         <div className={`grid ${view === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
           {view === "month" &&
