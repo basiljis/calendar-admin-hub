@@ -95,8 +95,47 @@ export const listSystemLogs = createServerFn({ method: "GET" })
       ip_address: (r.ip_address as string | null) ?? null,
       user_agent: (r.user_agent as string | null) ?? null,
       context: JSON.stringify(r.context ?? {}),
+      resolved: Boolean(r.resolved),
+      resolved_at: (r.resolved_at as string | null) ?? null,
       created_at: r.created_at as string,
     }));
+  });
+
+/** Отметка ошибок как исправленных — только администратор. Помечает всю группу одинаковых записей. */
+export const resolveSystemLogs = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        level: levelSchema,
+        category: categorySchema,
+        event: z.string().min(1).max(120),
+        message: z.string().max(4000).default(""),
+        resolved: z.boolean().default(true),
+      })
+      .parse(data),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context, data }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Отметка об исправлении доступна только администратору");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("system_logs")
+      .update(
+        data.resolved
+          ? { resolved: true, resolved_at: new Date().toISOString(), resolved_by: context.userId }
+          : { resolved: false, resolved_at: null, resolved_by: null },
+      )
+      .eq("level", data.level)
+      .eq("category", data.category)
+      .eq("event", data.event)
+      .eq("message", data.message);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 /** Очистка журнала старше N дней — только администратор. */

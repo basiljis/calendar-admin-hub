@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
-import { RefreshCw, Trash2, LogIn, AlertTriangle, Info, Activity, Layers } from "lucide-react";
+import { RefreshCw, Trash2, LogIn, AlertTriangle, Info, Activity, Layers, CheckCircle2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { listSystemLogs, purgeSystemLogs } from "@/lib/system-logs.functions";
+import { listSystemLogs, purgeSystemLogs, resolveSystemLogs } from "@/lib/system-logs.functions";
 
 const categoryLabels: Record<string, string> = {
   auth: "Входы",
@@ -48,11 +48,13 @@ export function SystemLogsPage() {
   const qc = useQueryClient();
   const fetchLogs = useServerFn(listSystemLogs);
   const purge = useServerFn(purgeSystemLogs);
+  const resolve = useServerFn(resolveSystemLogs);
 
   const [category, setCategory] = useState<"all" | "auth" | "error" | "system" | "action">("all");
   const [level, setLevel] = useState<"all" | "info" | "warning" | "error">("all");
   const [search, setSearch] = useState("");
   const [grouped, setGrouped] = useState(true);
+  const [hideResolved, setHideResolved] = useState(true);
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["system-logs", category, level, search],
@@ -69,9 +71,24 @@ export function SystemLogsPage() {
     onError: (e: any) => toast.error(e?.message ?? "Не удалось очистить журнал"),
   });
 
+  const resolveMutation = useMutation({
+    mutationFn: (input: {
+      level: "info" | "warning" | "error";
+      category: "auth" | "error" | "system" | "action";
+      event: string;
+      message: string;
+      resolved: boolean;
+    }) => resolve({ data: input }),
+    onSuccess: (_d, v) => {
+      toast.success(v.resolved ? "Отмечено как исправленное" : "Отметка об исправлении снята");
+      qc.invalidateQueries({ queryKey: ["system-logs"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Не удалось обновить отметку"),
+  });
+
   const logs = data ?? [];
 
-  const entries = grouped
+  const allEntries = grouped
     ? Array.from(
         logs
           .reduce((acc, log) => {
@@ -79,15 +96,18 @@ export function SystemLogsPage() {
             const prev = acc.get(key);
             if (prev) {
               prev.count += 1;
+              if (!log.resolved) prev.allResolved = false;
               if (new Date(log.created_at) > new Date(prev.log.created_at)) prev.log = log;
             } else {
-              acc.set(key, { log, count: 1 });
+              acc.set(key, { log, count: 1, allResolved: log.resolved });
             }
             return acc;
-          }, new Map<string, { log: (typeof logs)[number]; count: number }>())
+          }, new Map<string, { log: (typeof logs)[number]; count: number; allResolved: boolean }>())
           .values(),
       ).sort((a, b) => +new Date(b.log.created_at) - +new Date(a.log.created_at))
-    : logs.map((log) => ({ log, count: 1 }));
+    : logs.map((log) => ({ log, count: 1, allResolved: log.resolved }));
+
+  const entries = hideResolved ? allEntries.filter((e) => !e.allResolved) : allEntries;
 
   return (
     <div className="space-y-4">
@@ -131,6 +151,14 @@ export function SystemLogsPage() {
             <Layers className="size-4" aria-hidden="true" />
             {grouped ? "Одинаковые сгруппированы" : "Группировать одинаковые"}
           </Button>
+          <Button
+            variant={hideResolved ? "default" : "outline"}
+            onClick={() => setHideResolved((v) => !v)}
+            aria-pressed={hideResolved}
+          >
+            <CheckCircle2 className="size-4" aria-hidden="true" />
+            {hideResolved ? "Исправленные скрыты" : "Скрыть исправленные"}
+          </Button>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`size-4 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
             Обновить
@@ -156,8 +184,8 @@ export function SystemLogsPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {entries.map(({ log, count }) => (
-            <Card key={log.id}>
+          {entries.map(({ log, count, allResolved }) => (
+            <Card key={log.id} className={allResolved ? "opacity-70" : undefined}>
               <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-4">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <CategoryIcon category={log.category} />
@@ -176,6 +204,15 @@ export function SystemLogsPage() {
                     <Badge variant="secondary">
                       {categoryLabels[log.category] ?? log.category}
                     </Badge>
+                    {allResolved && (
+                      <Badge
+                        variant="outline"
+                        className="border-green-500/40 bg-green-500/10 text-green-600"
+                      >
+                        <CheckCircle2 className="mr-1 size-3" aria-hidden="true" />
+                        Исправлено
+                      </Badge>
+                    )}
                   </div>
                   {log.message && (
                     <p className="break-words text-sm text-muted-foreground">{log.message}</p>
@@ -185,8 +222,40 @@ export function SystemLogsPage() {
                     {new Date(log.created_at).toLocaleString("ru-RU")}
                     {log.user_email ? ` • ${log.user_email}` : ""}
                     {log.ip_address ? ` • IP ${log.ip_address}` : ""}
+                    {allResolved && log.resolved_at
+                      ? ` • Исправлено ${new Date(log.resolved_at).toLocaleString("ru-RU")}`
+                      : ""}
                   </p>
                 </div>
+                {isAdmin && (log.level === "error" || log.level === "warning") && (
+                  <Button
+                    variant={allResolved ? "ghost" : "outline"}
+                    size="sm"
+                    className="shrink-0"
+                    disabled={resolveMutation.isPending}
+                    onClick={() =>
+                      resolveMutation.mutate({
+                        level: log.level,
+                        category: log.category,
+                        event: log.event,
+                        message: log.message,
+                        resolved: !allResolved,
+                      })
+                    }
+                  >
+                    {allResolved ? (
+                      <>
+                        <Undo2 className="size-4" aria-hidden="true" />
+                        Вернуть в работу
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="size-4" aria-hidden="true" />
+                        Отметить исправленным
+                      </>
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
