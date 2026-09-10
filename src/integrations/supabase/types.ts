@@ -428,6 +428,9 @@ export type Database = {
           ip_address: string | null
           level: string
           message: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
           user_agent: string | null
           user_email: string | null
           user_id: string | null
@@ -441,6 +444,9 @@ export type Database = {
           ip_address?: string | null
           level?: string
           message?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
           user_agent?: string | null
           user_email?: string | null
           user_id?: string | null
@@ -454,6 +460,9 @@ export type Database = {
           ip_address?: string | null
           level?: string
           message?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
           user_agent?: string | null
           user_email?: string | null
           user_id?: string | null
