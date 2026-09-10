@@ -88,7 +88,7 @@ export function SystemLogsPage() {
 
   const logs = data ?? [];
 
-  const entries = grouped
+  const allEntries = grouped
     ? Array.from(
         logs
           .reduce((acc, log) => {
@@ -96,15 +96,18 @@ export function SystemLogsPage() {
             const prev = acc.get(key);
             if (prev) {
               prev.count += 1;
+              if (!log.resolved) prev.allResolved = false;
               if (new Date(log.created_at) > new Date(prev.log.created_at)) prev.log = log;
             } else {
-              acc.set(key, { log, count: 1 });
+              acc.set(key, { log, count: 1, allResolved: log.resolved });
             }
             return acc;
-          }, new Map<string, { log: (typeof logs)[number]; count: number }>())
+          }, new Map<string, { log: (typeof logs)[number]; count: number; allResolved: boolean }>())
           .values(),
       ).sort((a, b) => +new Date(b.log.created_at) - +new Date(a.log.created_at))
-    : logs.map((log) => ({ log, count: 1 }));
+    : logs.map((log) => ({ log, count: 1, allResolved: log.resolved }));
+
+  const entries = hideResolved ? allEntries.filter((e) => !e.allResolved) : allEntries;
 
   return (
     <div className="space-y-4">
