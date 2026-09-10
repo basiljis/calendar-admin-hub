@@ -48,11 +48,13 @@ export function SystemLogsPage() {
   const qc = useQueryClient();
   const fetchLogs = useServerFn(listSystemLogs);
   const purge = useServerFn(purgeSystemLogs);
+  const resolve = useServerFn(resolveSystemLogs);
 
   const [category, setCategory] = useState<"all" | "auth" | "error" | "system" | "action">("all");
   const [level, setLevel] = useState<"all" | "info" | "warning" | "error">("all");
   const [search, setSearch] = useState("");
   const [grouped, setGrouped] = useState(true);
+  const [hideResolved, setHideResolved] = useState(true);
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["system-logs", category, level, search],
@@ -67,6 +69,21 @@ export function SystemLogsPage() {
       qc.invalidateQueries({ queryKey: ["system-logs"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Не удалось очистить журнал"),
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: (input: {
+      level: "info" | "warning" | "error";
+      category: "auth" | "error" | "system" | "action";
+      event: string;
+      message: string;
+      resolved: boolean;
+    }) => resolve({ data: input }),
+    onSuccess: (_d, v) => {
+      toast.success(v.resolved ? "Отмечено как исправленное" : "Отметка об исправлении снята");
+      qc.invalidateQueries({ queryKey: ["system-logs"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Не удалось обновить отметку"),
   });
 
   const logs = data ?? [];
