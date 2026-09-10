@@ -184,8 +184,8 @@ export function SystemLogsPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {entries.map(({ log, count }) => (
-            <Card key={log.id}>
+          {entries.map(({ log, count, allResolved }) => (
+            <Card key={log.id} className={allResolved ? "opacity-70" : undefined}>
               <CardContent className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:gap-4">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <CategoryIcon category={log.category} />
@@ -204,6 +204,15 @@ export function SystemLogsPage() {
                     <Badge variant="secondary">
                       {categoryLabels[log.category] ?? log.category}
                     </Badge>
+                    {allResolved && (
+                      <Badge
+                        variant="outline"
+                        className="border-green-500/40 bg-green-500/10 text-green-600"
+                      >
+                        <CheckCircle2 className="mr-1 size-3" aria-hidden="true" />
+                        Исправлено
+                      </Badge>
+                    )}
                   </div>
                   {log.message && (
                     <p className="break-words text-sm text-muted-foreground">{log.message}</p>
@@ -213,8 +222,40 @@ export function SystemLogsPage() {
                     {new Date(log.created_at).toLocaleString("ru-RU")}
                     {log.user_email ? ` • ${log.user_email}` : ""}
                     {log.ip_address ? ` • IP ${log.ip_address}` : ""}
+                    {allResolved && log.resolved_at
+                      ? ` • Исправлено ${new Date(log.resolved_at).toLocaleString("ru-RU")}`
+                      : ""}
                   </p>
                 </div>
+                {isAdmin && (log.level === "error" || log.level === "warning") && (
+                  <Button
+                    variant={allResolved ? "ghost" : "outline"}
+                    size="sm"
+                    className="shrink-0"
+                    disabled={resolveMutation.isPending}
+                    onClick={() =>
+                      resolveMutation.mutate({
+                        level: log.level,
+                        category: log.category,
+                        event: log.event,
+                        message: log.message,
+                        resolved: !allResolved,
+                      })
+                    }
+                  >
+                    {allResolved ? (
+                      <>
+                        <Undo2 className="size-4" aria-hidden="true" />
+                        Вернуть в работу
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="size-4" aria-hidden="true" />
+                        Отметить исправленным
+                      </>
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
