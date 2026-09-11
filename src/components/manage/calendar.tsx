@@ -1313,9 +1313,11 @@ export function CalendarPage() {
             Array.from({ length: (7 - ((leadingBlanks + days.length) % 7)) % 7 }).map((_, i) => (
             <div
               key={`t${i}`}
-              className="bg-muted/25 text-muted-foreground/50 min-h-20 border-r border-b p-2 text-sm sm:min-h-28"
+              className="bg-muted/25 min-h-20 border-r border-b p-1 align-top sm:min-h-28 sm:p-2"
             >
-              {i + 1}
+              <span className="text-muted-foreground/50 flex size-7 items-center justify-center rounded-full text-base font-semibold">
+                {i + 1}
+              </span>
             </div>
           ))}
         </div>
